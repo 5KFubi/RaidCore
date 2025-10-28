@@ -1,0 +1,5 @@
+name: api
+version: '1.0'
+main: me.fivekfubi.api
+api-version: '1.20'
+authors: [5KFubi]
