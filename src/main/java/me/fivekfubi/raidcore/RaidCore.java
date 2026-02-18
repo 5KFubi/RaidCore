@@ -30,12 +30,12 @@ public final class RaidCore extends JavaPlugin {
 
     public static Random RANDOM = new Random();
     public static RaidCore PLUGIN;
+    public static String PLUGIN_NAME;
     public static String SESSION_VALUE;
     public static final MiniMessage mini_message = MiniMessage.miniMessage();
     public static final LegacyComponentSerializer legacy_serializer = LegacyComponentSerializer.legacyAmpersand();
 
     public static final String PREFIX                             = "<dark_gray>[<gold>RaidCore<dark_gray>]" ;
-    public static final String PLUGIN_NAME                        = "raidcore"                               ;
 
     //
     public static Utils utils = new Utils();
@@ -68,9 +68,19 @@ public final class RaidCore extends JavaPlugin {
     @Override
     public void onLoad(){
         PLUGIN = this;
+        PLUGIN_NAME = PLUGIN.getName();
         registered_plugins.put(this.getName(), this);
 
         SESSION_VALUE = UUID.randomUUID().toString();
+    }
+
+    public void register(JavaPlugin plugin) {
+        if (PLUGIN.allow_register){
+            PLUGIN.registered_plugins.put(plugin.getName(), plugin);
+            utils.console_message(true, "<dark_gray>[<green>REGISTERED<dark_gray>] <white>API registered plugin: " + plugin.getName());
+        }else{
+            utils.console_message(true, "<dark_gray>[<red>ERROR<dark_gray>] <white>API registration failed for <red>" + plugin.getName() + "<white>, must be registered <gold>onLoad()<white>!");
+        }
     }
 
     /// TODO: ----------------------------------------------------------------------------------------------------------
@@ -87,7 +97,7 @@ public final class RaidCore extends JavaPlugin {
 
         try {
             NKEY = new KEY_Namespace();
-            create_configs();
+            m_config.create_configs();
             load();
 
             t_inventory.functionate();
@@ -140,7 +150,7 @@ public final class RaidCore extends JavaPlugin {
 
     public boolean loaded = false;
     public void load(){
-        load_configs();
+        m_config.load_configs();
         //
 
         if (!loaded) update_databases();
@@ -175,60 +185,6 @@ public final class RaidCore extends JavaPlugin {
         m_scheduler.run_async_timer(0L, m_database.DATABASE_UPDATE_INTERVAL, () -> {
             m_database.update_databases();
         });
-    }
-
-    /// TODO: ----------------------------------------------------------------------------------------------------------
-    /// TODO: ----------------------------------------------------------------------------------------------------------
-    /// TODO: ----------------------------------------------------------------------------------------------------------
-
-    public Map<JavaPlugin, List<Map<List<String>, Boolean>>> file_paths =
-            Map.of(this, List.of(
-        Map.of(List.of("config.yml"), true),
-        Map.of(List.of("commands.yml"), true),
-        Map.of(List.of("placeholders.yml"), true),
-        Map.of(List.of("Items", "test-item.yml"), false),
-
-        Map.of(List.of("GUIs", "test.yml"), false)
-    ));
-
-    public void create_configs() {
-        utils.console_message("<dark_gray>Checking configs...");
-
-        for (Map.Entry<JavaPlugin, List<Map<List<String>, Boolean>>> pluginEntry : file_paths.entrySet()) {
-            JavaPlugin plugin = pluginEntry.getKey();
-            List<Map<List<String>, Boolean>> configList = pluginEntry.getValue();
-
-            for (Map<List<String>, Boolean> map : configList) {
-                Map.Entry<List<String>, Boolean> entry = map.entrySet().iterator().next();
-
-                List<String> path = entry.getKey();
-                boolean always = entry.getValue();
-
-                m_config.create_config(plugin, path, always);
-            }
-        }
-    }
-
-    public void load_configs() {
-        m_config.clear_config_data();
-
-        for (Map.Entry<JavaPlugin, List<Map<List<String>, Boolean>>> plugin_entry : file_paths.entrySet()) {
-            JavaPlugin plugin = plugin_entry.getKey();
-            List<Map<List<String>, Boolean>> config_list = plugin_entry.getValue();
-
-            for (Map<List<String>, Boolean> map : config_list) {
-                Map.Entry<List<String>, Boolean> entry = map.entrySet().iterator().next();
-                List<String> path = entry.getKey();
-
-                m_config.load_config(plugin, path);
-            }
-
-            List<List<String>> default_paths = config_list.stream()
-                    .map(m -> m.keySet().iterator().next())
-                    .toList();
-
-            m_config.load_user_configs(plugin, default_paths);
-        }
     }
 
     /// TODO: ----------------------------------------------------------------------------------------------------------

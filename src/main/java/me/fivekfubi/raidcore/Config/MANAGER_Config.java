@@ -12,7 +12,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
 
-import static me.fivekfubi.raidcore.RaidCore.utils;
+import static me.fivekfubi.raidcore.RaidCore.*;
 
 public class MANAGER_Config {
 
@@ -23,6 +23,68 @@ public class MANAGER_Config {
     public DATA_Config get_config_data(JavaPlugin plugin, List<String> path) { return configs.getOrDefault(plugin.getName(), new HashMap<>()).get(path); }
     public FileConfiguration get_config_file(JavaPlugin plugin, List<String> path) { return configs.get(plugin.getName()).get(path).config; }
     public void clear_config_data() { configs.clear(); }
+
+    /// TODO: ----------------------------------------------------------------------------------------------------------
+    /// TODO: ----------------------------------------------------------------------------------------------------------
+    /// TODO: ----------------------------------------------------------------------------------------------------------
+
+    public Map<String, List<Map<List<String>, Boolean>>> file_paths =
+            Map.of(PLUGIN_NAME, List.of(
+                    Map.of(List.of("config.yml"), true),
+                    Map.of(List.of("commands.yml"), true),
+                    Map.of(List.of("placeholders.yml"), true),
+                    Map.of(List.of("Items", "test-item.yml"), false),
+
+                    Map.of(List.of("GUIs", "test.yml"), false)
+            ));
+
+    public void register_configs(String plugin_name, List<Map<List<String>, Boolean>> file_paths){
+        this.file_paths.put(plugin_name, file_paths);
+    }
+
+    public void create_configs() {
+        utils.console_message("<dark_gray>Checking configs...");
+
+        for (Map.Entry<String, List<Map<List<String>, Boolean>>> plugin_entry : file_paths.entrySet()) {
+            String plugin_name = plugin_entry.getKey();
+            JavaPlugin plugin = PLUGIN.registered_plugins.get(plugin_name);
+            if (plugin == null) continue;
+            List<Map<List<String>, Boolean>> configList = plugin_entry.getValue();
+
+            for (Map<List<String>, Boolean> map : configList) {
+                Map.Entry<List<String>, Boolean> entry = map.entrySet().iterator().next();
+
+                List<String> path = entry.getKey();
+                boolean always = entry.getValue();
+
+                create_config(plugin, path, always);
+            }
+        }
+    }
+
+    public void load_configs() {
+        clear_config_data();
+
+        for (Map.Entry<String, List<Map<List<String>, Boolean>>> plugin_entry : file_paths.entrySet()) {
+            String plugin_name = plugin_entry.getKey();
+            JavaPlugin plugin = PLUGIN.registered_plugins.get(plugin_name);
+            if (plugin == null) continue;
+            List<Map<List<String>, Boolean>> config_list = plugin_entry.getValue();
+
+            for (Map<List<String>, Boolean> map : config_list) {
+                Map.Entry<List<String>, Boolean> entry = map.entrySet().iterator().next();
+                List<String> path = entry.getKey();
+
+                load_config(plugin, path);
+            }
+
+            List<List<String>> default_paths = config_list.stream()
+                    .map(m -> m.keySet().iterator().next())
+                    .toList();
+
+            load_user_configs(plugin, default_paths);
+        }
+    }
 
     /// TODO: ----------------------------------------------------------------------------------------------------------
     /// TODO: ----------------------------------------------------------------------------------------------------------
@@ -90,7 +152,7 @@ public class MANAGER_Config {
             if (plugin_configs == null) continue;
 
             for (List<String> path : plugin_configs.keySet()) {
-                if (!path.isEmpty() && root_folder.equals(path.get(0))) {
+                if (!path.isEmpty() && root_folder.equals(path.getFirst())) {
 
                     result
                             .computeIfAbsent(plugin_name, k -> new ArrayList<>())
@@ -107,9 +169,9 @@ public class MANAGER_Config {
 
         for (List<String> path : configs.get(plugin.getName()).keySet()) {
             if (!path.isEmpty()) {
-                boolean starts_with_root = root_folder.equals(path.get(0));
+                boolean starts_with_root = root_folder.equals(path.getFirst());
 
-                String last = path.get(path.size() - 1);
+                String last = path.getLast();
                 boolean ends_in_file = last.endsWith(".yml");
 
                 if (starts_with_root && ends_in_file) {
@@ -123,7 +185,7 @@ public class MANAGER_Config {
         List<DATA_Config> root_configs = new ArrayList<>();
 
         for (List<String> path : configs.get(plugin.getName()).keySet()) {
-            if (!path.isEmpty() && root_folder.equals(path.get(0))) {
+            if (!path.isEmpty() && root_folder.equals(path.getFirst())) {
                 root_configs.add(configs.get(plugin.getName()).get(path));
             }
         }

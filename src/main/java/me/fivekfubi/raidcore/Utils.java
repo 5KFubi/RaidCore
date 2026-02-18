@@ -635,7 +635,7 @@ public class Utils {
     public void console_message(int i) {
         getServer().getConsoleSender().sendMessage(colorize(PREFIX + " <yellow>DEBUG: " + i));
     }
-    public void console_message(String s, boolean b) {
+    public void console_message(boolean b, String s) {
         String message;
         if (b){
             message = PREFIX + s;
@@ -650,7 +650,7 @@ public class Utils {
     public void broadcast(int i) {
         Bukkit.broadcast(colorize(PREFIX + " <yellow>DEBUG: " + i));
     }
-    public void broadcast(String s, boolean b) {
+    public void broadcast(boolean b, String s) {
         String message;
         if (b){
             message = PREFIX + s;

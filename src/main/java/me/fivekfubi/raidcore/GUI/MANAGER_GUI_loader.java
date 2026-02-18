@@ -272,7 +272,7 @@ public class MANAGER_GUI_loader {
             gData.set_used_slots(used_slots);
             g_map.put(path_string, gData);
         }
-        guis.put(PLUGIN.getName(), g_map);
+        guis.put(PLUGIN_NAME, g_map);
     }
 
     public GUI_Item sectionToGItem(ConfigurationSection section, String path_string, String group_id, int page_number, String item_id, String variant, String variation_id) {
@@ -365,7 +365,7 @@ public class MANAGER_GUI_loader {
 
             ConfigurationSection actions_section = section.getConfigurationSection("actions");
             if (actions_section != null){
-                g_item.action_data = m_item.get_action_data(PLUGIN.getName(), actions_section);
+                g_item.action_data = m_item.get_action_data(PLUGIN_NAME, actions_section);
             }
 
             ItemMeta meta = g_item.item.getItemMeta();

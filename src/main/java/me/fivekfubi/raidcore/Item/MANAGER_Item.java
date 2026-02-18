@@ -42,13 +42,12 @@ public class MANAGER_Item {
     }
 
     public void register_default(){
-        String plugin_name = PLUGIN.getName();
-        register_attribute(plugin_name, NKEY.attribute_item_stackable            );
-        register_attribute(plugin_name, NKEY.attribute_item_durability           );
-        register_attribute(plugin_name, NKEY.attribute_item_on_break_replacement );
-        register_attribute(plugin_name, NKEY.attribute_item_allow_enchant        );
-        register_attribute(plugin_name, NKEY.attribute_item_allow_anvil          );
-        register_attribute(plugin_name, NKEY.attribute_item_is_currency          );
+        register_attribute(PLUGIN_NAME, NKEY.attribute_item_stackable            );
+        register_attribute(PLUGIN_NAME, NKEY.attribute_item_durability           );
+        register_attribute(PLUGIN_NAME, NKEY.attribute_item_on_break_replacement );
+        register_attribute(PLUGIN_NAME, NKEY.attribute_item_allow_enchant        );
+        register_attribute(PLUGIN_NAME, NKEY.attribute_item_allow_anvil          );
+        register_attribute(PLUGIN_NAME, NKEY.attribute_item_is_currency          );
 
         //register_attribute(PLUGIN, "attributes.values", (section, path) -> {
         //    ConfigurationSection values = section.getConfigurationSection(path);

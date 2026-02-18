@@ -267,7 +267,7 @@ public class MANAGER_Event implements Listener {
         if (player == null) return should_cancel;
 
         ItemStack item = player.getInventory().getItemInMainHand();
-        DATA_Item item_data = m_item.get_item_data(PLUGIN.getName(), item);
+        DATA_Item item_data = m_item.get_item_data(PLUGIN_NAME, item);
         if (item_data == null) return should_cancel;
 
         DATA_Action item_actions = item_data.action_data;
@@ -279,11 +279,11 @@ public class MANAGER_Event implements Listener {
             if (!item_actions.action_event.containsKey(action_string)) continue;
 
             // [COOLDOWN] ----------------------------------------------------------------------------------------------
-            boolean on_clump = m_cooldown.on_cooldown(PLUGIN.getName(), player_uuid, CLUMP_KEY_EVENT);
+            boolean on_clump = m_cooldown.on_cooldown(PLUGIN_NAME, player_uuid, CLUMP_KEY_EVENT);
             if (on_clump){
                 continue;
             }
-            m_cooldown.add_cooldown(PLUGIN.getName(), player_uuid, CLUMP_KEY_EVENT, 1);
+            m_cooldown.add_cooldown(PLUGIN_NAME, player_uuid, CLUMP_KEY_EVENT, 1);
 
             for (DATA_Action_State state : item_actions.action_event.get(action_string)){
 
@@ -299,20 +299,20 @@ public class MANAGER_Event implements Listener {
                 if (resolved == null) continue;
 
                 // [COOLDOWN] ----------------------------------------------------------------------------------------------
-                boolean on_cooldown = m_cooldown.on_cooldown(PLUGIN.getName(), player_uuid, resolved);
+                boolean on_cooldown = m_cooldown.on_cooldown(PLUGIN_NAME, player_uuid, resolved);
                 if (on_cooldown) {
                     DATA_Action_Condition cooldown_branch = resolved.cooldown_branch;
                     if (cooldown_branch == null) continue;
 
                     // [COOLDOWN] ----------------------------------------------------------------------------------------------
-                    boolean cd_on_cooldown = m_cooldown.on_cooldown(PLUGIN.getName(), player_uuid, cooldown_branch);
+                    boolean cd_on_cooldown = m_cooldown.on_cooldown(PLUGIN_NAME, player_uuid, cooldown_branch);
                     if (cd_on_cooldown){
                         continue;
                     }
-                    m_cooldown.add_cooldown(PLUGIN.getName(), player_uuid,cooldown_branch, cooldown_branch.cooldown);
+                    m_cooldown.add_cooldown(PLUGIN_NAME, player_uuid,cooldown_branch, cooldown_branch.cooldown);
 
                     m_executable.execute(
-                            PLUGIN.getName(),
+                            PLUGIN_NAME,
                             player,
                             cooldown_branch.self_use,
                             event_type,
@@ -324,10 +324,10 @@ public class MANAGER_Event implements Listener {
                     continue;
                 }
                 //
-                m_cooldown.add_cooldown(PLUGIN.getName(), player_uuid, resolved, resolved.cooldown);
+                m_cooldown.add_cooldown(PLUGIN_NAME, player_uuid, resolved, resolved.cooldown);
 
                 m_executable.execute(
-                        PLUGIN.getName(),
+                        PLUGIN_NAME,
                         player,
                         resolved.self_use,
                         event_type,

@@ -43,7 +43,7 @@ public class TRACKER_Inventory implements Listener {
         if (slot < 0) return;
 
         String file_path = (String) container_data.get(NKEY.file_path);
-        DATA_Item item_data = m_item.get_item_data(PLUGIN.getName(), file_path);
+        DATA_Item item_data = m_item.get_item_data(PLUGIN_NAME, file_path);
         if (item_data == null) return;
         DATA_Action action_data = item_data.action_data;
         if (action_data == null) return;
@@ -87,7 +87,7 @@ public class TRACKER_Inventory implements Listener {
                             cooldowns.put(cooldown_branch, cooldown_branch.cooldown);
 
                             m_executable.execute(
-                                    PLUGIN.getName(),
+                                    PLUGIN_NAME,
                                     player,
                                     cooldown_branch.self_use,
                                     "ITEM_PASSIVE",
@@ -103,7 +103,7 @@ public class TRACKER_Inventory implements Listener {
                         cooldowns.put(resolved, resolved.cooldown);
 
                         m_executable.execute(
-                                PLUGIN.getName(),
+                                PLUGIN_NAME,
                                 player,
                                 resolved.self_use,
                                 "ITEM_PASSIVE",
