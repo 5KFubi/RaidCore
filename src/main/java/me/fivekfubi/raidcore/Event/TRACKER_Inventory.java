@@ -28,7 +28,7 @@ public class TRACKER_Inventory implements Listener {
 
     public int SLOTS_PER_TICK = 4;
     public void load(){
-        DATA_Config config_data = m_config.get_config_data(PLUGIN, List.of("config.yml"));
+        DATA_Config config_data = m_config.get_config_data(PLUGIN_NAME, List.of("config.yml"));
         FileConfiguration config = config_data.config;
 
         SLOTS_PER_TICK = config.getInt("passive-tracker.slots-per-tick");

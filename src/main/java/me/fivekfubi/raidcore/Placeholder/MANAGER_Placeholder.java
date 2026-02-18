@@ -43,7 +43,7 @@ public class MANAGER_Placeholder {
 
     public void load(){
         replacement_data_cache.clear();
-        DATA_Config config_data = m_config.get_config_data(PLUGIN, List.of("placeholders.yml"));
+        DATA_Config config_data = m_config.get_config_data(PLUGIN_NAME, List.of("placeholders.yml"));
         FileConfiguration config = config_data.config;
 
         //plugin_current_version = PLUGIN.getCurrentVersion();

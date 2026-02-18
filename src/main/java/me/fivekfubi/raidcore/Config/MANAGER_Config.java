@@ -1,6 +1,7 @@
 package me.fivekfubi.raidcore.Config;
 
 import me.fivekfubi.raidcore.Config.Data.DATA_Config;
+import me.fivekfubi.raidcore.RaidCore;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -20,23 +21,20 @@ public class MANAGER_Config {
     public boolean is_first_boot(){ return this.first_time; }
     public Map<String, Map<List<String>, DATA_Config>> configs = new HashMap<>();
     public Map<String, Map<List<String>, DATA_Config>> get_configs() { return configs; }
-    public DATA_Config get_config_data(JavaPlugin plugin, List<String> path) { return configs.getOrDefault(plugin.getName(), new HashMap<>()).get(path); }
-    public FileConfiguration get_config_file(JavaPlugin plugin, List<String> path) { return configs.get(plugin.getName()).get(path).config; }
-    public void clear_config_data() { configs.clear(); }
+    public DATA_Config get_config_data(String plugin_name, List<String> path) { return configs.getOrDefault(plugin_name, new HashMap<>()).get(path); }
 
     /// TODO: ----------------------------------------------------------------------------------------------------------
     /// TODO: ----------------------------------------------------------------------------------------------------------
     /// TODO: ----------------------------------------------------------------------------------------------------------
 
-    public Map<String, List<Map<List<String>, Boolean>>> file_paths =
-            Map.of(PLUGIN_NAME, List.of(
-                    Map.of(List.of("config.yml"), true),
-                    Map.of(List.of("commands.yml"), true),
-                    Map.of(List.of("placeholders.yml"), true),
-                    Map.of(List.of("Items", "test-item.yml"), false),
+    public Map<String, List<Map<List<String>, Boolean>>> file_paths = new HashMap<>(Map.of(PLUGIN_NAME, List.of(
+            Map.of(List.of("config.yml"), true),
+            Map.of(List.of("commands.yml"), true),
+            Map.of(List.of("placeholders.yml"), true),
+            Map.of(List.of("Items", "test-item.yml"), false),
 
-                    Map.of(List.of("GUIs", "test.yml"), false)
-            ));
+            Map.of(List.of("GUIs", "test.yml"), false)
+    )));
 
     public void register_configs(String plugin_name, List<Map<List<String>, Boolean>> file_paths){
         this.file_paths.put(plugin_name, file_paths);
@@ -63,7 +61,7 @@ public class MANAGER_Config {
     }
 
     public void load_configs() {
-        clear_config_data();
+        configs.clear();
 
         for (Map.Entry<String, List<Map<List<String>, Boolean>>> plugin_entry : file_paths.entrySet()) {
             String plugin_name = plugin_entry.getKey();
@@ -85,6 +83,31 @@ public class MANAGER_Config {
             load_user_configs(plugin, default_paths);
         }
     }
+
+    public void load_configs(String plugin_name) {
+        configs.remove(plugin_name);
+
+        for (Map.Entry<String, List<Map<List<String>, Boolean>>> plugin_entry : file_paths.entrySet()) {
+            if (!plugin_name.equals(plugin_entry.getKey())) continue;
+            JavaPlugin plugin = PLUGIN.registered_plugins.get(plugin_name);
+            if (plugin == null) continue;
+            List<Map<List<String>, Boolean>> config_list = plugin_entry.getValue();
+
+            for (Map<List<String>, Boolean> map : config_list) {
+                Map.Entry<List<String>, Boolean> entry = map.entrySet().iterator().next();
+                List<String> path = entry.getKey();
+
+                load_config(plugin, path);
+            }
+
+            List<List<String>> default_paths = config_list.stream()
+                    .map(m -> m.keySet().iterator().next())
+                    .toList();
+
+            load_user_configs(plugin, default_paths);
+        }
+    }
+
 
     /// TODO: ----------------------------------------------------------------------------------------------------------
     /// TODO: ----------------------------------------------------------------------------------------------------------
@@ -152,7 +175,7 @@ public class MANAGER_Config {
             if (plugin_configs == null) continue;
 
             for (List<String> path : plugin_configs.keySet()) {
-                if (!path.isEmpty() && root_folder.equals(path.getFirst())) {
+                if (!path.isEmpty() && root_folder.equals(path.get(0))) {
 
                     result
                             .computeIfAbsent(plugin_name, k -> new ArrayList<>())
@@ -169,9 +192,9 @@ public class MANAGER_Config {
 
         for (List<String> path : configs.get(plugin.getName()).keySet()) {
             if (!path.isEmpty()) {
-                boolean starts_with_root = root_folder.equals(path.getFirst());
+                boolean starts_with_root = root_folder.equals(path.get(0));
 
-                String last = path.getLast();
+                String last = path.get(path.size() - 1);
                 boolean ends_in_file = last.endsWith(".yml");
 
                 if (starts_with_root && ends_in_file) {
@@ -185,7 +208,7 @@ public class MANAGER_Config {
         List<DATA_Config> root_configs = new ArrayList<>();
 
         for (List<String> path : configs.get(plugin.getName()).keySet()) {
-            if (!path.isEmpty() && root_folder.equals(path.getFirst())) {
+            if (!path.isEmpty() && root_folder.equals(path.get(0))) {
                 root_configs.add(configs.get(plugin.getName()).get(path));
             }
         }
@@ -332,7 +355,7 @@ public class MANAGER_Config {
     }
     public void append_to_config(JavaPlugin plugin, List<String> path, String text) {
         try {
-            DATA_Config config_data = get_config_data(plugin, path);
+            DATA_Config config_data = get_config_data(plugin.getName(), path);
             if (config_data == null){
                 utils.error_message("<white>Failed to append to config file, path <yellow>`" + String.join("/", path) + "`<white, null.>", null);
                 return;
@@ -366,7 +389,7 @@ public class MANAGER_Config {
     }
     public void add_to_config_path(JavaPlugin plugin, List<String> path, String textToAdd) {
         try {
-            DATA_Config config_data = get_config_data(plugin, path);
+            DATA_Config config_data = get_config_data(plugin.getName(), path);
             if (config_data == null) {
                 utils.error_message("<white>Failed to add to config path <yellow>`" + String.join(".", path) + "`<white>, null.", null);
                 return;
@@ -424,7 +447,7 @@ public class MANAGER_Config {
 
     public void modify_config_value(JavaPlugin plugin, List<String> path, Object newValue) {
         try {
-            DATA_Config configData = get_config_data(plugin, path);
+            DATA_Config configData = get_config_data(plugin.getName(), path);
             if (configData == null) {
                 utils.error_message("<white>Failed to modify config, path not found <yellow>`" + String.join(".", path) + "`", null);
                 return;

@@ -119,7 +119,7 @@ public class MANAGER_Database {
 
     public long DATABASE_UPDATE_INTERVAL = 60L;
     public void load() {
-        DATA_Config config_data = m_config.get_config_data(PLUGIN, List.of("config.yml"));
+        DATA_Config config_data = m_config.get_config_data(PLUGIN_NAME, List.of("config.yml"));
         FileConfiguration config = config_data.config;
 
         DATABASE_UPDATE_INTERVAL = config.getInt("database.update-interval");
