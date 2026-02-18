@@ -54,7 +54,6 @@ public final class RaidCore extends JavaPlugin {
     public static TRACKER_Inventory t_inventory = new TRACKER_Inventory();
     //public static LISTENER_Packet test_LISTENERPacket = null;
     public static MANAGER_Cooldown m_cooldown = new MANAGER_Cooldown();
-
     public static MANAGER_GUI m_gui = new MANAGER_GUI();
     public static MANAGER_GUI_loader m_gui_loader = new MANAGER_GUI_loader();
     //
