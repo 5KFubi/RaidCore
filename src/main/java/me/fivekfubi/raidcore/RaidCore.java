@@ -57,7 +57,6 @@ public final class RaidCore extends JavaPlugin {
     public static MANAGER_GUI m_gui = new MANAGER_GUI();
     public static MANAGER_GUI_loader m_gui_loader = new MANAGER_GUI_loader();
     //
-
     public final Map<String, JavaPlugin> registered_plugins = new HashMap<>();
 
     /// TODO: ----------------------------------------------------------------------------------------------------------
