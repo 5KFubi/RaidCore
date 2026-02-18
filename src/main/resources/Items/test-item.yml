@@ -1,0 +1,210 @@
+item:
+  model-data: 499
+  flags:
+    - "HIDE_ATTRIBUTES"
+    - "HIDE_ENCHANTS"
+  enchants:
+    - "infinity"
+  material: "RAW_IRON"
+  name: "<gold>You shouldn't have this"
+  lore:
+    - "<blue>???"
+    - "<dark_gray><i>How do you even have this?"
+    - ""
+    - "<dark_gray><st>               </st><dark_gray>[ <gold><b>ɪɴꜰᴏ</b> <dark_gray>]<st>                </st>"
+    - ""
+    - " <dark_gray><b>▪</b><white> Heal: <red>%item-slot%"
+    - " "
+    - "<dark_gray>┏<st> </st><dark_gray>                                      <st> </st><dark_gray>┓"
+    - " "
+    - " <dark_gray>[<yellow>ʀɪɢʜᴛ ᴄʟɪᴄᴋ<dark_gray>] → <gray>Use"
+    - " "
+    - "<dark_gray>┗<st> </st><dark_gray>                                      <st> </st><dark_gray>┛"
+  hide-tooltip: false
+  placeholders:
+    single: "<gold>Scrap"
+    multiple: "<gold>Scraps"
+  attributes:
+    stackable: true # Allow stacking of the item [MAY CAUSE ISSUES WITH DURABILITY]
+    durability: 1 # Custom item durability - DOES NOT AFFECT VANILLA ITEM DURABILITY
+    on-break-replacement: "Items/Currency/scrap.yml"
+    allow-enchant: false # Allow the item to be used inside a enchanting table
+    allow-anvil: false # Allow the item to be used inside an anvil
+  actions:
+    event:
+      DROP_ITEM:
+        - "[MESSAGE] <red>[----] <dark_gray>[<red><b>DROP</b><dark_gray>] <green>- 1"
+      LEFT_CLICK: # ------------------------------------------------------------------------------------------------
+        test-event-action-1:
+          settings:
+            weight: 0 # Set to -1 to always execute | Set ALL to 0 to execute all of them | Set to anything else to execute ONE of them.
+            chance:
+              amount: 100.0 # Chance to execute
+              reroll-weight: false # Re-roll for the other groups in this click-type, if there are none -> run 'fail'
+              reroll-fail:
+                - "[MESSAGE] <red>Failed chance!"
+            cancel-event:
+              - "*" # Cancel the event no matter the source it came from (block_dig, attack, etc.)
+            price: # The cost to execute - charged if the conditions are met
+              money:
+                amount: 100.0
+              item:
+                currencies:
+                  1:
+                    currency: "Items/Currency/scrap.yml"
+                    amount: 1
+          conditions: # Conditions & actions, don't use "if:" to skip the condition check (always run)
+            if:
+              condition: "%item-slot% == 0 || %item-slot% == 1"
+              self-use: true # Use on self or on another target (if applicable)
+              durability-cost: 1 # Durability cost to execute
+              cooldown: 100 # Ticks - Cooldowns are applied per-condition, so you can still use the rest
+              then:
+                - "[MESSAGE] <blue>[] <dark_gray>[<gold><b>EVENT</b><dark_gray>] <green>- 1"
+                - "[SPECIAL] gui-open GUIs/test.yml"
+              on-cooldown:
+                self-use: true # Use on self or on another target (if applicable)
+                durability-cost: 1 # Durability cost to execute
+                cooldown: 10 # Ticks - Cooldowns are applied per-condition, so you can still use the rest
+                then:
+                  - "[MESSAGE] <blue>[] <dark_gray>[<red><b>COOLDOWN</b> <gray>| <gold><b>EVENT</b><dark_gray>] <red>| 1"
+              else-if:
+                condition: "%item-slot% == 2 || %item-slot% == 3"
+                self-use: true # Use on self or on another target (if applicable)
+                durability-cost: 1 # Durability cost to execute
+                cooldown: 10 # Ticks - Cooldowns are applied per-condition, so you can still use the rest
+                then:
+                  - "[MESSAGE] <blue>[] <dark_gray>[<gold><b>EVENT</b><dark_gray>] <green>-- 2"
+                on-cooldown:
+                  self-use: true # Use on self or on another target (if applicable)
+                  durability-cost: 1 # Durability cost to execute
+                  cooldown: 10 # Ticks - Cooldowns are applied per-condition, so you can still use the rest
+                  then:
+                    - "[MESSAGE] <blue>[] <dark_gray>[<red><b>COOLDOWN</b> <gray>| <gold><b>EVENT</b><dark_gray>] <red>|| 2"
+                else-if:
+                  condition: "%item-slot% == 4 || %item-slot% == 5"
+                  self-use: true # Use on self or on another target (if applicable)
+                  durability-cost: 1 # Durability cost to execute
+                  cooldown: 10 # Ticks - Cooldowns are applied per-condition, so you can still use the rest
+                  then:
+                    - "[MESSAGE] <blue>[] <dark_gray>[<gold><b>EVENT</b><dark_gray>] <green>--- 3"
+                  on-cooldown:
+                    self-use: true # Use on self or on another target (if applicable)
+                    durability-cost: 1 # Durability cost to execute
+                    cooldown: 10 # Ticks - Cooldowns are applied per-condition, so you can still use the rest
+                    then:
+                      - "[MESSAGE] <blue>[] <dark_gray>[<red><b>COOLDOWN</b> <gray>| <gold><b>EVENT</b><dark_gray>] <red>||| 3"
+                  else:
+                    self-use: true # Use on self or on another target (if applicable)
+                    durability-cost: 1 # Durability cost to execute
+                    cooldown: 10 # Ticks - Cooldowns are applied per-condition, so you can still use the rest
+                    then:
+                      - "[MESSAGE] <blue>[] <dark_gray>[<gold><b>EVENT</b><dark_gray>] <green>---- 4"
+                    on-cooldown:
+                      self-use: true # Use on self or on another target (if applicable)
+                      durability-cost: 1 # Durability cost to execute
+                      cooldown: 10 # Ticks - Cooldowns are applied per-condition, so you can still use the rest
+                      then:
+                        - "[MESSAGE] <blue>[] <dark_gray>[<red><b>COOLDOWN</b> <gray>| <gold><b>EVENT</b><dark_gray>] <red>|||| 4"
+
+
+
+          # action data -----
+          #  %action-weight%
+          #  %action-chance%
+          #  %action-roll-weight%
+          #  %action-self-use%
+          #  %action-durability-cost%
+          #  %action-has-price%
+          #  %action-has-price-money%
+          #  %action-has-price-items%
+
+          #  %item-slot%
+          #  %item-slot-category%
+
+          # player data -----
+          #  %target-name%
+          #  %target-uuid%
+
+          # active-slots:
+          #  helmet" # armor
+          #  chest" # armor
+          #  legs" # armor
+          #  boots" # armor
+          #  main-hand" # main hand
+          #  off-hand" # off hand
+          #  hotbar" # anywhere in hotbar
+          #  1" # inv slot
+          #  4-10" # inv slots
+
+    passive:
+      test-passive-action-1:
+        weight: 0 # Set to -1 to always execute | Set ALL to 0 to execute all of them | Set to anything else to execute ONE of them.
+        chance:
+          amount: 100.0 # Chance to execute
+          reroll-weight: false # Re-roll for the other groups in this click-type, if there are none -> run 'fail'
+          fail:
+            - "[MESSAGE] <red>Failed chance!"
+        cancel-event:
+          - "*" # Cancel the event no matter the source it came from (block_dig, attack, etc.)
+        price: # The cost to execute - charged if the conditions are met
+          money:
+            amount: 100.0
+          item:
+            currencies:
+              1:
+                currency: "Items/Currency/scrap.yml"
+                amount: 1
+
+        conditions: # Conditions & actions, don't use "if:" to skip the condition check (always run)
+          if:
+            condition: "%item-slot% == 0 || %item-slot% == 1"
+            self-use: true # Use on self or on another target (if applicable)
+            durability-cost: 1 # Durability cost to execute
+            cooldown: 100 # Ticks - Cooldowns are applied per-condition, so you can still use the rest
+            then:
+              - "[MESSAGE] <yellow>[] <dark_gray>[<gold><b>PASSIVE</b><dark_gray>] <green>- 1"
+            on-cooldown:
+              self-use: true # Use on self or on another target (if applicable)
+              durability-cost: 1 # Durability cost to execute
+              cooldown: 100 # Ticks - Cooldowns are applied per-condition, so you can still use the rest
+              then:
+                - "[MESSAGE] <yellow>[] <dark_gray>[<red><b>COOLDOWN</b> <gray>| <yellow><b>PASSIVE</b><dark_gray>] <red>|| 1"
+            else-if:
+              condition: "%item-slot% == 2 || %item-slot% == 3"
+              self-use: true # Use on self or on another target (if applicable)
+              durability-cost: 1 # Durability cost to execute
+              cooldown: 100 # Ticks - Cooldowns are applied per-condition, so you can still use the rest
+              then:
+                - "[MESSAGE] <yellow>[] <dark_gray>[<gold><b>PASSIVE</b><dark_gray>] <green>-- 2"
+              on-cooldown:
+                self-use: true # Use on self or on another target (if applicable)
+                durability-cost: 1 # Durability cost to execute
+                cooldown: 100 # Ticks - Cooldowns are applied per-condition, so you can still use the rest
+                then:
+                  - "[MESSAGE] <yellow>[] <dark_gray>[<red><b>COOLDOWN</b> <gray>| <yellow><b>PASSIVE</b><dark_gray>] <red>|| 2"
+              else-if:
+                condition: "%item-slot% == 4 || %item-slot% == 5"
+                self-use: true # Use on self or on another target (if applicable)
+                durability-cost: 1 # Durability cost to execute
+                cooldown: 100 # Ticks - Cooldowns are applied per-condition, so you can still use the rest
+                then:
+                  - "[MESSAGE] <yellow>[] <dark_gray>[<gold><b>PASSIVE</b><dark_gray>] <green>--- 3"
+                on-cooldown:
+                  self-use: true # Use on self or on another target (if applicable)
+                  durability-cost: 1 # Durability cost to execute
+                  cooldown: 100 # Ticks - Cooldowns are applied per-condition, so you can still use the rest
+                  then:
+                    - "[MESSAGE] <yellow>[] <dark_gray>[<red><b>COOLDOWN</b> <gray>| <yellow><b>PASSIVE</b><dark_gray>] <red>||| 3"
+                else:
+                  self-use: true # Use on self or on another target (if applicable)
+                  durability-cost: 1 # Durability cost to execute
+                  cooldown: 100 # Ticks - Cooldowns are applied per-condition, so you can still use the rest
+                  then:
+                    - "[MESSAGE] <yellow>[] <dark_gray>[<gold><b>PASSIVE</b><dark_gray>] <green>---- 4"
+                  on-cooldown:
+                    self-use: true # Use on self or on another target (if applicable)
+                    durability-cost: 1 # Durability cost to execute
+                    cooldown: 100 # Ticks - Cooldowns are applied per-condition, so you can still use the rest
+                    then:
+                      - "[MESSAGE] <yellow>[] <dark_gray>[<red><b>COOLDOWN</b> <gray>| <yellow><b>PASSIVE</b><dark_gray>] <red>|||| 4"

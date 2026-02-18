@@ -1,0 +1,15 @@
+name: RaidCore
+version: '${project.version}'
+main: me.fivekfubi.raidcore.RaidCore
+api-version: '1.18'
+authors: [ 5KFubi ]
+description: RaidCore - Anything and everything
+website: www.raidhub.net
+
+#depends: [Vault]
+#softdepend: [PlaceholderAPI, WorldGuard, WorldEdit, CMI, Dynmap, ItemsAdder, RaidCore]
+
+commands:
+  raidcore:
+    description: RaidCore main command
+    aliases: [rcore, rc]

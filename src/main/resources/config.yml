@@ -1,0 +1,35 @@
+
+#            ██████╗  █████╗ ██╗██████╗  ██████╗ ██████╗ ██████╗ ███████╗
+#            ██╔══██╗██╔══██╗██║██╔══██╗██╔════╝██╔═══██╗██╔══██╗██╔════╝
+#            ██████╔╝███████║██║██║  ██║██║     ██║   ██║██████╔╝█████╗
+#            ██╔══██╗██╔══██║██║██║  ██║██║     ██║   ██║██╔══██╗██╔══╝
+#            ██║  ██║██║  ██║██║██████╔╝╚██████╗╚██████╔╝██║  ██║███████╗
+#            ╚═╝  ╚═╝╚═╝  ╚═╝╚═╝╚═════╝  ╚═════╝ ╚═════╝ ╚═╝  ╚═╝╚══════╝
+
+# ╔══════════════════════════════════════════════════════════════════════════════════════════════════════════════════╗
+# ║                                                    MAIN CONFIG                                                   ║
+# ╚══════════════════════════════════════════════════════════════════════════════════════════════════════════════════╝
+
+#
+# For any questions or support request feel free to contact us over on discord at https://discord.gg/MYK3zTSJkY
+#
+
+# !!!!! WARNING !!!!!
+# Deleting this file (config.yml) will re-create EVERY default file [NON-REVERSIBLE]
+
+
+database:
+  update-interval: 80L # Ticks | How often to update the databases | LOW PERFORMANCE IMPACT
+
+passive-tracker:
+  slots-per-tick: 3 # How many slots to check every tick for passive items in the player's inventory | HIGH PERFORMANCE IMPACT
+
+
+
+# test 1 -- asd
+list: # comment 2
+  - "line 1" # comment 3
+
+list-2: ["hello", "world"] # comment 4
+
+# end

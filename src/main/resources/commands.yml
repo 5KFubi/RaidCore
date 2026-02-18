@@ -1,0 +1,70 @@
+
+
+# ╔══════════════════════════════════════════════════════════════════════════════════════════════════════════════════╗
+# ║                                                  PLUGIN COMMANDS                                                 ║
+# ╚══════════════════════════════════════════════════════════════════════════════════════════════════════════════════╝
+
+commands:
+  raidcore:
+    permission: "raidcore.use"
+    description:
+      - "Base RaidCore command."
+    messages:
+      missing-permission:
+        - "You don't have permission to use /raidcore"
+      no-command:
+        - "<dark_gray>[<gold><b>RaidCore</b><dark_gray>] <gray>Anything and everything"
+        - " <gray>Plugin version: <green>%plugin-current-version%"
+        - " <gray>Latest version: <green>%plugin-latest-version%"
+        - " <gray>Update link:"
+        - "  <dark_gray>- <green>%plugin-update-link%"
+    # Sub commands
+    sub-commands:
+      reload:
+        permission: "raidcore.admin.use.reload"
+        description:
+          - "Base reload command."
+        messages:
+          missing-permission:
+            - "You don't have permission to use /raidcore reload"
+          success:
+            - "<dark_gray>[<gold><b>RC</b><dark_gray>] - <gray>Configuration reloaded"
+      test:
+        permission: "raidcore.admin.use.test"
+        description:
+          - "Base test command."
+        messages:
+          missing-permission:
+            - "You don't have permission to use /raidcore test"
+          success:
+            - "<dark_gray>[<gold><b>RC</b><dark_gray>] - <gray>test"
+      give:
+        permission: "baseraiders.base.admin.use.give"
+        description:
+          - "Base give command."
+        messages:
+          missing-permission:
+            - "You don't have permission to use /base give"
+          insufficient-arguments:
+            - " "
+            - "<dark_gray>[<gold><b>BR</b><dark_gray>] - <red>Missing arguments"
+            - "<dark_gray>・<gray>base give <player> <item> <amount>"
+            - " "
+          item-not-found:
+            - " "
+            - "<dark_gray>[<gold><b>BR</b><dark_gray>] - <red>Item not found"
+            - "<dark_gray>・<gray>The item id <yellow>%item-name%<gray> was not found."
+            - " "
+          target-not-found:
+            - " "
+            - "<dark_gray>[<gold><b>BR</b><dark_gray>] - <red>Player not found"
+            - "<dark_gray>・<gray>The player <yellow>%target-name%<gray> was not found."
+            - " "
+          sender-success:
+            - " "
+            - "<dark_gray>[<gold><b>BR</b><dark_gray>] - <gray>Gave <green>%target-name% <yellow>%item-name% <dark_gray>(x%item-amount%)"
+            - " "
+          target-success:
+            - " "
+            - "<dark_gray>[<gold><b>BR</b><dark_gray>] - <gray>You have received <yellow>%item-name% <dark_gray>(x%item-amount%)"
+            - " "

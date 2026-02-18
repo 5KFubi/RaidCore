@@ -1,0 +1,272 @@
+
+# GUI slot numbers and sizes
+#
+#   0   1   2   3   4   5   6   7   8   |
+#   ██  ██  ██  ██  ██  ██  ██  ██  ██  | ROW 1 - [MIN]
+#   9   10  11  12  13  14  15  16  17  |
+#   ██  ██  ██  ██  ██  ██  ██  ██  ██  | ROW 2
+#   18  19  20  21  22  23  24  25  26  |
+#   ██  ██  ██  ██  ██  ██  ██  ██  ██  | ROW 3
+#   27  28  29  30  31  32  33  34  35  |
+#   ██  ██  ██  ██  ██  ██  ██  ██  ██  | ROW 4
+#   36  37  38  39  40  41  42  43  44  |
+#   ██  ██  ██  ██  ██  ██  ██  ██  ██  | ROW 5
+#   45  46  47  48  49  50  51  52  53  |
+#   ██  ██  ██  ██  ██  ██  ██  ██  ██  | ROW 6 - [MAX]
+#
+
+gui:
+  title: "<dark_grey>Test menu" # GUI title
+  placeholder-name: "<dark_gray>[<gray>Test Menu<dark_gray>]" # Display name for the `%previous-gui-name%` placeholder
+  size: 6 # How many rows the GUI should have
+  refresh-rate: 1 # Refresh the GUI every X ticks
+  inactivity-timer: 2400 # Ticks | Amount it takes to close the inventory due to inactivity | Set to 0 to disable
+  inactivity-message:
+    - "<dark_grey>GUI closed due to inactivity."
+  open-sound: "block.chest.open 1.0 1.0" # <SOUND> <VOLUME> <PITCH> | Sound to play when the GUI is opened | Opening other GUIs will not play this sound
+  close-sound: "block.chest.close 1.0 1.0" # <SOUND> <VOLUME> <PITCH> | Sound to play when the GUI is closed | Switching to other GUIs will not play this sound
+  switch-sound: "block.chest.open 1.0 0.5" # <SOUND> <VOLUME> <PITCH> | Sound to play when switching to another GUI
+
+empty-slots:
+  material: "BLACK_STAINED_GLASS_PANE" # Empty slots in the GUI will be filled with this item
+  model-data: 0 # Item's custom model data
+  name: "" # Display name
+
+
+groups:
+  test-group-1: # Group ID
+    settings: # Group settings
+      fill-empty: false # Automatically fill slots left unused (from changing page items) to the "empty-slots" item
+      switch:
+        auto: true
+        order: [ "1", "2", "3" ] # ["1", "2", "3", "RANDOM"] < Page numbers
+        delay: 10 # Ticks | Delay between each switch
+        interact:
+          stop: true # Stop switching when interacted with
+          timer: 40 # Ticks | Stop for X amount of ticks, then resume | Set to 0 to stop indefinitely
+    1: # Page number
+      test_id: # Item ID
+        item-type: "NONE"
+        slots: [ "0" ]
+        amount: 1
+        gradual-amount: false
+        model-data: 499
+        enchants:
+          - "infinity"
+        flags:
+          - "HIDE_ATTRIBUTES"
+          - "HIDE_ENCHANTS"
+        gradual-model-data: false
+        material: "DIAMOND"
+        name: "<dark_gray>1"
+        lore:
+          - "<gray>Test lore"
+
+    2: # Page number
+      test_id: # Item ID
+        item-type: "NONE"
+        slots: [ "0-1" ]
+        amount: 1
+        gradual-amount: false
+        model-data: 499
+        flags:
+          - "HIDE_ATTRIBUTES"
+          - "HIDE_ENCHANTS"
+        gradual-model-data: false
+        material: "DIRT"
+        name: "<dark_gray>2"
+        lore:
+          - "<gray>Test lore"
+        actions:
+          LEFT_CLICK:
+            - "[MESSAGE] test-group-1 1" # <SOUND NAME> <VOLUME> <PITCH>
+          right-click:
+            - "[MESSAGE] test-group-1 1" # <SOUND NAME> <VOLUME> <PITCH>
+    3: # Page number
+      test_id: # Item ID
+        item-type: "NONE"
+        slots: [ "0-2" ]
+        amount: 1
+        gradual-amount: false
+        model-data: 499
+        flags:
+          - "HIDE_ATTRIBUTES"
+          - "HIDE_ENCHANTS"
+        gradual-model-data: false
+        material: "STONE"
+        name: "<dark_gray>3"
+        lore:
+          - "<gray>Test lore"
+        actions:
+          LEFT_CLICK:
+            - "[MESSAGE] test-group-1 2" # <SOUND NAME> <VOLUME> <PITCH>
+          right-click:
+            - "[MESSAGE] test-group-1 2" # <SOUND NAME> <VOLUME> <PITCH>
+
+  # ------------------------------------------------------------------------------------------------------------------------
+  # ------------------------------------------------------------------------------------------------------------------------
+  # ------------------------------------------------------------------------------------------------------------------------
+  # ------------------------------------------------------------------------------------------------------------------------
+  # ------------------------------------------------------------------------------------------------------------------------
+  # ------------------------------------------------------------------------------------------------------------------------
+
+  showcase-item:
+    item-type: "NONE"
+    slots: [ "6" ]
+    amount: 1
+    gradual-amount: false
+    model-data: 499
+    flags:
+      - "HIDE_ATTRIBUTES"
+      - "HIDE_ENCHANTS"
+    gradual-model-data: false
+    material: "DIAMOND"
+    name: "<gray>Test item 999"
+    lore:
+      - "<gray>Random: <yellow>%random-value%"
+    actions:
+      event:
+        LEFT_CLICK:
+          test-event-action-1:
+            weight: 0 # Set to -1 to always execute | Set ALL to 0 to execute all of them | Set to anything else to execute ONE of them.
+            chance:
+              amount: 100.0 # Chance to execute
+              reroll-weight: false # Re-roll for the other groups in this click-type, if there are none -> run 'fail'
+              reroll-fail:
+                - "[MESSAGE] <red>Failed chance!"
+            cancel-event:
+              - "*" # Cancel the event no matter the source it came from (block_dig, attack, etc.)
+            price: # The cost to execute - charged if the conditions are met
+              money:
+                amount: 100.0
+              item:
+                currencies:
+                  1:
+                    currency: "Items/Currency/scrap.yml"
+                    amount: 1
+            conditions: # Conditions & actions, don't use "if:" to skip the condition check (always run)
+              if:
+                condition: "true"
+                self-use: true # Use on self or on another target (if applicable)
+                durability-cost: 1 # Durability cost to execute
+                cooldown: 100 # Ticks - Cooldowns are applied per-condition, so you can still use the rest
+                then:
+                  - "[MESSAGE] <gold>[] <dark_gray>[<blue><b>GUI</b><dark_gray>] <green>- 1"
+                on-cooldown:
+                  self-use: true # Use on self or on another target (if applicable)
+                  durability-cost: 1 # Durability cost to execute
+                  cooldown: 10 # Ticks - Cooldowns are applied per-condition, so you can still use the rest
+                  then:
+                    - "[MESSAGE] <gold>[] <dark_gray>[<red><b>COOLDOWN</b> <gray>| <blue><b>GUI</b><dark_gray>] <red>| 1"
+                else:
+                  self-use: true # Use on self or on another target (if applicable)
+                  durability-cost: 1 # Durability cost to execute
+                  cooldown: 10 # Ticks - Cooldowns are applied per-condition, so you can still use the rest
+                  then:
+                    - "[MESSAGE] <gold>[] <dark_gray>[<blue><b>GUI</b><dark_gray>] <green>-- 2"
+                  on-cooldown:
+                    self-use: true # Use on self or on another target (if applicable)
+                    durability-cost: 1 # Durability cost to execute
+                    cooldown: 10 # Ticks - Cooldowns are applied per-condition, so you can still use the rest
+                    then:
+                      - "[MESSAGE] <gold>[] <dark_gray>[<red><b>COOLDOWN</b> <gray>| <blue><b>GUI</b><dark_gray>] <red>|| 2"
+
+  # ------------------------------------------------------------------------------------------------------------------------
+  # ------------------------------------------------------------------------------------------------------------------------
+  # ------------------------------------------------------------------------------------------------------------------------
+  # ------------------------------------------------------------------------------------------------------------------------
+  # ------------------------------------------------------------------------------------------------------------------------
+  # ------------------------------------------------------------------------------------------------------------------------
+
+  test-group-2: # Group ID
+    settings: # Group settings
+      fill-empty: true # Automatically fill slots left unused (from changing page items) to the "empty-slots" item
+      switch:
+        auto: true
+        order: [ "1", "2" ] # ["1", "2", "3", "RANDOM"] < Page numbers
+        delay: 20 # Ticks | Delay between each switch
+        interact:
+          stop: true # Stop switching when interacted with
+          timer: 0 # Ticks | Stop for X amount of ticks, then resume | Set to 0 to stop indefinitely
+    1: # Page number
+      GUI_OPEN:
+        slots: [ "20" ]
+        amount: 1
+        model-data: 499
+        flags:
+          - "HIDE_ATTRIBUTES"
+          - "HIDE_ENCHANTS"
+        material: "DIRT"
+        name: "<dark_gray>GUI_OPEN"
+        actions:
+          LEFT_CLICK:
+            - "[MESSAGE] permission-toggle GUI_OPEN"
+            - "[MESSAGE] test-group-2 1"
+      GUI_OPEN_2:
+        slots: [ "21" ]
+        amount: 1
+        model-data: 499
+        flags:
+          - "HIDE_ATTRIBUTES"
+          - "HIDE_ENCHANTS"
+        material: "WATER_BUCKET"
+        name: "<dark_gray>GUI_OPEN 2"
+        actions:
+          LEFT_CLICK:
+            - "[MESSAGE] permission-toggle GUI_OPEN"
+            - "[MESSAGE] test-group-2 2"
+    2: # Page number
+      BLOCK_BREAK: # Item ID
+        slots: [ "20" ]
+        amount: 1
+        model-data: 499
+        flags:
+          - "HIDE_ATTRIBUTES"
+          - "HIDE_ENCHANTS"
+        material: "GRASS_BLOCK"
+        name: "<dark_gray>BLOCK_BREAK"
+        actions:
+          LEFT_CLICK:
+            - "[MESSAGE] permission-toggle BLOCK_BREAK"
+            - "[MESSAGE] test-group-2 3" # <SOUND NAME> <VOLUME> <PITCH>
+
+  page-change: # Group ID
+    1: # Page number
+      previous: # Item ID
+        item-type: "NONE"
+        slots: [ "32" ]
+        amount: 1
+        model-data: 499
+        flags:
+          - "HIDE_ATTRIBUTES"
+        material: "FEATHER"
+        name: "<white>Left"
+        actions:
+          LEFT_CLICK:
+            - "[MESSAGE] page-change back"
+            - "[SPECIAL] change-page test-group-2 backward"
+          right-click:
+            - "[MESSAGE] page-change back"
+            - "[SPECIAL] change-page test-group-2 backward"
+          drop:
+            - "[MESSAGE] page-change back reset"
+            - "[SPECIAL] change-page test-group-2 1"
+      next: # Item ID
+        item-type: "NONE"
+        slots: [ "33" ]
+        amount: 1
+        model-data: 499
+        flags:
+          - "HIDE_ATTRIBUTES"
+        material: "FEATHER"
+        name: "<white>Right"
+        actions:
+          LEFT_CLICK:
+            - "[MESSAGE] page-change front"
+            - "[SPECIAL] change-page test-group-2 forward"
+          right-click:
+            - "[MESSAGE] page-change front"
+            - "[SPECIAL] change-page test-group-2 forward"
+          drop:
+            - "[MESSAGE] page-change reset"
+            - "[SPECIAL] change-page test-group-2 1"

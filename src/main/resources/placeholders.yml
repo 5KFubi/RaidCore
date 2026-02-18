@@ -1,0 +1,58 @@
+
+
+
+# ╔══════════════════════════════════════════════════════════════════════════════════════════════════════════════════╗
+# ║                                                    TEXT FORMAT                                                   ║
+# ╚══════════════════════════════════════════════════════════════════════════════════════════════════════════════════╝
+
+format:
+  color-format: "adventure" # "adventure" / "legacy" / "both"
+  # adventure - uses "<gray> (https://webui.advntr.dev)" --- ! RECOMMENDED ! ---
+  # legacy - uses "&7" (gray)
+  # both - Combines the legacy format with the adventure format in an ungodly way ----- !!! WARNINGS - CAUSES MORE LAG !!! -----
+  time:
+    # Add color codes for each value or modify its name
+    # " <yellow> " You can add spaces before and after the value to format it even more, or any text you want
+    weeks: "w" # How the number type (weeks, days, hours, etc.) will look like, example: "<gold><b>Weeks"
+    days: "d"
+    hours: "h"
+    minutes: "m"
+    seconds: "s"
+    milliseconds: "ms"
+  money:
+    prefix: "<green>"
+    suffix: "$"
+  list:
+    prefix: "<dark_gray>- <gray>"
+    suffix: ""
+  map:
+    prefix: "<dark_gray>- <gray>"
+    suffix: " <gray>(%map-value-amount%x)"
+
+
+# ╔══════════════════════════════════════════════════════════════════════════════════════════════════════════════════╗
+# ║                                             PLACEHOLDER REPLACEMENTS                                             ║
+# ╚══════════════════════════════════════════════════════════════════════════════════════════════════════════════════╝
+
+    # NOTE
+    # If you don't plan to add special rules for a placeholder you can comment it out,
+    #  adding rules consumes slightly more performance. <- This applies if the placeholder is used a lot, otherwise go wild.
+
+placeholders: # Replacements / Values
+  default-null-replacement: # SPECIAL DEFAULT CASE // Fallback
+    # Commenting this out will result in every null placeholder value to be "null"
+    # This will apply to every placeholder that does not have its own case, see bellow
+    replacements:
+      null: "<yellow>Unknown"
+
+  random-value: # Placeholder name
+    replacements: # Replace the value with X if the value equals the replacement
+      null:
+        text: "<yellow>N/A" # Replacement
+        remove-whole-line: false # If the value matches, remove the line
+        remove-empty-line: false # If the value matches AND the line does not have any other text on it, remove the line
+      '0':
+        text: "<yellow>None"
+        remove-whole-line: false
+        remove-empty-line: false
+  # Add as many as you want here

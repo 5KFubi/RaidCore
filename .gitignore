@@ -1,0 +1,23 @@
+# IntelliJ IDEA
+.idea/
+*.iml
+*.iws
+out/
+target/
+
+# Java
+*.class
+*.log
+*.jar
+*.war
+*.ear
+
+# Maven
+.mvn/
+.settings/
+dependency-reduced-pom.xml
+release.properties
+
+# OS files
+.DS_Store
+Thumbs.db
