@@ -73,6 +73,15 @@ public final class RaidCore extends JavaPlugin {
         SESSION_VALUE = UUID.randomUUID().toString();
     }
 
+    public void register(JavaPlugin plugin) {
+        if (PLUGIN.allow_register){
+            PLUGIN.registered_plugins.put(plugin.getName(), plugin);
+            utils.console_message("<dark_gray>[<green>REGISTERED<dark_gray>] <white>API registered plugin: " + plugin.getName(), true);
+        }else{
+            utils.console_message("<dark_gray>[<red>ERROR<dark_gray>] <white>API registration failed for <red>" + plugin.getName() + "<white>, must be registered <gold>onLoad()<white>!");
+        }
+    }
+
     /// TODO: ----------------------------------------------------------------------------------------------------------
     /// TODO: ----------------------------------------------------------------------------------------------------------
     /// TODO: ----------------------------------------------------------------------------------------------------------
