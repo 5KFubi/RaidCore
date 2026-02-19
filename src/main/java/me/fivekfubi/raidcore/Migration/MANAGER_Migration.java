@@ -1,7 +1,6 @@
 package me.fivekfubi.raidcore.Migration;
 
 import io.papermc.paper.plugin.configuration.PluginMeta;
-import org.bukkit.Bukkit;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -28,8 +27,8 @@ public class MANAGER_Migration {
     public String latest_version = null;
     public Boolean has_latest = null;
     public String get_version(){
-        try{ /**/ PluginMeta meta = PLUGIN.getPluginMeta(); /**/ if (meta != null) return meta.getVersion(); /**/ }catch (Exception ignored){}
-        return PLUGIN.getDescription().getVersion();
+        try{ /**/ PluginMeta meta = CORE.getPluginMeta(); /**/ if (meta != null) return meta.getVersion(); /**/ }catch (Exception ignored){}
+        return CORE.getDescription().getVersion();
     }
 
     public Map<String, Map<List<String>, String>> versions = new LinkedHashMap<>(Map.of(
@@ -114,7 +113,7 @@ public class MANAGER_Migration {
                 List<String> path = paths_entry.getKey();
                 String text = paths_entry.getValue();
 
-                m_config.append_to_config(PLUGIN, path, text);
+                m_config.append_to_config(CORE, path, text);
             }
 
             System.out.println();

@@ -115,7 +115,7 @@ public class TRACKER_Inventory implements Listener {
                     }
                 }
             }
-        }.runTaskTimer(PLUGIN, 0L, 1L);
+        }.runTaskTimer(CORE, 0L, 1L);
 
         task_list.add(task);
         task_map.put(file_path, task_list);
@@ -203,7 +203,7 @@ public class TRACKER_Inventory implements Listener {
                 tick_index++;
                 if (tick_index * SLOTS_PER_TICK >= 36) tick_index = 0;
             }
-        }.runTaskTimer(PLUGIN, 0L, 1L);
+        }.runTaskTimer(CORE, 0L, 1L);
     }
 
     public void process_slot(Player player, UUID uuid, int slot, ItemStack item) {

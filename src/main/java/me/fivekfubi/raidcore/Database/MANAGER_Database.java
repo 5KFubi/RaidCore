@@ -109,7 +109,7 @@ public class MANAGER_Database {
                         .build();
 
         register_database(
-                PLUGIN,
+                CORE,
                 "discounts",
                 m_discount.discount_cache,
                 discount_class,

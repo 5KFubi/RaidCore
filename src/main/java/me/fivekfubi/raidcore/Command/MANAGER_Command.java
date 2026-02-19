@@ -74,7 +74,7 @@ public class MANAGER_Command {
                             return true;
                         }
 
-                        PLUGIN.load();
+                        CORE.load();
                         send_message(sender, messages.get("success"), holder_data);
                     }
                     case "test" -> {
@@ -100,7 +100,7 @@ public class MANAGER_Command {
                                 "    gap-buffer: 2 # Blocks | Makes it so there must be at least an X block gap between the edges of protected zones\n" +
                                 "    border-display: 5 # Blocks | Display the border when the player is 5 blocks away from the edge of a protected zone"
                         ;
-                        m_config.append_to_config(PLUGIN, List.of("config.yml"), lines);
+                        m_config.append_to_config(CORE, List.of("config.yml"), lines);
                         send_message(sender, messages.get("success"), holder_data);
                     }
                     case "give" -> {

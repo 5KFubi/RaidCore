@@ -27,7 +27,6 @@ import org.bukkit.scheduler.BukkitTask;
 import java.util.*;
 
 import static me.fivekfubi.raidcore.EVENT_TYPE.*;
-import static me.fivekfubi.raidcore.KEY_Namespace.CLUMP_KEY_GUI;
 import static me.fivekfubi.raidcore.RaidCore.*;
 
 public class MANAGER_GUI implements Listener {
@@ -269,7 +268,7 @@ public class MANAGER_GUI implements Listener {
 
                         @Override
                         public void run() {
-                            Bukkit.getScheduler().runTask(PLUGIN, () -> {
+                            Bukkit.getScheduler().runTask(CORE, () -> {
                                 if (player.getOpenInventory().getTopInventory().equals(inventory)) {
                                     long interrupt_time = gTask.get_interrupt_time();
                                     long current_time = gTask.get_current_time();
@@ -293,7 +292,7 @@ public class MANAGER_GUI implements Listener {
                                 }
                             });
                         }
-                    }.runTaskTimer(PLUGIN, 0, 1L);
+                    }.runTaskTimer(CORE, 0, 1L);
                     gTask.set_task(task);
                     group_tasks.put(group_id, gTask);
                 }
@@ -305,14 +304,14 @@ public class MANAGER_GUI implements Listener {
         new BukkitRunnable() {
             @Override
             public void run() {
-                Bukkit.getScheduler().runTask(PLUGIN, () -> {
+                Bukkit.getScheduler().runTask(CORE, () -> {
 
                     if (player.getOpenInventory().getTopInventory().equals(inventory)) {
                         // INACTIVITY ----------------------------------------------------------------------------------
                         // INACTIVITY ----------------------------------------------------------------------------------
                         if (inactivity_timer != 0) {
                             if (g_inventory.get_inactivity_timer() > inactivity_timer) {
-                                Bukkit.getScheduler().runTask(PLUGIN, () -> {
+                                Bukkit.getScheduler().runTask(CORE, () -> {
                                     if (inactivity_message != null && !inactivity_message.isEmpty()) {
                                         player.sendMessage(m_placeholder.replace_placeholders_component(inactivity_message, holder));
                                     }
@@ -451,7 +450,7 @@ public class MANAGER_GUI implements Listener {
                     }
                 });
             }
-        }.runTaskTimer(PLUGIN, 0, refresh_rate);
+        }.runTaskTimer(CORE, 0, refresh_rate);
 
         if (open_guis.containsKey(player)) {
             g_data.play_switch_sound(player);
@@ -548,7 +547,7 @@ public class MANAGER_GUI implements Listener {
 
         //handleStorage(g_inventory, inventory);
 
-        Bukkit.getScheduler().runTaskLater(PLUGIN, () -> {
+        Bukkit.getScheduler().runTaskLater(CORE, () -> {
             InventoryHolder current_holder = player.getOpenInventory().getTopInventory().getHolder();
             if (!(current_holder instanceof GUI_Inventory)) {
                 g_inventory.get_gui_data().play_close_sound(player);
@@ -671,11 +670,11 @@ public class MANAGER_GUI implements Listener {
             if (!action_events.containsKey(action_string)) continue;
 
             // [COOLDOWN] ----------------------------------------------------------------------------------------------
-            boolean on_clump = m_cooldown.on_cooldown(PLUGIN_NAME, player_uuid, CLUMP_KEY_GUI);
+            boolean on_clump = m_cooldown.on_cooldown(PLUGIN_NAME, player_uuid, NKEY.CLUMP_KEY_GUI);
             if (on_clump){
                 continue;
             }
-            m_cooldown.add_cooldown(PLUGIN_NAME, player_uuid, CLUMP_KEY_GUI, 1);
+            m_cooldown.add_cooldown(PLUGIN_NAME, player_uuid, NKEY.CLUMP_KEY_GUI, 1);
 
             for (DATA_Action_State state : action_events.get(action_string)){
 

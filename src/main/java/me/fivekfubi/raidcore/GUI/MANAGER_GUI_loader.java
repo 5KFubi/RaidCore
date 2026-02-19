@@ -46,7 +46,7 @@ public class MANAGER_GUI_loader {
         guis.clear();
         group_slot.clear();
 
-        List<DATA_Config> configs = m_config.get_configs_from_root(PLUGIN,"GUIs");
+        List<DATA_Config> configs = m_config.get_configs_from_root(CORE,"GUIs");
 
         Map<String, DATA_GUI> g_map = new HashMap<>();
         for (DATA_Config config_data : configs) {

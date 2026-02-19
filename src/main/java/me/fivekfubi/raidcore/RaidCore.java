@@ -12,6 +12,7 @@ import me.fivekfubi.raidcore.Executable.MANAGER_Executable;
 import me.fivekfubi.raidcore.GUI.MANAGER_GUI;
 import me.fivekfubi.raidcore.GUI.MANAGER_GUI_loader;
 import me.fivekfubi.raidcore.Item.MANAGER_Item;
+import me.fivekfubi.raidcore.NKey.MANAGER_Key;
 import me.fivekfubi.raidcore.Migration.MANAGER_Migration;
 import me.fivekfubi.raidcore.Placeholder.MANAGER_Placeholder;
 import me.fivekfubi.raidcore.Scheduler.MANAGER_Scheduler;
@@ -29,7 +30,7 @@ import java.util.*;
 public final class RaidCore extends JavaPlugin {
 
     public static Random RANDOM = new Random();
-    public static RaidCore PLUGIN;
+    public static RaidCore CORE;
     public static String PLUGIN_NAME = "RaidCore";
     public static String SESSION_VALUE;
     public static final MiniMessage mini_message = MiniMessage.miniMessage();
@@ -39,7 +40,7 @@ public final class RaidCore extends JavaPlugin {
 
     //
     public static Utils utils = new Utils();
-    public static KEY_Namespace NKEY = null;
+    public static MANAGER_Key NKEY = null;
     public static MANAGER_Config m_config = new MANAGER_Config();
     public static MANAGER_Command m_command = new MANAGER_Command();
     public static MANAGER_Migration m_migration = new MANAGER_Migration();
@@ -65,16 +66,16 @@ public final class RaidCore extends JavaPlugin {
 
     @Override
     public void onLoad(){
-        PLUGIN = this;
-        registered_plugins.put(PLUGIN_NAME, PLUGIN);
+        CORE = this;
+        registered_plugins.put(PLUGIN_NAME, CORE);
 
         SESSION_VALUE = UUID.randomUUID().toString();
     }
 
 
     public void register(JavaPlugin plugin) {
-        if (PLUGIN.allow_register){
-            PLUGIN.registered_plugins.put(plugin.getName(), plugin);
+        if (CORE.allow_register){
+            CORE.registered_plugins.put(plugin.getName(), plugin);
             utils.console_message(true, "<dark_gray>[<green>REGISTERED<dark_gray>] <white>API registered plugin: " + plugin.getName());
         }else{
             utils.console_message(true, "<dark_gray>[<red>ERROR<dark_gray>] <white>API registration failed for <red>" + plugin.getName() + "<white>, must be registered <gold>onLoad()<white>!");
@@ -94,14 +95,14 @@ public final class RaidCore extends JavaPlugin {
         utils.console_message("<dark_gray>Loading...");
 
         try {
-            NKEY = new KEY_Namespace();
+            NKEY = new MANAGER_Key();
             m_config.create_configs();
             load();
 
             t_inventory.functionate();
-            getServer().getPluginManager().registerEvents(m_event, PLUGIN);
-            getServer().getPluginManager().registerEvents(m_gui, PLUGIN);
-            getServer().getPluginManager().registerEvents(t_inventory, PLUGIN);
+            getServer().getPluginManager().registerEvents(m_event, CORE);
+            getServer().getPluginManager().registerEvents(m_gui, CORE);
+            getServer().getPluginManager().registerEvents(t_inventory, CORE);
 
             //test_LISTENERPacket = new LISTENER_Packet(this);
             //test_LISTENERPacket.listAllPackets();
@@ -169,9 +170,9 @@ public final class RaidCore extends JavaPlugin {
         //
         if (!loaded){
             for (String command_string : m_command.command_list.keySet()) {
-                PluginCommand command = PLUGIN.getCommand(command_string);
+                PluginCommand command = CORE.getCommand(command_string);
                 if (command != null) {
-                    command.setExecutor(PLUGIN);
+                    command.setExecutor(CORE);
                 }
             }
         }

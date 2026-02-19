@@ -74,7 +74,7 @@ public class MANAGER_Executable {
                             ;
                         }
                         String final_to_execute = to_execute;
-                        Bukkit.getScheduler().runTask(PLUGIN, () -> {
+                        Bukkit.getScheduler().runTask(CORE, () -> {
                             if (flag.equals(FLAG_self_send)){
                                 Bukkit.getServer().dispatchCommand(target, final_to_execute);
                             }else{
@@ -107,7 +107,7 @@ public class MANAGER_Executable {
 
                             PotionEffectType effectType = PotionEffectType.getByName(effect);
                             if (effectType != null) {
-                                Bukkit.getScheduler().runTask(PLUGIN, () -> {
+                                Bukkit.getScheduler().runTask(CORE, () -> {
                                     living.addPotionEffect(new PotionEffect(effectType, effectTimer * 20, effectAmplifier - 1, hidden));
                                 });
                             }
@@ -118,7 +118,7 @@ public class MANAGER_Executable {
                             try {
                                 Sound sound = utils.get_sound(to_execute, to_execute);
                                 if (sound != null){
-                                    Bukkit.getScheduler().runTask(PLUGIN, () -> {
+                                    Bukkit.getScheduler().runTask(CORE, () -> {
                                         living.playSound(sound);
                                     });
                                 }
@@ -189,7 +189,7 @@ public class MANAGER_Executable {
                             }
 
                             Vector finalDirection = direction;
-                            Bukkit.getScheduler().runTask(PLUGIN, () -> {
+                            Bukkit.getScheduler().runTask(CORE, () -> {
                                 if (radius > 0) {
                                     for (double angle = 0; angle < Math.PI * 2; angle += Math.PI / 8) {
                                         double x = target_location.getX() + radius * Math.cos(angle);
@@ -223,7 +223,7 @@ public class MANAGER_Executable {
                                 }
                                 case "gui-close" -> {
                                     if (target instanceof Player player){
-                                        Bukkit.getScheduler().runTask(PLUGIN, () -> {
+                                        Bukkit.getScheduler().runTask(CORE, () -> {
                                             player.closeInventory();
                                         });
                                     }
@@ -238,7 +238,7 @@ public class MANAGER_Executable {
                                         } else {
                                             direction = "forward";
                                         }
-                                        Bukkit.getScheduler().runTask(PLUGIN, () -> {
+                                        Bukkit.getScheduler().runTask(CORE, () -> {
                                             m_gui.change_page(player, group_id, direction, true);
                                         });
                                     }

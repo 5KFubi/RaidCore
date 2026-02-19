@@ -33,11 +33,11 @@ public class MANAGER_Economy {
         if (vault_economy == null){
             if (Bukkit.getPluginManager().getPlugin("Vault") == null) {
                 utils.error_message("<white>Vault not found! <dark_gray>Vault is required for the plugin to run.", null);
-                Bukkit.getPluginManager().disablePlugin(PLUGIN);
+                Bukkit.getPluginManager().disablePlugin(CORE);
                 return;
             }
 
-            RegisteredServiceProvider<Economy> rsp = PLUGIN.getServer().getServicesManager().getRegistration(Economy.class);
+            RegisteredServiceProvider<Economy> rsp = CORE.getServer().getServicesManager().getRegistration(Economy.class);
             if (rsp == null) {
                 utils.error_message("<white>Economy provider not found! Make sure Vault and an economy plugin are installed, disabling...", null);
                 return;

@@ -356,7 +356,7 @@ public class LISTENER_Packet {
             functionate_task.cancel();
         }
 
-        functionate_task = Bukkit.getScheduler().runTaskTimerAsynchronously(PLUGIN, () -> {
+        functionate_task = Bukkit.getScheduler().runTaskTimerAsynchronously(CORE, () -> {
             if (functionate_tick % 20 == 0){
                 try{
                     for (Player player : Bukkit.getOnlinePlayers()) {

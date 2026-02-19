@@ -19,7 +19,6 @@ import org.bukkit.inventory.ItemStack;
 import java.util.*;
 
 import static me.fivekfubi.raidcore.EVENT_TYPE.*;
-import static me.fivekfubi.raidcore.KEY_Namespace.CLUMP_KEY_EVENT;
 import static me.fivekfubi.raidcore.RaidCore.*;
 
 public class MANAGER_Event implements Listener {
@@ -279,11 +278,11 @@ public class MANAGER_Event implements Listener {
             if (!item_actions.action_event.containsKey(action_string)) continue;
 
             // [COOLDOWN] ----------------------------------------------------------------------------------------------
-            boolean on_clump = m_cooldown.on_cooldown(PLUGIN_NAME, player_uuid, CLUMP_KEY_EVENT);
+            boolean on_clump = m_cooldown.on_cooldown(PLUGIN_NAME, player_uuid, NKEY.CLUMP_KEY_EVENT);
             if (on_clump){
                 continue;
             }
-            m_cooldown.add_cooldown(PLUGIN_NAME, player_uuid, CLUMP_KEY_EVENT, 1);
+            m_cooldown.add_cooldown(PLUGIN_NAME, player_uuid, NKEY.CLUMP_KEY_EVENT, 1);
 
             for (DATA_Action_State state : item_actions.action_event.get(action_string)){
 

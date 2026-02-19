@@ -1,7 +1,6 @@
 package me.fivekfubi.raidcore.Config;
 
 import me.fivekfubi.raidcore.Config.Data.DATA_Config;
-import me.fivekfubi.raidcore.RaidCore;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -45,7 +44,7 @@ public class MANAGER_Config {
 
         for (Map.Entry<String, List<Map<List<String>, Boolean>>> plugin_entry : file_paths.entrySet()) {
             String plugin_name = plugin_entry.getKey();
-            JavaPlugin plugin = PLUGIN.registered_plugins.get(plugin_name);
+            JavaPlugin plugin = CORE.registered_plugins.get(plugin_name);
             if (plugin == null) continue;
             List<Map<List<String>, Boolean>> configList = plugin_entry.getValue();
 
@@ -65,7 +64,7 @@ public class MANAGER_Config {
 
         for (Map.Entry<String, List<Map<List<String>, Boolean>>> plugin_entry : file_paths.entrySet()) {
             String plugin_name = plugin_entry.getKey();
-            JavaPlugin plugin = PLUGIN.registered_plugins.get(plugin_name);
+            JavaPlugin plugin = CORE.registered_plugins.get(plugin_name);
             if (plugin == null) continue;
             List<Map<List<String>, Boolean>> config_list = plugin_entry.getValue();
 
@@ -89,7 +88,7 @@ public class MANAGER_Config {
 
         for (Map.Entry<String, List<Map<List<String>, Boolean>>> plugin_entry : file_paths.entrySet()) {
             if (!plugin_name.equals(plugin_entry.getKey())) continue;
-            JavaPlugin plugin = PLUGIN.registered_plugins.get(plugin_name);
+            JavaPlugin plugin = CORE.registered_plugins.get(plugin_name);
             if (plugin == null) continue;
             List<Map<List<String>, Boolean>> config_list = plugin_entry.getValue();
 

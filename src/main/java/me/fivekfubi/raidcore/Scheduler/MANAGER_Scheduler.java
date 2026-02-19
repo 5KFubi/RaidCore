@@ -7,7 +7,7 @@ import org.bukkit.scheduler.BukkitTask;
 
 import java.lang.reflect.Method;
 
-import static me.fivekfubi.raidcore.RaidCore.PLUGIN;
+import static me.fivekfubi.raidcore.RaidCore.CORE;
 
 public class MANAGER_Scheduler {
 
@@ -23,8 +23,8 @@ public class MANAGER_Scheduler {
     // Do not fucking touch
     private Object run_folia_scheduler(Object scheduler, Runnable task) {
         try {
-            Method run_method = scheduler.getClass().getMethod("run", PLUGIN.getClass(), java.util.function.Consumer.class, Object.class);
-            return run_method.invoke(scheduler, PLUGIN, (java.util.function.Consumer<Object>) t -> task.run(), null);
+            Method run_method = scheduler.getClass().getMethod("run", CORE.getClass(), java.util.function.Consumer.class, Object.class);
+            return run_method.invoke(scheduler, CORE, (java.util.function.Consumer<Object>) t -> task.run(), null);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -52,7 +52,7 @@ public class MANAGER_Scheduler {
                 e.printStackTrace();
             }
         } else {
-            return Bukkit.getScheduler().runTask(PLUGIN, task);
+            return Bukkit.getScheduler().runTask(CORE, task);
         }
         return null;
     }
@@ -71,7 +71,7 @@ public class MANAGER_Scheduler {
                 e.printStackTrace();
             }
         } else {
-            return Bukkit.getScheduler().runTask(PLUGIN, task);
+            return Bukkit.getScheduler().runTask(CORE, task);
         }
         return null;
     }
@@ -85,13 +85,13 @@ public class MANAGER_Scheduler {
         if(is_foila){
             try {
                 Object scheduler = Bukkit.class.getMethod("getGlobalRegionScheduler").invoke(null);
-                Method run_method = scheduler.getClass().getMethod("run", PLUGIN.getClass(), java.util.function.Consumer.class, Object.class);
-                return run_method.invoke(scheduler, PLUGIN, (java.util.function.Consumer<Object>) t -> task.run(), null);
+                Method run_method = scheduler.getClass().getMethod("run", CORE.getClass(), java.util.function.Consumer.class, Object.class);
+                return run_method.invoke(scheduler, CORE, (java.util.function.Consumer<Object>) t -> task.run(), null);
             } catch (Exception e) {
                 e.printStackTrace();
             }
         } else {
-            return Bukkit.getScheduler().runTask(PLUGIN, task);
+            return Bukkit.getScheduler().runTask(CORE, task);
         }
         return null;
     }
@@ -109,13 +109,13 @@ public class MANAGER_Scheduler {
         if(is_foila){
             try {
                 Class<?> async_scheduler_class = Class.forName("io.papermc.paper.threadedregions.scheduler.AsyncScheduler");
-                Method run_now = async_scheduler_class.getMethod("runNow", PLUGIN.getClass(), java.util.function.Consumer.class);
-                return run_now.invoke(null, PLUGIN, (java.util.function.Consumer<Object>) t -> task.run());
+                Method run_now = async_scheduler_class.getMethod("runNow", CORE.getClass(), java.util.function.Consumer.class);
+                return run_now.invoke(null, CORE, (java.util.function.Consumer<Object>) t -> task.run());
             } catch (Exception e) {
                 e.printStackTrace();
             }
         } else {
-            return Bukkit.getScheduler().runTaskAsynchronously(PLUGIN, task);
+            return Bukkit.getScheduler().runTaskAsynchronously(CORE, task);
         }
         return null;
     }
@@ -129,13 +129,13 @@ public class MANAGER_Scheduler {
         if(is_foila){
             try {
                 Class<?> async_scheduler_class = Class.forName("io.papermc.paper.threadedregions.scheduler.AsyncScheduler");
-                Method run_later = async_scheduler_class.getMethod("runLater", PLUGIN.getClass(), java.util.function.Consumer.class, long.class);
-                return run_later.invoke(null, PLUGIN, (java.util.function.Consumer<Object>) t -> task.run(), start_delay);
+                Method run_later = async_scheduler_class.getMethod("runLater", CORE.getClass(), java.util.function.Consumer.class, long.class);
+                return run_later.invoke(null, CORE, (java.util.function.Consumer<Object>) t -> task.run(), start_delay);
             } catch (Exception e) {
                 e.printStackTrace();
             }
         } else {
-            return Bukkit.getScheduler().runTaskLaterAsynchronously(PLUGIN, task, start_delay);
+            return Bukkit.getScheduler().runTaskLaterAsynchronously(CORE, task, start_delay);
         }
         return null;
     }
@@ -149,13 +149,13 @@ public class MANAGER_Scheduler {
         if(is_foila){
             try {
                 Class<?> async_scheduler_class = Class.forName("io.papermc.paper.threadedregions.scheduler.AsyncScheduler");
-                Method run_repeating = async_scheduler_class.getMethod("runAtFixedRate", PLUGIN.getClass(), java.util.function.Consumer.class, long.class, long.class);
-                return run_repeating.invoke(null, PLUGIN, (java.util.function.Consumer<Object>) t -> task.run(), start_delay, repeat_delay);
+                Method run_repeating = async_scheduler_class.getMethod("runAtFixedRate", CORE.getClass(), java.util.function.Consumer.class, long.class, long.class);
+                return run_repeating.invoke(null, CORE, (java.util.function.Consumer<Object>) t -> task.run(), start_delay, repeat_delay);
             } catch (Exception e) {
                 e.printStackTrace();
             }
         } else {
-            return Bukkit.getScheduler().runTaskTimerAsynchronously(PLUGIN, task, start_delay, repeat_delay);
+            return Bukkit.getScheduler().runTaskTimerAsynchronously(CORE, task, start_delay, repeat_delay);
         }
         return null;
     }
@@ -173,13 +173,13 @@ public class MANAGER_Scheduler {
         if(is_foila){
             try {
                 Object scheduler = entity.getClass().getMethod("getScheduler").invoke(entity);
-                Method run_delayed = scheduler.getClass().getMethod("runDelayed", PLUGIN.getClass(), java.util.function.Consumer.class, Object.class, long.class);
-                return run_delayed.invoke(scheduler, PLUGIN, (java.util.function.Consumer<Object>) t -> task.run(), null, start_delay);
+                Method run_delayed = scheduler.getClass().getMethod("runDelayed", CORE.getClass(), java.util.function.Consumer.class, Object.class, long.class);
+                return run_delayed.invoke(scheduler, CORE, (java.util.function.Consumer<Object>) t -> task.run(), null, start_delay);
             } catch (Exception e) {
                 e.printStackTrace();
             }
         } else {
-            return Bukkit.getScheduler().runTaskLater(PLUGIN, task, start_delay);
+            return Bukkit.getScheduler().runTaskLater(CORE, task, start_delay);
         }
         return null;
     }
@@ -193,13 +193,13 @@ public class MANAGER_Scheduler {
         if(is_foila){
             try {
                 Object scheduler = world.getClass().getMethod("getScheduler").invoke(world);
-                Method run_delayed = scheduler.getClass().getMethod("runDelayed", PLUGIN.getClass(), java.util.function.Consumer.class, Object.class, long.class);
-                return run_delayed.invoke(scheduler, PLUGIN, (java.util.function.Consumer<Object>) t -> task.run(), null, start_delay);
+                Method run_delayed = scheduler.getClass().getMethod("runDelayed", CORE.getClass(), java.util.function.Consumer.class, Object.class, long.class);
+                return run_delayed.invoke(scheduler, CORE, (java.util.function.Consumer<Object>) t -> task.run(), null, start_delay);
             } catch (Exception e) {
                 e.printStackTrace();
             }
         } else {
-            return Bukkit.getScheduler().runTaskLater(PLUGIN, task, start_delay);
+            return Bukkit.getScheduler().runTaskLater(CORE, task, start_delay);
         }
         return null;
     }
@@ -213,13 +213,13 @@ public class MANAGER_Scheduler {
         if(is_foila){
             try {
                 Object scheduler = Bukkit.class.getMethod("getGlobalRegionScheduler").invoke(null);
-                Method run_delayed = scheduler.getClass().getMethod("runDelayed", PLUGIN.getClass(), java.util.function.Consumer.class, Object.class, long.class);
-                return run_delayed.invoke(scheduler, PLUGIN, (java.util.function.Consumer<Object>) t -> task.run(), null, start_delay);
+                Method run_delayed = scheduler.getClass().getMethod("runDelayed", CORE.getClass(), java.util.function.Consumer.class, Object.class, long.class);
+                return run_delayed.invoke(scheduler, CORE, (java.util.function.Consumer<Object>) t -> task.run(), null, start_delay);
             } catch (Exception e) {
                 e.printStackTrace();
             }
         } else {
-            return Bukkit.getScheduler().runTaskLater(PLUGIN, task, start_delay);
+            return Bukkit.getScheduler().runTaskLater(CORE, task, start_delay);
         }
         return null;
     }
@@ -237,13 +237,13 @@ public class MANAGER_Scheduler {
         if(is_foila){
             try {
                 Object scheduler = entity.getClass().getMethod("getScheduler").invoke(entity);
-                Method run_at_fixed_rate = scheduler.getClass().getMethod("runAtFixedRate", PLUGIN.getClass(), java.util.function.Consumer.class, Object.class, long.class, long.class);
-                return run_at_fixed_rate.invoke(scheduler, PLUGIN, (java.util.function.Consumer<Object>) t -> task.run(), null, start_delay, repeat_delay);
+                Method run_at_fixed_rate = scheduler.getClass().getMethod("runAtFixedRate", CORE.getClass(), java.util.function.Consumer.class, Object.class, long.class, long.class);
+                return run_at_fixed_rate.invoke(scheduler, CORE, (java.util.function.Consumer<Object>) t -> task.run(), null, start_delay, repeat_delay);
             } catch (Exception e) {
                 e.printStackTrace();
             }
         } else {
-            return Bukkit.getScheduler().runTaskTimer(PLUGIN, task, start_delay, repeat_delay);
+            return Bukkit.getScheduler().runTaskTimer(CORE, task, start_delay, repeat_delay);
         }
         return null;
     }
@@ -257,13 +257,13 @@ public class MANAGER_Scheduler {
         if(is_foila){
             try {
                 Object scheduler = world.getClass().getMethod("getScheduler").invoke(world);
-                Method run_at_fixed_rate = scheduler.getClass().getMethod("runAtFixedRate", PLUGIN.getClass(), java.util.function.Consumer.class, Object.class, long.class, long.class);
-                return run_at_fixed_rate.invoke(scheduler, PLUGIN, (java.util.function.Consumer<Object>) t -> task.run(), null, start_delay, repeat_delay);
+                Method run_at_fixed_rate = scheduler.getClass().getMethod("runAtFixedRate", CORE.getClass(), java.util.function.Consumer.class, Object.class, long.class, long.class);
+                return run_at_fixed_rate.invoke(scheduler, CORE, (java.util.function.Consumer<Object>) t -> task.run(), null, start_delay, repeat_delay);
             } catch (Exception e) {
                 e.printStackTrace();
             }
         } else {
-            return Bukkit.getScheduler().runTaskTimer(PLUGIN, task, start_delay, repeat_delay);
+            return Bukkit.getScheduler().runTaskTimer(CORE, task, start_delay, repeat_delay);
         }
         return null;
     }
@@ -277,13 +277,13 @@ public class MANAGER_Scheduler {
         if(is_foila){
             try {
                 Object scheduler = Bukkit.class.getMethod("getGlobalRegionScheduler").invoke(null);
-                Method run_at_fixed_rate = scheduler.getClass().getMethod("runAtFixedRate", PLUGIN.getClass(), java.util.function.Consumer.class, Object.class, long.class, long.class);
-                return run_at_fixed_rate.invoke(scheduler, PLUGIN, (java.util.function.Consumer<Object>) t -> task.run(), null, start_delay, repeat_delay);
+                Method run_at_fixed_rate = scheduler.getClass().getMethod("runAtFixedRate", CORE.getClass(), java.util.function.Consumer.class, Object.class, long.class, long.class);
+                return run_at_fixed_rate.invoke(scheduler, CORE, (java.util.function.Consumer<Object>) t -> task.run(), null, start_delay, repeat_delay);
             } catch (Exception e) {
                 e.printStackTrace();
             }
         } else {
-            return Bukkit.getScheduler().runTaskTimer(PLUGIN, task, start_delay, repeat_delay);
+            return Bukkit.getScheduler().runTaskTimer(CORE, task, start_delay, repeat_delay);
         }
         return null;
     }
