@@ -42,24 +42,14 @@ public class MANAGER_Key {
     public NamespacedKey gui_item_clicked_index = generate( "gui_item_clicked_index" );
     public NamespacedKey gui_item_empty_slot    = generate( "gui_item_empty_slot"    );
 
-    public Map<String, NamespacedKey> namespaced_keys = new HashMap<>();
-
-    public void add_key(String key_name, NamespacedKey key){
-        namespaced_keys.put(key_name, key);
-    }
-    public void get_key(String key_name){
-        namespaced_keys.get(key_name);
-    }
-
     public NamespacedKey generate(){
-        return generate(CORE, UUID.randomUUID().toString(), false);
+        return generate(CORE, UUID.randomUUID().toString());
     }
     public NamespacedKey generate(String key){
-        return generate(CORE, key, true);
+        return generate(CORE, key);
     }
-    public NamespacedKey generate(JavaPlugin plugin, String key, boolean track){
+    public NamespacedKey generate(JavaPlugin plugin, String key){
         NamespacedKey n = new NamespacedKey(plugin, key);
-        if (track) add_key(key, n);
         return n;
     }
 
