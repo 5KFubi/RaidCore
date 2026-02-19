@@ -295,48 +295,48 @@ public class MANAGER_Command {
 
 
     public void send_message(CommandSender commandSender, List<String> message, HOLDER holder_data){
-        //if (message == null || message.isEmpty()){
-        //    return;
-        //}
-        //commandSender.sendMessage(Records.placeholder.replace_placeholders_component(message, holder_data));
+        if (message == null || message.isEmpty()){
+            return;
+        }
+        commandSender.sendMessage(m_placeholder.replace_placeholders_component(message, holder_data));
     }
     public void send_message(Player player, List<String> message, HOLDER holder_data){
-        //if (message == null || message.isEmpty()){
-        //    return;
-        //}
-        //player.sendMessage(Records.placeholder.replace_placeholders_component(message, holder_data));
+        if (message == null || message.isEmpty()){
+            return;
+        }
+        player.sendMessage(m_placeholder.replace_placeholders_component(message, holder_data));
     }
     private void send_missing_permission_message(CommandSender commandSender, DATA_Sub_command commandData, HOLDER holder_data){
-        //if (commandData != null) {
-        //    List<String> message = commandData.getMessages().get("missing-permission");
-        //    if (message != null && !message.isEmpty()) {
-        //        commandSender.sendMessage(Records.placeholder.replace_placeholders_component(message, holder_data));
-        //    }
-        //}
+        if (commandData != null) {
+            List<String> message = commandData.getMessages().get("missing-permission");
+            if (message != null && !message.isEmpty()) {
+                commandSender.sendMessage(m_placeholder.replace_placeholders_component(message, holder_data));
+            }
+        }
     }
     private void send_missing_permission_message(Player player, DATA_Sub_command commandData, HOLDER holder_data){
-        //if (commandData != null){
-        //    List<String> message = commandData.getMessages().get("missing-permission");
-        //    if (message != null && !message.isEmpty()){
-        //        player.sendMessage(Records.placeholder.replace_placeholders_component(message, holder_data));
-        //    }
-        //}
+        if (commandData != null){
+            List<String> message = commandData.getMessages().get("missing-permission");
+            if (message != null && !message.isEmpty()){
+                player.sendMessage(m_placeholder.replace_placeholders_component(message, holder_data));
+            }
+        }
     }
     private void send_missing_permission_message(CommandSender commandSender, DATA_Command commandData, HOLDER holder_data){
-        //if (commandData != null) {
-        //    List<String> message = commandData.getMessages().get("missing-permission");
-        //    if (message != null && !message.isEmpty()) {
-        //        commandSender.sendMessage(Records.placeholder.replace_placeholders_component(message, holder_data));
-        //    }
-        //}
+        if (commandData != null) {
+            List<String> message = commandData.getMessages().get("missing-permission");
+            if (message != null && !message.isEmpty()) {
+                commandSender.sendMessage(m_placeholder.replace_placeholders_component(message, holder_data));
+            }
+        }
     }
     private void send_missing_permission_message(Player player, DATA_Command commandData, HOLDER holder_data){
-        //if (commandData != null){
-        //    List<String> message = commandData.getMessages().get("missing-permission");
-        //    if (message != null && !message.isEmpty()){
-        //        player.sendMessage(Records.placeholder.replace_placeholders_component(message, holder_data));
-        //    }
-        //}
+        if (commandData != null){
+            List<String> message = commandData.getMessages().get("missing-permission");
+            if (message != null && !message.isEmpty()){
+                player.sendMessage(m_placeholder.replace_placeholders_component(message, holder_data));
+            }
+        }
     }
     private boolean has_permission(CommandSender commandSender, DATA_Command commandData){
         return commandData != null && commandSender.hasPermission(commandData.getPermission());
