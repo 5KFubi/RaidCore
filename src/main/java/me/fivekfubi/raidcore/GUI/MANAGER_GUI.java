@@ -215,7 +215,7 @@ public class MANAGER_GUI implements Listener {
     ){
         if (player == null) return;
 
-        DATA_GUI g_data = m_gui_loader.getGData(plugin_name, path_string);
+        DATA_GUI g_data = m_gui_loader.get_gui_data(plugin_name, path_string);
         if (g_data == null) {
             utils.error_message("<white>Failed to open custom GUI: <yellow>" + path_string + "<white> | Invalid 'GUI' data.", null);
             return;
