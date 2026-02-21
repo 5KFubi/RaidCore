@@ -31,7 +31,7 @@ public final class RaidCore extends JavaPlugin {
 
     public static Random RANDOM = new Random();
     public static RaidCore CORE;
-    public static String PLUGIN_NAME = "RaidCore";
+    public static String CORE_NAME = "RaidCore";
     public static String SESSION_VALUE;
     public static final MiniMessage mini_message = MiniMessage.miniMessage();
     public static final LegacyComponentSerializer legacy_serializer = LegacyComponentSerializer.legacyAmpersand();
@@ -67,7 +67,7 @@ public final class RaidCore extends JavaPlugin {
     @Override
     public void onLoad(){
         CORE = this;
-        registered_plugins.put(PLUGIN_NAME, CORE);
+        registered_plugins.put(CORE_NAME, CORE);
 
         SESSION_VALUE = UUID.randomUUID().toString();
     }
@@ -152,7 +152,7 @@ public final class RaidCore extends JavaPlugin {
         if (!loaded){
             m_config.load_configs();
         }else{
-            m_config.load_configs(PLUGIN_NAME);
+            m_config.load_configs(CORE_NAME);
         }
         //
 

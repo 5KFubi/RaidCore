@@ -42,12 +42,12 @@ public class MANAGER_Item {
     }
 
     public void register_default(){
-        register_attribute(PLUGIN_NAME, NKEY.attribute_item_stackable            );
-        register_attribute(PLUGIN_NAME, NKEY.attribute_item_durability           );
-        register_attribute(PLUGIN_NAME, NKEY.attribute_item_on_break_replacement );
-        register_attribute(PLUGIN_NAME, NKEY.attribute_item_allow_enchant        );
-        register_attribute(PLUGIN_NAME, NKEY.attribute_item_allow_anvil          );
-        register_attribute(PLUGIN_NAME, NKEY.attribute_item_is_currency          );
+        register_attribute(CORE_NAME, NKEY.attribute_item_stackable            );
+        register_attribute(CORE_NAME, NKEY.attribute_item_durability           );
+        register_attribute(CORE_NAME, NKEY.attribute_item_on_break_replacement );
+        register_attribute(CORE_NAME, NKEY.attribute_item_allow_enchant        );
+        register_attribute(CORE_NAME, NKEY.attribute_item_allow_anvil          );
+        register_attribute(CORE_NAME, NKEY.attribute_item_is_currency          );
 
         //register_attribute(PLUGIN, "attributes.values", (section, path) -> {
         //    ConfigurationSection values = section.getConfigurationSection(path);
@@ -193,6 +193,7 @@ public class MANAGER_Item {
     public DATA_Item section_to_var_item(String plugin_name, ConfigurationSection section, String file_path) {
         Map<NamespacedKey, Object> container_data = new HashMap<>();
 
+        container_data.put(NKEY.file_plugin, plugin_name);
         container_data.put(NKEY.file_path, file_path);
         container_data.put(NKEY.item_key, "yes");
         container_data.put(NKEY.item_variant, "item");
@@ -268,105 +269,14 @@ public class MANAGER_Item {
         //        settings: (...)
         //        conditions: (...)
 
-        String type = "none";
-        ConfigurationSection                             section;
-               if (actions_section.contains("event")){   section = actions_section.getConfigurationSection("event"   ); type = "event";
-        } else if (actions_section.contains("passive")){ section = actions_section.getConfigurationSection("passive" ); type = "passive";
-        } else    {                                      section = actions_section.getConfigurationSection(""        );}
-               if                                       (section == null) return null;
+
+        ConfigurationSection a_sec = actions_section.contains("event") ? actions_section.getConfigurationSection("event") : actions_section.getConfigurationSection("");
+        ConfigurationSection p_sec = actions_section.contains("passive") ? actions_section.getConfigurationSection("passive") : null;
 
         DATA_Action data = new DATA_Action();
-        if (type.equals("passive")) {
-            for (String passive_id : section.getKeys(false)) { //  1  |  2  |  (...)
-                if (section.isList(passive_id)){
-
-                    DATA_Action_State event_data = new DATA_Action_State();
-
-                    event_data.id = passive_id;
-                    event_data.weight = 0;
-                    event_data.chance_amount = 100;
-                    event_data.chance_reroll_weight = false;
-                    event_data.chance_reroll_fail = null;
-                    event_data.cancel_events = null;
-                    event_data.price_data = null;
-                    event_data.conditions = new DATA_Action_Condition();
-                               event_data.conditions.condition       = null;
-                               event_data.conditions.self_use        = true;
-                               event_data.conditions.durability_cost = 0;
-                               event_data.conditions.cooldown        = 0;
-                               event_data.conditions.then            = section.getStringList(passive_id);
-
-                    data.action_passive.computeIfAbsent(passive_id, k -> new ArrayList<>()).add(event_data);
-                    continue;
-                } // --------------------------------------------------------------------------------------------------------------
-
-                ConfigurationSection passive_section = section.getConfigurationSection(passive_id); //  1  |  2  |  (...)
-                if (passive_section == null) continue;
-
-                boolean has_direct = passive_section.contains("settings") || passive_section.contains("conditions");
-                if (!has_direct){
-                    for (String child : passive_section.getKeys(false)) {
-                        if (passive_section.isList(child)) {
-                            DATA_Action_State event_data = new DATA_Action_State();
-                            event_data.id = child;
-                            event_data.weight = 0;
-                            event_data.chance_amount = 100;
-                            event_data.chance_reroll_weight = false;
-                            event_data.chance_reroll_fail = null;
-                            event_data.cancel_events = null;
-                            event_data.price_data = null;
-                            event_data.conditions = new DATA_Action_Condition();
-                                       event_data.conditions.condition = null;
-                                       event_data.conditions.self_use = true;
-                                       event_data.conditions.durability_cost = 0;
-                                       event_data.conditions.cooldown = 0;
-                                       event_data.conditions.then = passive_section.getStringList(child);
-
-                            data.action_passive.computeIfAbsent(passive_id, k -> new ArrayList<>()).add(event_data);
-                            continue;
-                        }
-
-                        ConfigurationSection child_section = passive_section.getConfigurationSection(child);
-                        if (child_section == null) continue;
-
-                        ConfigurationSection settings_section = child_section.getConfigurationSection("settings");
-                        if (settings_section == null) settings_section = child_section;
-
-                        DATA_Action_State event_data = new DATA_Action_State();
-                        event_data.id = child;
-                        event_data.weight = settings_section.getInt("weight");
-                        event_data.chance_amount = settings_section.getDouble("chance.amount");
-                        event_data.chance_reroll_weight = settings_section.getBoolean("chance.reroll-weight");
-                        event_data.chance_reroll_fail = settings_section.getStringList("chance.reroll-fail");
-                        event_data.cancel_events = settings_section.getStringList("cancel-event");
-                        event_data.price_data = m_economy.get_price_from_section(plugin_name, settings_section.getConfigurationSection("price"));
-
-                        event_data.conditions = get_condition_data(child_section, child_section.getConfigurationSection("conditions"));
-
-                        data.action_passive.computeIfAbsent(passive_id, k -> new ArrayList<>()).add(event_data);
-                    }
-                    continue;
-                }
-
-                ConfigurationSection settings_section = passive_section.getConfigurationSection("settings");
-                if (settings_section == null) settings_section = passive_section;
-
-                DATA_Action_State event_data = new DATA_Action_State();
-                event_data.id = passive_id;
-                event_data.weight = settings_section.getInt("weight");
-                event_data.chance_amount = settings_section.getDouble("chance.amount");
-                event_data.chance_reroll_weight = settings_section.getBoolean("chance.reroll-weight");
-                event_data.chance_reroll_fail = settings_section.getStringList("chance.reroll-fail");
-                event_data.cancel_events = settings_section.getStringList("cancel-event");
-                event_data.price_data = m_economy.get_price_from_section(plugin_name, settings_section.getConfigurationSection("price"));
-
-                event_data.conditions = get_condition_data(passive_section, passive_section.getConfigurationSection("conditions"));
-
-                data.action_passive.computeIfAbsent(passive_id, k -> new ArrayList<>()).add(event_data);
-            }
-        } else {
-            for (String action_type : section.getKeys(false)) { //  LEFT_CLICK  |  RIGHT_CLICK  |  (...)
-                if (section.isList(action_type)){
+        if (a_sec != null){
+            for (String action_type : a_sec.getKeys(false)) { //  LEFT_CLICK  |  RIGHT_CLICK  |  (...)
+                if (a_sec.isList(action_type)){
                     DATA_Action_State event_data = new DATA_Action_State();
 
                     event_data.id = action_type;
@@ -377,17 +287,17 @@ public class MANAGER_Item {
                     event_data.cancel_events = null;
                     event_data.price_data = null;
                     event_data.conditions = new DATA_Action_Condition();
-                               event_data.conditions.condition       = null;
-                               event_data.conditions.self_use        = true;
-                               event_data.conditions.durability_cost = 0;
-                               event_data.conditions.cooldown        = 0;
-                               event_data.conditions.then            = section.getStringList(action_type);
+                    event_data.conditions.condition       = null;
+                    event_data.conditions.self_use        = true;
+                    event_data.conditions.durability_cost = 0;
+                    event_data.conditions.cooldown        = 0;
+                    event_data.conditions.then            = a_sec.getStringList(action_type);
 
                     data.action_event.computeIfAbsent(action_type, k -> new ArrayList<>()).add(event_data);
                     continue;
                 } // --------------------------------------------------------------------------------------------------------------
 
-                ConfigurationSection action_section = section.getConfigurationSection(action_type); //  LEFT_CLICK  |  RIGHT_CLICK  |  (...)
+                ConfigurationSection action_section = a_sec.getConfigurationSection(action_type); //  LEFT_CLICK  |  RIGHT_CLICK  |  (...)
                 if (action_section == null) continue;
 
                 boolean has_direct = action_section.contains("settings") || action_section.contains("conditions");
@@ -403,11 +313,11 @@ public class MANAGER_Item {
                             event_data.cancel_events = null;
                             event_data.price_data = null;
                             event_data.conditions = new DATA_Action_Condition();
-                                       event_data.conditions.condition = null;
-                                       event_data.conditions.self_use = true;
-                                       event_data.conditions.durability_cost = 0;
-                                       event_data.conditions.cooldown = 0;
-                                       event_data.conditions.then = action_section.getStringList(child);
+                            event_data.conditions.condition = null;
+                            event_data.conditions.self_use = true;
+                            event_data.conditions.durability_cost = 0;
+                            event_data.conditions.cooldown = 0;
+                            event_data.conditions.then = action_section.getStringList(child);
 
                             data.action_event.computeIfAbsent(action_type, k -> new ArrayList<>()).add(event_data);
                             continue;
@@ -452,6 +362,97 @@ public class MANAGER_Item {
                 data.action_event.computeIfAbsent(action_type, k -> new ArrayList<>()).add(event_data);
             }
         }
+
+        if (p_sec != null){
+            for (String passive_id : p_sec.getKeys(false)) { //  1  |  2  |  (...)
+                if (p_sec.isList(passive_id)){
+
+                    DATA_Action_State event_data = new DATA_Action_State();
+
+                    event_data.id = passive_id;
+                    event_data.weight = 0;
+                    event_data.chance_amount = 100;
+                    event_data.chance_reroll_weight = false;
+                    event_data.chance_reroll_fail = null;
+                    event_data.cancel_events = null;
+                    event_data.price_data = null;
+                    event_data.conditions = new DATA_Action_Condition();
+                    event_data.conditions.condition       = null;
+                    event_data.conditions.self_use        = true;
+                    event_data.conditions.durability_cost = 0;
+                    event_data.conditions.cooldown        = 0;
+                    event_data.conditions.then            = p_sec.getStringList(passive_id);
+
+                    data.action_passive.computeIfAbsent(passive_id, k -> new ArrayList<>()).add(event_data);
+                    continue;
+                } // --------------------------------------------------------------------------------------------------------------
+
+                ConfigurationSection passive_section = p_sec.getConfigurationSection(passive_id); //  1  |  2  |  (...)
+                if (passive_section == null) continue;
+
+                boolean has_direct = passive_section.contains("settings") || passive_section.contains("conditions");
+                if (!has_direct){
+                    for (String child : passive_section.getKeys(false)) {
+                        if (passive_section.isList(child)) {
+                            DATA_Action_State event_data = new DATA_Action_State();
+                            event_data.id = child;
+                            event_data.weight = 0;
+                            event_data.chance_amount = 100;
+                            event_data.chance_reroll_weight = false;
+                            event_data.chance_reroll_fail = null;
+                            event_data.cancel_events = null;
+                            event_data.price_data = null;
+                            event_data.conditions = new DATA_Action_Condition();
+                            event_data.conditions.condition = null;
+                            event_data.conditions.self_use = true;
+                            event_data.conditions.durability_cost = 0;
+                            event_data.conditions.cooldown = 0;
+                            event_data.conditions.then = passive_section.getStringList(child);
+
+                            data.action_passive.computeIfAbsent(passive_id, k -> new ArrayList<>()).add(event_data);
+                            continue;
+                        }
+
+                        ConfigurationSection child_section = passive_section.getConfigurationSection(child);
+                        if (child_section == null) continue;
+
+                        ConfigurationSection settings_section = child_section.getConfigurationSection("settings");
+                        if (settings_section == null) settings_section = child_section;
+
+                        DATA_Action_State event_data = new DATA_Action_State();
+                        event_data.id = child;
+                        event_data.weight = settings_section.getInt("weight");
+                        event_data.chance_amount = settings_section.getDouble("chance.amount");
+                        event_data.chance_reroll_weight = settings_section.getBoolean("chance.reroll-weight");
+                        event_data.chance_reroll_fail = settings_section.getStringList("chance.reroll-fail");
+                        event_data.cancel_events = settings_section.getStringList("cancel-event");
+                        event_data.price_data = m_economy.get_price_from_section(plugin_name, settings_section.getConfigurationSection("price"));
+
+                        event_data.conditions = get_condition_data(child_section, child_section.getConfigurationSection("conditions"));
+
+                        data.action_passive.computeIfAbsent(passive_id, k -> new ArrayList<>()).add(event_data);
+                    }
+                    continue;
+                }
+
+                ConfigurationSection settings_section = passive_section.getConfigurationSection("settings");
+                if (settings_section == null) settings_section = passive_section;
+
+                DATA_Action_State event_data = new DATA_Action_State();
+                event_data.id = passive_id;
+                event_data.weight = settings_section.getInt("weight");
+                event_data.chance_amount = settings_section.getDouble("chance.amount");
+                event_data.chance_reroll_weight = settings_section.getBoolean("chance.reroll-weight");
+                event_data.chance_reroll_fail = settings_section.getStringList("chance.reroll-fail");
+                event_data.cancel_events = settings_section.getStringList("cancel-event");
+                event_data.price_data = m_economy.get_price_from_section(plugin_name, settings_section.getConfigurationSection("price"));
+
+                event_data.conditions = get_condition_data(passive_section, passive_section.getConfigurationSection("conditions"));
+
+                data.action_passive.computeIfAbsent(passive_id, k -> new ArrayList<>()).add(event_data);
+            }
+        }
+
         return data;
     }
 

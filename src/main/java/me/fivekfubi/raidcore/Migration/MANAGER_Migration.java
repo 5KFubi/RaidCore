@@ -71,7 +71,7 @@ public class MANAGER_Migration {
                     String line;
                     while ((line = reader.readLine()) != null) {
                         line = line.trim();
-                        if (line.startsWith(PLUGIN_NAME + ":")) {
+                        if (line.startsWith(CORE_NAME + ":")) {
                             int quoteStart = line.indexOf('"');
                             int quoteEnd = line.lastIndexOf('"');
                             if (quoteStart != -1 && quoteEnd != -1 && quoteEnd > quoteStart) {
@@ -83,7 +83,7 @@ public class MANAGER_Migration {
 
                     if (latest_version == null) {
                         StackTraceElement stk = new Throwable().getStackTrace()[0];
-                        utils.warn_message("<red>Could not find latest version for " + PLUGIN_NAME, stk);
+                        utils.warn_message("<red>Could not find latest version for " + CORE_NAME, stk);
                         return;
                     }
                     if (!current_version.equalsIgnoreCase(latest_version)) {

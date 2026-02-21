@@ -11,6 +11,7 @@ public class MANAGER_Key {
     public final String CLUMP_KEY_EVENT         =           "clump_key_event"        ;
     public final String CLUMP_KEY_GUI           =           "clump_key_gui"          ;
 
+    public NamespacedKey file_plugin            = generate( "file_plugin"            );
     public NamespacedKey file_path              = generate( "file_path"              );
     public NamespacedKey session_key            = generate( "session_key"            );
     public NamespacedKey session_value          = generate( SESSION_VALUE            );

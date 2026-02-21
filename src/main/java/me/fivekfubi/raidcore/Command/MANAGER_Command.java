@@ -225,7 +225,7 @@ public class MANAGER_Command {
     public void load(){
         commands.clear();
 
-        DATA_Config config_data = m_config.get_config_data(PLUGIN_NAME, List.of("commands.yml"));
+        DATA_Config config_data = m_config.get_config_data(CORE_NAME, List.of("commands.yml"));
         FileConfiguration config = config_data.config;
         for (String command_id : command_list.keySet() ){
             String path = "commands.";

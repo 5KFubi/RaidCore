@@ -670,11 +670,11 @@ public class MANAGER_GUI implements Listener {
             if (!action_events.containsKey(action_string)) continue;
 
             // [COOLDOWN] ----------------------------------------------------------------------------------------------
-            boolean on_clump = m_cooldown.on_cooldown(PLUGIN_NAME, player_uuid, NKEY.CLUMP_KEY_GUI);
+            boolean on_clump = m_cooldown.on_cooldown(CORE_NAME, player_uuid, NKEY.CLUMP_KEY_GUI);
             if (on_clump){
                 continue;
             }
-            m_cooldown.add_cooldown(PLUGIN_NAME, player_uuid, NKEY.CLUMP_KEY_GUI, 1);
+            m_cooldown.add_cooldown(CORE_NAME, player_uuid, NKEY.CLUMP_KEY_GUI, 1);
 
             for (DATA_Action_State state : action_events.get(action_string)){
 
@@ -690,20 +690,20 @@ public class MANAGER_GUI implements Listener {
                 if (resolved == null) continue;
 
                 // [COOLDOWN] ----------------------------------------------------------------------------------------------
-                boolean on_cooldown = m_cooldown.on_cooldown(PLUGIN_NAME, player_uuid, resolved);
+                boolean on_cooldown = m_cooldown.on_cooldown(CORE_NAME, player_uuid, resolved);
                 if (on_cooldown) {
                     DATA_Action_Condition cooldown_branch = resolved.cooldown_branch;
                     if (cooldown_branch == null) continue;
 
                     // [COOLDOWN] ----------------------------------------------------------------------------------------------
-                    boolean cd_on_cooldown = m_cooldown.on_cooldown(PLUGIN_NAME, player_uuid, cooldown_branch);
+                    boolean cd_on_cooldown = m_cooldown.on_cooldown(CORE_NAME, player_uuid, cooldown_branch);
                     if (cd_on_cooldown){
                         continue;
                     }
-                    m_cooldown.add_cooldown(PLUGIN_NAME, player_uuid,cooldown_branch, cooldown_branch.cooldown);
+                    m_cooldown.add_cooldown(CORE_NAME, player_uuid,cooldown_branch, cooldown_branch.cooldown);
 
                     m_executable.execute(
-                            PLUGIN_NAME,
+                            CORE_NAME,
                             player,
                             cooldown_branch.self_use,
                             event_type,
@@ -715,10 +715,10 @@ public class MANAGER_GUI implements Listener {
                     continue;
                 }
                 //
-                m_cooldown.add_cooldown(PLUGIN_NAME, player_uuid, resolved, resolved.cooldown);
+                m_cooldown.add_cooldown(CORE_NAME, player_uuid, resolved, resolved.cooldown);
 
                 m_executable.execute(
-                        PLUGIN_NAME,
+                        CORE_NAME,
                         player,
                         resolved.self_use,
                         event_type,

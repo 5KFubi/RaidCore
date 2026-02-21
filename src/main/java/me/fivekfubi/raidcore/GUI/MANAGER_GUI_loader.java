@@ -115,6 +115,7 @@ public class MANAGER_GUI_loader {
                     Map<NamespacedKey, Object> container_data = new HashMap<>();
                     container_data.put(NKEY.gui_item, "yes");
                     container_data.put(NKEY.item_variant, "gui");
+                    container_data.put(NKEY.file_plugin, plugin_name);
                     container_data.put(NKEY.file_path, path_string);
                     container_data.put(NKEY.gui_item_empty_slot, "yes");
 
@@ -234,7 +235,7 @@ public class MANAGER_GUI_loader {
                                             ConfigurationSection item_section = items_section.getConfigurationSection(item_id);
                                             if (item_section == null) continue;
                                             //
-                                            GUI_Item gui_item = section_to_gui_item(item_section, path_string, group_id, page_number, item_id, "gui", null);
+                                            GUI_Item gui_item = section_to_gui_item(plugin_name, item_section, path_string, group_id, page_number, item_id, "gui", null);
                                             List<Integer> slots = gui_item.slots;
                                             used_slots.addAll(slots);
                                             group_slot.put(slots, group_id);
@@ -253,7 +254,7 @@ public class MANAGER_GUI_loader {
 
                                 Map<String, GUI_Item> page_items = new HashMap<>();
                                 //
-                                GUI_Item gui_item = section_to_gui_item(group_section, path_string, group_id, page_number, group_id, "gui", null);
+                                GUI_Item gui_item = section_to_gui_item(plugin_name, group_section, path_string, group_id, page_number, group_id, "gui", null);
                                 List<Integer> slots = gui_item.slots;
                                 used_slots.addAll(slots);
                                 group_slot.put(slots, group_id);
@@ -280,16 +281,17 @@ public class MANAGER_GUI_loader {
         }
     }
 
-    public GUI_Item section_to_gui_item(ConfigurationSection section, String path_string, String group_id, int page_number, String item_id, String variant, String variation_id) {
+    public GUI_Item section_to_gui_item(String plugin_name, ConfigurationSection section, String path_string, String group_id, int page_number, String item_id, String variant, String variation_id) {
         if (section == null) return null;
 
         GUI_Item g_item = new GUI_Item();
-        g_item.item_id            = item_id;
+        g_item.item_id = item_id;
         try {
             g_item.container_data = new HashMap<>();
 
             g_item.container_data.put(NKEY.gui_item, "yes");
             g_item.container_data.put(NKEY.item_variant, variant);
+            g_item.container_data.put(NKEY.file_plugin, plugin_name);
             g_item.container_data.put(NKEY.file_path, path_string);
             g_item.container_data.put(NKEY.gui_item_group, group_id);
             g_item.container_data.put(NKEY.gui_item_id, item_id);
@@ -370,7 +372,7 @@ public class MANAGER_GUI_loader {
 
             ConfigurationSection actions_section = section.getConfigurationSection("actions");
             if (actions_section != null){
-                g_item.action_data = m_item.get_action_data(PLUGIN_NAME, actions_section);
+                g_item.action_data = m_item.get_action_data(CORE_NAME, actions_section);
             }
 
             ItemMeta meta = g_item.item.getItemMeta();
@@ -422,7 +424,7 @@ public class MANAGER_GUI_loader {
                         continue;
                     }
 
-                    GUI_Item variation = section_to_gui_item(section, path_string, group_id, page_number, item_id, variant, var_id);
+                    GUI_Item variation = section_to_gui_item(plugin_name, section, path_string, group_id, page_number, item_id, variant, var_id);
                     g_item.variations.put(var_id, variation);
                 }
             }

@@ -16,8 +16,7 @@ import static me.fivekfubi.raidcore.RaidCore.*;
 
 public class MANAGER_Config {
 
-    public boolean first_time = false;
-    public boolean is_first_boot(){ return this.first_time; }
+    public Set<String> first_times = new HashSet<>();
     public Map<String, Map<List<String>, DATA_Config>> configs = new HashMap<>();
     public Map<String, Map<List<String>, DATA_Config>> get_configs() { return configs; }
     public DATA_Config get_config_data(String plugin_name, List<String> path) { return configs.getOrDefault(plugin_name, new HashMap<>()).get(path); }
@@ -26,7 +25,7 @@ public class MANAGER_Config {
     /// TODO: ----------------------------------------------------------------------------------------------------------
     /// TODO: ----------------------------------------------------------------------------------------------------------
 
-    public Map<String, List<Map<List<String>, Boolean>>> file_paths = new HashMap<>(Map.of(PLUGIN_NAME, List.of(
+    public Map<String, List<Map<List<String>, Boolean>>> file_paths = new HashMap<>(Map.of(CORE_NAME, List.of(
             Map.of(List.of("config.yml"), true),
             Map.of(List.of("commands.yml"), true),
             Map.of(List.of("placeholders.yml"), true),
@@ -240,11 +239,15 @@ public class MANAGER_Config {
             parent_folder.mkdirs();
         }
 
+        boolean first_time = first_times.contains(plugin.getName());
         if (file.exists() && !first_time) {
             return;
         }
 
-        if (file_name.equalsIgnoreCase("config.yml")) first_time = true;
+        if (file_name.equalsIgnoreCase("config.yml")){
+            first_time = true;
+            first_times.add(plugin.getName());
+        }
 
         if (!first_time && !always) {
             return;

@@ -316,7 +316,7 @@ public class LISTENER_Packet {
 
         ItemStack item = player.getInventory().getItemInMainHand();
 
-        DATA_Item item_data = m_item.get_item_data(PLUGIN_NAME, item);
+        DATA_Item item_data = m_item.get_item_data(CORE_NAME, item);
         if (item_data == null) return false;
 
         me.fivekfubi.raidcore.Item.Data.Action.DATA_Action item_actions = item_data.action_data;
@@ -380,7 +380,7 @@ public class LISTENER_Packet {
                             if (meta == null) continue;
 
                             PersistentDataContainer container = meta.getPersistentDataContainer();
-                            DATA_Item item_data = m_item.get_item_data(PLUGIN_NAME, container);
+                            DATA_Item item_data = m_item.get_item_data(CORE_NAME, container);
                             if (item_data == null) continue;
 
                             DATA_Action action_data = item_data.action_data;

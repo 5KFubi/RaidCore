@@ -28,7 +28,7 @@ public class TRACKER_Inventory implements Listener {
 
     public int SLOTS_PER_TICK = 4;
     public void load(){
-        DATA_Config config_data = m_config.get_config_data(PLUGIN_NAME, List.of("config.yml"));
+        DATA_Config config_data = m_config.get_config_data(CORE_NAME, List.of("config.yml"));
         FileConfiguration config = config_data.config;
 
         SLOTS_PER_TICK = config.getInt("passive-tracker.slots-per-tick");
@@ -42,8 +42,9 @@ public class TRACKER_Inventory implements Listener {
     public void track(Player player, UUID uuid, int slot, Map<NamespacedKey, Object> container_data) {
         if (slot < 0) return;
 
+        String plugin_name = (String) container_data.get(NKEY.file_plugin);
         String file_path = (String) container_data.get(NKEY.file_path);
-        DATA_Item item_data = m_item.get_item_data(PLUGIN_NAME, file_path);
+        DATA_Item item_data = m_item.get_item_data(plugin_name, file_path);
         if (item_data == null) return;
         DATA_Action action_data = item_data.action_data;
         if (action_data == null) return;
@@ -87,7 +88,7 @@ public class TRACKER_Inventory implements Listener {
                             cooldowns.put(cooldown_branch, cooldown_branch.cooldown);
 
                             m_executable.execute(
-                                    PLUGIN_NAME,
+                                    plugin_name,
                                     player,
                                     cooldown_branch.self_use,
                                     "ITEM_PASSIVE",
@@ -103,7 +104,7 @@ public class TRACKER_Inventory implements Listener {
                         cooldowns.put(resolved, resolved.cooldown);
 
                         m_executable.execute(
-                                PLUGIN_NAME,
+                                plugin_name,
                                 player,
                                 resolved.self_use,
                                 "ITEM_PASSIVE",

@@ -6,6 +6,7 @@ import me.fivekfubi.raidcore.Item.Data.Action.DATA_Action;
 import me.fivekfubi.raidcore.Item.Data.Action.DATA_Action_Condition;
 import me.fivekfubi.raidcore.Item.Data.Action.DATA_Action_State;
 import me.fivekfubi.raidcore.Item.Data.DATA_Item;
+import org.bukkit.NamespacedKey;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
@@ -15,6 +16,7 @@ import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockDamageEvent;
 import org.bukkit.event.player.*;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.persistence.PersistentDataContainer;
 
 import java.util.*;
 
@@ -266,7 +268,12 @@ public class MANAGER_Event implements Listener {
         if (player == null) return should_cancel;
 
         ItemStack item = player.getInventory().getItemInMainHand();
-        DATA_Item item_data = m_item.get_item_data(PLUGIN_NAME, item);
+        if (item.getItemMeta() == null) return should_cancel;
+
+        Map<NamespacedKey, Object> container_data = utils.get_container_data(item.getItemMeta().getPersistentDataContainer());
+        String plugin_name = (String) container_data.get(NKEY.file_plugin);
+        String file_path = (String) container_data.get(NKEY.file_path);
+        DATA_Item item_data = m_item.get_item_data(plugin_name, file_path);
         if (item_data == null) return should_cancel;
 
         DATA_Action item_actions = item_data.action_data;
@@ -278,11 +285,11 @@ public class MANAGER_Event implements Listener {
             if (!item_actions.action_event.containsKey(action_string)) continue;
 
             // [COOLDOWN] ----------------------------------------------------------------------------------------------
-            boolean on_clump = m_cooldown.on_cooldown(PLUGIN_NAME, player_uuid, NKEY.CLUMP_KEY_EVENT);
+            boolean on_clump = m_cooldown.on_cooldown(plugin_name, player_uuid, NKEY.CLUMP_KEY_EVENT);
             if (on_clump){
                 continue;
             }
-            m_cooldown.add_cooldown(PLUGIN_NAME, player_uuid, NKEY.CLUMP_KEY_EVENT, 1);
+            m_cooldown.add_cooldown(plugin_name, player_uuid, NKEY.CLUMP_KEY_EVENT, 1);
 
             for (DATA_Action_State state : item_actions.action_event.get(action_string)){
 
@@ -298,20 +305,20 @@ public class MANAGER_Event implements Listener {
                 if (resolved == null) continue;
 
                 // [COOLDOWN] ----------------------------------------------------------------------------------------------
-                boolean on_cooldown = m_cooldown.on_cooldown(PLUGIN_NAME, player_uuid, resolved);
+                boolean on_cooldown = m_cooldown.on_cooldown(plugin_name, player_uuid, resolved);
                 if (on_cooldown) {
                     DATA_Action_Condition cooldown_branch = resolved.cooldown_branch;
                     if (cooldown_branch == null) continue;
 
                     // [COOLDOWN] ----------------------------------------------------------------------------------------------
-                    boolean cd_on_cooldown = m_cooldown.on_cooldown(PLUGIN_NAME, player_uuid, cooldown_branch);
+                    boolean cd_on_cooldown = m_cooldown.on_cooldown(plugin_name, player_uuid, cooldown_branch);
                     if (cd_on_cooldown){
                         continue;
                     }
-                    m_cooldown.add_cooldown(PLUGIN_NAME, player_uuid,cooldown_branch, cooldown_branch.cooldown);
+                    m_cooldown.add_cooldown(plugin_name, player_uuid,cooldown_branch, cooldown_branch.cooldown);
 
                     m_executable.execute(
-                            PLUGIN_NAME,
+                            plugin_name,
                             player,
                             cooldown_branch.self_use,
                             event_type,
@@ -323,10 +330,10 @@ public class MANAGER_Event implements Listener {
                     continue;
                 }
                 //
-                m_cooldown.add_cooldown(PLUGIN_NAME, player_uuid, resolved, resolved.cooldown);
+                m_cooldown.add_cooldown(plugin_name, player_uuid, resolved, resolved.cooldown);
 
                 m_executable.execute(
-                        PLUGIN_NAME,
+                        plugin_name,
                         player,
                         resolved.self_use,
                         event_type,
