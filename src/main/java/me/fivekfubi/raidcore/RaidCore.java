@@ -12,6 +12,7 @@ import me.fivekfubi.raidcore.Executable.MANAGER_Executable;
 import me.fivekfubi.raidcore.GUI.MANAGER_GUI;
 import me.fivekfubi.raidcore.GUI.MANAGER_GUI_loader;
 import me.fivekfubi.raidcore.Item.MANAGER_Item;
+import me.fivekfubi.raidcore.Message.MANAGER_Message;
 import me.fivekfubi.raidcore.NKey.MANAGER_Key;
 import me.fivekfubi.raidcore.Migration.MANAGER_Migration;
 import me.fivekfubi.raidcore.Placeholder.MANAGER_Placeholder;
@@ -57,6 +58,7 @@ public final class RaidCore extends JavaPlugin {
     public static MANAGER_Cooldown m_cooldown = new MANAGER_Cooldown();
     public static MANAGER_GUI m_gui = new MANAGER_GUI();
     public static MANAGER_GUI_loader m_gui_loader = new MANAGER_GUI_loader();
+    public static MANAGER_Message m_message = new MANAGER_Message();
     //
     public final Map<String, JavaPlugin> registered_plugins = new HashMap<>();
 
@@ -166,6 +168,7 @@ public final class RaidCore extends JavaPlugin {
         m_economy.load();
         m_gui_loader.load();
         if (!loaded) m_gui.register_default();
+        m_message.load_messages(CORE);
 
         //
         if (!loaded){

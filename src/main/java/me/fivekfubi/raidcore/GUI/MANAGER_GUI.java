@@ -802,7 +802,9 @@ public class MANAGER_GUI implements Listener {
     public final Map<String, HANDLER_Gui> ITEM_TYPE_HANDLERS = new HashMap<>();
 
     public void register_item_type(String type, HANDLER_Gui handler) {
-        ITEM_TYPE_HANDLERS.put(type.toLowerCase(Locale.ROOT), handler);
+        String formatted = type.toLowerCase(Locale.ROOT);
+        utils.console_message(true, " <White>Registered GUI item type `<gold>" + formatted + "<white>`.");
+        ITEM_TYPE_HANDLERS.put(formatted, handler);
     }
     public HANDLER_Gui get_item_type_handler(String type) {
         return ITEM_TYPE_HANDLERS.get(type.toLowerCase(Locale.ROOT));
