@@ -35,9 +35,10 @@ public class MANAGER_Message {
         if (message == null) return;
         entity.sendMessage(m_placeholder.replace_placeholders_component(message, holder_data));
     }
-
     public void load_messages(JavaPlugin plugin){
-        String plugin_name = plugin.getName();
+        load_messages(plugin.getName());
+    }
+    public void load_messages(String plugin_name){
         DATA_Config config_data = m_config.get_config_data(plugin_name,List.of("messages.yml"));
         if (config_data == null){
             utils.console_message(true, " <red>Could not load messages.yml for plugin `" + plugin_name + "`, file does not exist.");

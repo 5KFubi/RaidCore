@@ -76,11 +76,12 @@ public final class RaidCore extends JavaPlugin {
 
 
     public void register(JavaPlugin plugin) {
+        String plugin_name = plugin != null ? plugin.getName() : "N/A";
         if (CORE.allow_register){
-            CORE.registered_plugins.put(plugin.getName(), plugin);
-            utils.console_message(true, "<dark_gray>[<green>REGISTERED<dark_gray>] <white>API registered plugin: " + plugin.getName());
+            CORE.registered_plugins.put(plugin_name, plugin);
+            utils.console_message(true, "<dark_gray>[<green>REGISTERED<dark_gray>] <white>API registered plugin: " + plugin_name);
         }else{
-            utils.console_message(true, "<dark_gray>[<red>ERROR<dark_gray>] <white>API registration failed for <red>" + plugin.getName() + "<white>, must be registered <gold>onLoad()<white>!");
+            utils.console_message(true, "<dark_gray>[<red>ERROR<dark_gray>] <white>API registration failed for <red>" + plugin_name + "<white>, must be registered <gold>onLoad()<white>!");
         }
     }
 
@@ -166,9 +167,9 @@ public final class RaidCore extends JavaPlugin {
         m_item.load();
         m_discount.load();
         m_economy.load();
-        m_gui_loader.load();
+        m_gui_loader.load_all();
         if (!loaded) m_gui.register_default();
-        m_message.load_messages(CORE);
+        m_message.load_messages(CORE_NAME);
 
         //
         if (!loaded){
