@@ -141,18 +141,18 @@ public class MANAGER_GUI implements Listener {
         GUI_Inventory g_inventory = open_guis.get(player);
         if (g_inventory == null) return;
 
-        Map<String, Integer> player_pages = g_inventory.get_player_pages();
+        Map<String, Integer> player_pages = g_inventory.player_pages;
         Integer page_number = player_pages.get(group_id);
         if (page_number == null) page_number = 1;
 
-        DATA_GUI gData = g_inventory.get_gui_data();
+        DATA_GUI gData = g_inventory.gui_data;
         if (gData == null) return;
 
         Map<String, GUI_Group> groups = gData.get_item_groups();
         GUI_Group group = groups.get(group_id);
         if (group == null) return;
 
-        g_inventory.set_first_time(group_id, true);
+        g_inventory.first_time.put(group_id, true);
 
         Map<Integer, GUI_Page> pages = group.get_pages();
         int size = pages.size();
@@ -192,7 +192,7 @@ public class MANAGER_GUI implements Listener {
             if (group_settings != null){
                 boolean interact_stop = group_settings.get_switch_interact_stop();
                 if (interact_stop){
-                    Map<String, GUI_Task> group_tasks = g_inventory.get_group_tasks();
+                    Map<String, GUI_Task> group_tasks = g_inventory.group_tasks;
                     GUI_Task gTask = group_tasks.get(group_id);
                     if (gTask != null){
                         long interact_timer = group_settings.get_switch_interact_stop_timer();
@@ -225,8 +225,8 @@ public class MANAGER_GUI implements Listener {
 
         Component title = m_placeholder.replace_placeholders_component(g_data.get_title(), holder);
         int size = g_data.get_size();
-        GUI_Inventory g_inventory = new GUI_Inventory(path_string, size, title, g_data);
-        g_inventory.set_holder_data(holder);
+        GUI_Inventory g_inventory = new GUI_Inventory(plugin_name, path_string, size, title, g_data);
+        g_inventory.holder_data = holder;
         Inventory inventory = g_inventory.getInventory();
 
         long refresh_rate = g_data.get_refresh_rate();
@@ -245,8 +245,8 @@ public class MANAGER_GUI implements Listener {
         UUID   player_uuid        = player.getUniqueId();
         String player_uuid_string = player_uuid.toString();
 
-        Map<String, Integer>   player_pages = g_inventory.get_player_pages();
-        Map<String, GUI_Task>  group_tasks  = g_inventory.get_group_tasks();
+        Map<String, Integer>   player_pages = g_inventory.player_pages;
+        Map<String, GUI_Task>  group_tasks  = g_inventory.group_tasks;
         Map<String, GUI_Group> groups       = g_data     .get_item_groups();
 
         for (String group_id : groups.keySet()){
@@ -310,7 +310,7 @@ public class MANAGER_GUI implements Listener {
                         // INACTIVITY ----------------------------------------------------------------------------------
                         // INACTIVITY ----------------------------------------------------------------------------------
                         if (inactivity_timer != 0) {
-                            if (g_inventory.get_inactivity_timer() > inactivity_timer) {
+                            if (g_inventory.inactivity_timer > inactivity_timer) {
                                 Bukkit.getScheduler().runTask(CORE, () -> {
                                     if (inactivity_message != null && !inactivity_message.isEmpty()) {
                                         player.sendMessage(m_placeholder.replace_placeholders_component(inactivity_message, holder));
@@ -320,7 +320,7 @@ public class MANAGER_GUI implements Listener {
                                 cancel();
                                 return;
                             } else {
-                                g_inventory.add_time(refresh_rate);
+                                g_inventory.inactivity_timer += refresh_rate;
                             }
                         }
 
@@ -381,7 +381,7 @@ public class MANAGER_GUI implements Listener {
                                 String name = data.name;
                                 List<String> lore = data.lore;
 
-                                Boolean first_time = g_inventory.get_first_time(group_id);
+                                Boolean first_time = g_inventory.first_time.get(group_id);
                                 if (first_time == null) first_time = true;
 
                                 // ----------------------------------------------
@@ -532,7 +532,7 @@ public class MANAGER_GUI implements Listener {
 
         if (holder instanceof GUI_Inventory g_inventory){
             if (!open_guis.containsKey(player)){
-                g_inventory.get_gui_data().play_open_sound(player);
+                g_inventory.gui_data.play_open_sound(player);
             }
             open_guis.put(player, g_inventory);
         }
@@ -550,7 +550,7 @@ public class MANAGER_GUI implements Listener {
         Bukkit.getScheduler().runTaskLater(CORE, () -> {
             InventoryHolder current_holder = player.getOpenInventory().getTopInventory().getHolder();
             if (!(current_holder instanceof GUI_Inventory)) {
-                g_inventory.get_gui_data().play_close_sound(player);
+                g_inventory.gui_data.play_close_sound(player);
                 open_guis.remove(player);
             }
         }, 1L);
@@ -568,7 +568,8 @@ public class MANAGER_GUI implements Listener {
             Inventory top_inventory = event.getView().getTopInventory();
             if (top_inventory.getHolder() instanceof GUI_Inventory g_inventory) {
 
-                HOLDER holder_data = g_inventory.get_holder_data();
+                String plugin_name = g_inventory.plugin_name;
+                HOLDER holder_data = g_inventory.holder_data;
 
                 boolean is_left  = event.isLeftClick();
                 boolean is_right = event.isRightClick();
@@ -578,7 +579,7 @@ public class MANAGER_GUI implements Listener {
                 ItemStack clicked_item = event.getCurrentItem();
                 Map<NamespacedKey, Object> container_data = new HashMap<>();
                 int clicked_slot = event.getSlot();
-                Map<Integer, HOLDER> present_holder_data = g_inventory.get_present_holder_data();
+                Map<Integer, HOLDER> present_holder_data = g_inventory.present_holder_data;
 
                 ItemMeta clicked_meta;
                 PersistentDataContainer clicked_container;
@@ -635,13 +636,13 @@ public class MANAGER_GUI implements Listener {
 
                 String action_type = get_custom_action(click_type, is_left, is_right, is_shift);
 
-                DATA_GUI gData = g_inventory.get_gui_data();
+                DATA_GUI gData = g_inventory.gui_data;
                 if (gData == null) return;
 
                 GUI_Item gItem = g_inventory.get_cached(clicked_slot);
                 if (gItem == null) return;
 
-                g_inventory.set_inactivity_timer(0);
+                g_inventory.inactivity_timer = 0;
 
                 List<Integer> item_slots = gItem.slots;
                 int item_clicked_index = item_slots.indexOf(clicked_slot);
@@ -651,12 +652,12 @@ public class MANAGER_GUI implements Listener {
                 Set<String> event_actions = new HashSet<>();
 
                 event_actions.add(action_type);
-                handle_actions(player, event.getEventName(), item_path,gItem.action_data, event_actions);
+                handle_actions(plugin_name, player, event.getEventName(), item_path,gItem.action_data, event_actions);
             }
         }
     }
 
-    public boolean handle_actions(Player player, String event_type, String item_id, DATA_Action item_actions, Set<String> actions){
+    public boolean handle_actions(String plugin_name, Player player, String event_type, String item_id, DATA_Action item_actions, Set<String> actions){
         boolean should_cancel = false;
         if (player == null) return should_cancel;
         if (item_actions == null) return should_cancel;
@@ -670,11 +671,11 @@ public class MANAGER_GUI implements Listener {
             if (!action_events.containsKey(action_string)) continue;
 
             // [COOLDOWN] ----------------------------------------------------------------------------------------------
-            boolean on_clump = m_cooldown.on_cooldown(CORE_NAME, player_uuid, NKEY.CLUMP_KEY_GUI);
+            boolean on_clump = m_cooldown.on_cooldown(plugin_name, player_uuid, NKEY.CLUMP_KEY_GUI);
             if (on_clump){
                 continue;
             }
-            m_cooldown.add_cooldown(CORE_NAME, player_uuid, NKEY.CLUMP_KEY_GUI, 1);
+            m_cooldown.add_cooldown(plugin_name, player_uuid, NKEY.CLUMP_KEY_GUI, 1);
 
             for (DATA_Action_State state : action_events.get(action_string)){
 
@@ -690,20 +691,20 @@ public class MANAGER_GUI implements Listener {
                 if (resolved == null) continue;
 
                 // [COOLDOWN] ----------------------------------------------------------------------------------------------
-                boolean on_cooldown = m_cooldown.on_cooldown(CORE_NAME, player_uuid, resolved);
+                boolean on_cooldown = m_cooldown.on_cooldown(plugin_name, player_uuid, resolved);
                 if (on_cooldown) {
                     DATA_Action_Condition cooldown_branch = resolved.cooldown_branch;
                     if (cooldown_branch == null) continue;
 
                     // [COOLDOWN] ----------------------------------------------------------------------------------------------
-                    boolean cd_on_cooldown = m_cooldown.on_cooldown(CORE_NAME, player_uuid, cooldown_branch);
+                    boolean cd_on_cooldown = m_cooldown.on_cooldown(plugin_name, player_uuid, cooldown_branch);
                     if (cd_on_cooldown){
                         continue;
                     }
-                    m_cooldown.add_cooldown(CORE_NAME, player_uuid,cooldown_branch, cooldown_branch.cooldown);
+                    m_cooldown.add_cooldown(plugin_name, player_uuid,cooldown_branch, cooldown_branch.cooldown);
 
                     m_executable.execute(
-                            CORE_NAME,
+                            plugin_name,
                             player,
                             cooldown_branch.self_use,
                             event_type,
@@ -715,10 +716,10 @@ public class MANAGER_GUI implements Listener {
                     continue;
                 }
                 //
-                m_cooldown.add_cooldown(CORE_NAME, player_uuid, resolved, resolved.cooldown);
+                m_cooldown.add_cooldown(plugin_name, player_uuid, resolved, resolved.cooldown);
 
                 m_executable.execute(
-                        CORE_NAME,
+                        plugin_name,
                         player,
                         resolved.self_use,
                         event_type,

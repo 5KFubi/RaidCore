@@ -1,5 +1,8 @@
 package me.fivekfubi.raidcore.Executable;
 
+import me.fivekfubi.raidcore.GUI.Data.GUI_Inventory;
+import me.fivekfubi.raidcore.GUI.Data.GUI_Item;
+import me.fivekfubi.raidcore.GUI.MANAGER_GUI;
 import me.fivekfubi.raidcore.Holder.HOLDER;
 import net.kyori.adventure.sound.Sound;
 import org.bukkit.Bukkit;
@@ -9,6 +12,7 @@ import org.bukkit.block.Block;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.Inventory;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.util.Vector;
@@ -208,49 +212,157 @@ public class MANAGER_Executable {
                     }
                     case "special" -> {
                         String[] executable_parts = to_execute.split(" ");
-                        try {
-                            switch (executable_parts[0]) {
-                                case "gui-open" -> {
-                                    if (target instanceof Player player){
-                                        if (holder == null) break;
 
-                                        holder.set(NKEY.player.getKey(), player);
-                                        if (executable_parts.length > 1) {
-                                            String gui_id = executable_parts[1];
-                                            m_gui.open(plugin_name, player, gui_id, holder);
-                                        }
-                                    }
-                                }
-                                case "gui-close" -> {
-                                    if (target instanceof Player player){
-                                        Bukkit.getScheduler().runTask(CORE, () -> {
-                                            player.closeInventory();
-                                        });
-                                    }
-                                }
-                                case "change-page" -> {
-                                    if (target instanceof Player player){
-                                        String[] page_change_split = to_execute.split(" ");
-                                        String group_id = page_change_split[1];
-                                        String direction;
-                                        if (page_change_split.length >= 3) {
-                                            direction = page_change_split[2];
-                                        } else {
-                                            direction = "forward";
-                                        }
-                                        Bukkit.getScheduler().runTask(CORE, () -> {
-                                            m_gui.change_page(player, group_id, direction, true);
-                                        });
-                                    }
-                                }
+                        try {
+                            HANDLER_Executable handler = get_special_tag_handler(executable_parts[0]);
+
+                            if (handler != null) {
+                                handler.handle(
+                                        plugin_name,
+                                        executable_parts,
+                                        split,
+                                        tag,
+                                        chance_string,
+                                        flag,
+                                        to_execute,
+                                        chance,
+                                        sender,
+                                        target,
+                                        self_use,
+                                        event_type,
+                                        targets,
+                                        blocks,
+                                        executables,
+                                        holder
+                                );
                             }
-                        }catch (Throwable t){
+                        } catch (Throwable t) {
                             t.printStackTrace();
                         }
                     }
                 }
             }
         }
+    }
+
+    public void register_default(){
+        register_special_tag("gui-open", (
+                plugin_name,
+                executable_parts,
+                split,
+                tag,
+                chance_string,
+                flag,
+                to_execute,
+                chance,
+                sender,
+                target,
+                self_use,
+                event_type,
+                targets,
+                blocks,
+                executables,
+                holder
+        ) -> {
+            if (target instanceof Player player){
+                if (holder != null) {
+                    holder.set(NKEY.player.getKey(), player);
+                    if (executable_parts.length > 1) {
+                        String gui_id = executable_parts[1];
+                        m_gui.open(plugin_name, player, gui_id, holder);
+                    }
+                }
+            }
+            return true;
+        });
+        register_special_tag("gui-close", (
+                plugin_name,
+                executable_parts,
+                split,
+                tag,
+                chance_string,
+                flag,
+                to_execute,
+                chance,
+                sender,
+                target,
+                self_use,
+                event_type,
+                targets,
+                blocks,
+                executables,
+                holder
+        ) -> {
+            if (target instanceof Player player){
+                Bukkit.getScheduler().runTask(CORE, () -> {
+                    player.closeInventory();
+                });
+            }
+            return true;
+        });
+        register_special_tag("change-page", (
+                plugin_name,
+                executable_parts,
+                split,
+                tag,
+                chance_string,
+                flag,
+                to_execute,
+                chance,
+                sender,
+                target,
+                self_use,
+                event_type,
+                targets,
+                blocks,
+                executables,
+                holder
+        ) -> {
+            if (target instanceof Player player){
+                String[] page_change_split = to_execute.split(" ");
+                String group_id = page_change_split[1];
+                String direction;
+                if (page_change_split.length >= 3) {
+                    direction = page_change_split[2];
+                } else {
+                    direction = "forward";
+                }
+                Bukkit.getScheduler().runTask(CORE, () -> {
+                    m_gui.change_page(player, group_id, direction, true);
+                });
+            }
+            return true;
+        });
+    }
+    public interface HANDLER_Executable {
+        boolean handle(
+                String       plugin_name,
+                String[]     executable_parts,
+                String[]     split,
+                String       tag,
+                String       chance_string,
+                String       flag,
+                String       to_execute,
+                double       chance,
+                LivingEntity sender,
+                Entity       target,
+                boolean      self_use,
+                String       event_type,
+                Set<Entity>  targets,
+                Set<Block>   blocks,
+                List<String> executables,
+                HOLDER       holder
+        );
+    }
+    public final Map<String, HANDLER_Executable> SPECIAL_TAG_HANDLERS = new HashMap<>();
+
+    public void register_special_tag(String type, HANDLER_Executable handler) {
+        String formatted = type.toLowerCase(Locale.ROOT);
+        utils.console_message(true, " <White>Registered SPECIAL tag `<gold>" + formatted + "<white>`.");
+        SPECIAL_TAG_HANDLERS.put(formatted, handler);
+    }
+    public HANDLER_Executable get_special_tag_handler(String type) {
+        return SPECIAL_TAG_HANDLERS.get(type.toLowerCase(Locale.ROOT));
     }
 
     public String[] split_executable(String input) {

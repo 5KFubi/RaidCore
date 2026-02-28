@@ -25,12 +25,15 @@ import static me.fivekfubi.raidcore.RaidCore.*;
 
 public class MANAGER_GUI_loader {
 
-    private final Map<String, Map<String, DATA_GUI>> guis = new HashMap<>();
-    private final Map<String, Map<List<Integer>, String>> group_slot = new HashMap<>();
+    public final Map<String, Map<String, DATA_GUI>> guis = new HashMap<>();
+    public final Map<String, Map<List<Integer>, String>> group_slot = new HashMap<>();
 
     public DATA_GUI get_gui_data(String plugin_name, String path){
         Map<String, DATA_GUI> map = guis.get(plugin_name);
         if (map == null) return null;
+        if (!path.startsWith("GUIs/")){
+            path = "GUIs/" + path;
+        }
         return map.get(path);
     }
     public String get_slot_in_group(String plugin_name, int slot){

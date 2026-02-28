@@ -160,7 +160,6 @@ public final class RaidCore extends JavaPlugin {
         //
 
         if (!loaded) update_databases();
-
         t_inventory.load();
         m_placeholder.load();
         m_command.load();
@@ -169,6 +168,7 @@ public final class RaidCore extends JavaPlugin {
         m_economy.load();
         m_gui_loader.load_all();
         if (!loaded) m_gui.register_default();
+        if (!loaded) m_executable.register_default();
         m_message.load_messages(CORE_NAME);
 
         //
