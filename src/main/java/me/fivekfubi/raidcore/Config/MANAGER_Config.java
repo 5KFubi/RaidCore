@@ -123,7 +123,7 @@ public class MANAGER_Config {
                 if (!path.isEmpty()) {
 
                     String last = path.get(path.size() - 1);
-                    boolean ends_in_file = last.endsWith(".yml");
+                    boolean ends_in_file = is_allowed_extension(last);
 
                     if (ends_in_file) {
                         root_configs
@@ -150,7 +150,7 @@ public class MANAGER_Config {
                     boolean starts_with_root = root_folder.equals(path.get(0));
 
                     String last = path.get(path.size() - 1);
-                    boolean ends_in_file = last.endsWith(".yml");
+                    boolean ends_in_file = is_allowed_extension(last);
 
                     if (starts_with_root && ends_in_file) {
                         result
@@ -193,7 +193,7 @@ public class MANAGER_Config {
                 boolean starts_with_root = root_folder.equals(path.get(0));
 
                 String last = path.get(path.size() - 1);
-                boolean ends_in_file = last.endsWith(".yml");
+                boolean ends_in_file = is_allowed_extension(last);
 
                 if (starts_with_root && ends_in_file) {
                     root_configs.add(configs.get(plugin.getName()).get(path));
@@ -290,19 +290,32 @@ public class MANAGER_Config {
         }
 
         try {
-            FileConfiguration config = YamlConfiguration.loadConfiguration(file);
-
             DATA_Config config_data = new DATA_Config();
             config_data.file = file;
-            config_data.config = config;
             config_data.path = path;
             config_data.file_name = file.getName();
+
+            if (file.getName().endsWith(".yml") || file.getName().endsWith(".yaml")) {
+                config_data.config = YamlConfiguration.loadConfiguration(file);
+            }
 
             Map<List<String>, DATA_Config> plugin_configs = configs.computeIfAbsent(plugin.getName(), k -> new HashMap<>());
             plugin_configs.put(path, config_data);
         } catch (Throwable t) {
             utils.error_message("<white> Failed to load config - Error [possible configuration error] <yellow>`" + resource_path + "`", t);
         }
+    }
+
+    public List<String> allowed_extensions = new ArrayList<>(List.of(
+       ".yml",
+       ".yaml",
+       ".json"
+    ));
+    public boolean is_allowed_extension(String name){
+        for (String end : allowed_extensions){
+            if (name.endsWith(end)) return true;
+        }
+        return false;
     }
     public void load_user_configs(JavaPlugin plugin, List<List<String>> default_paths) {
         Set<List<String>> default_path_set = new HashSet<>(default_paths);
@@ -327,7 +340,8 @@ public class MANAGER_Config {
 
             try {
                 Files.walk(folder.toPath())
-                        .filter(p -> p.toFile().isFile() && p.toString().endsWith(".yml"))
+                        .filter(p -> p.toFile().isFile() && is_allowed_extension(p.toString())
+                        )
                         .forEach(p -> {
                             Path base_path = plugin.getDataFolder().toPath();
                             Path relative_path = base_path.relativize(p);

@@ -76,6 +76,8 @@ public class MANAGER_Migration {
                             int quoteEnd = line.lastIndexOf('"');
                             if (quoteStart != -1 && quoteEnd != -1 && quoteEnd > quoteStart) {
                                 latest_version = line.substring(quoteStart + 1, quoteEnd);
+                            } else {
+                                latest_version = line.substring(line.indexOf(':') + 1).trim();
                             }
                             break;
                         }

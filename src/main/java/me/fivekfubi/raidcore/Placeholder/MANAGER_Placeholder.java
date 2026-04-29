@@ -1,12 +1,16 @@
 package me.fivekfubi.raidcore.Placeholder;
 
+import me.fivekfubi.raidcore.Executable.MANAGER_Executable;
 import me.fivekfubi.raidcore.Holder.HOLDER;
 import me.fivekfubi.raidcore.Config.Data.DATA_Config;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.TextDecoration;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
+import org.bukkit.block.Block;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.entity.Entity;
+import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 
 import java.util.*;
@@ -92,6 +96,8 @@ public class MANAGER_Placeholder {
                 replacement_data_cache.put("%" + p + "%", replacements);
             }
         }
+
+        register_default();
     }
 
     public final Map<String, Map<String, DATA_Replacement>> replacement_data_cache = new HashMap<>();
@@ -196,31 +202,100 @@ public class MANAGER_Placeholder {
         }
     }
 
-    public final Set<String> PLACEHOLDERS = new HashSet<>(List.of(
-            "%random-value%",
-            "%plugin-current-version%",
-            "%plugin-latest-version%",
-            "%plugin-update-link%",
+    public interface HANDLER_Placeholder {
+        String handle(
+                HOLDER holder
+        );
+    }
+    public final Map<String, HANDLER_Placeholder> PLACEHOLDER_HANDLERS = new HashMap<>();
 
-            "%target-name%",
-            "%target-uuid%",
-            "%player-name%",
-            "%player-uuid%",
-            "%player-balance-money%",
+    public void register_placeholder(String type, HANDLER_Placeholder handler) {
+        String formatted = type.toLowerCase(Locale.ROOT);
+        utils.console_message(true, " <White>Registered placeholder `<gold>" + formatted + "<white>`.");
+        PLACEHOLDER_HANDLERS.put(formatted, handler);
+    }
+    public HANDLER_Placeholder get_placeholder_handler(String type) {
+        return PLACEHOLDER_HANDLERS.get(type.toLowerCase(Locale.ROOT));
+    }
 
-            "%item-name%",
-            "%item-amount%",
-            "%item-durability%",
+    public void register_default() {
 
-            "%item-slot%",
-            "%item-slot-category%"
-    ));
+        register_placeholder("%random-value%", (holder) -> {
+            return String.valueOf(Math.random());
+        });
 
-    public final Set<String> PLACEHOLDERS_DYNAMIC = new HashSet<>(List.of(
-            "%protection-fuel-price-money ",
-            "%upgrade-price-money ",
-            "%upgrade-price-items "
-    ));
+        register_placeholder("%plugin-current-version%", (holder) -> {
+            String value = holder.get("plugin-current-version", String.class, null);
+            return value;
+        });
+
+        register_placeholder("%plugin-latest-version%", (holder) -> {
+            String value = holder.get("plugin-latest-version", String.class, null);
+            return value;
+        });
+
+        register_placeholder("%plugin-update-link%", (holder) -> {
+            String value = holder.get("plugin-update-link", String.class, null);
+            return value;
+        });
+
+        register_placeholder("%player-name%", (holder) -> {
+            Player player = holder.get(NKEY.player.getKey(), Player.class, null);
+            return player != null ? player.getName() : "null";
+        });
+
+        register_placeholder("%player-uuid%", (holder) -> {
+            Player player = holder.get(NKEY.player.getKey(), Player.class, null);
+            return player != null ? player.getUniqueId().toString() : "null";
+        });
+
+        register_placeholder("%player-balance-money%", (holder) -> {
+            Player player = holder.get(NKEY.player.getKey(), Player.class, null);
+            return player != null
+                    ? m_placeholder.format_money(m_economy.get_balance(player))
+                    : m_placeholder.format_money(0);
+        });
+
+        register_placeholder("%item-slot%", (holder) -> {
+            Player player = holder.get(NKEY.player.getKey(), Player.class, null);
+
+            if (holder.contains(NKEY.item_slot.getKey())) {
+                return String.valueOf(holder.get(NKEY.item_slot.getKey(), Object.class, null));
+            }
+
+            if (player != null) {
+                return String.valueOf(player.getInventory().getHeldItemSlot());
+            }
+
+            return "0";
+        });
+
+        register_placeholder("%item-slot-category%", (holder) -> {
+            Player player = holder.get(NKEY.player.getKey(), Player.class, null);
+
+            if (holder.contains(NKEY.item_slot_category.getKey())) {
+                return String.valueOf(holder.get(NKEY.item_slot_category.getKey(), Object.class, null));
+            }
+
+            if (player != null) {
+                return t_inventory.get_slot_name(player.getInventory().getHeldItemSlot());
+            }
+
+            return "null";
+        });
+
+        register_placeholder("%protection-fuel-price-money", (holder) -> {
+            return "0";
+        });
+
+        register_placeholder("%upgrade-price-money", (holder) -> {
+            return "0";
+        });
+
+        register_placeholder("%upgrade-price-items", (holder) -> {
+            return "0";
+        });
+    }
 
 
     //
@@ -319,179 +394,94 @@ public class MANAGER_Placeholder {
     //
     //
     //
-    public Map<String, Map<Integer, Integer>> get_placeholders_within(String text){
-        List<String> list = Arrays.asList(text.split("\n"));
-        return get_placeholders_within(list);
-    }
-    public Map<String, Map<Integer, Integer>> get_placeholders_within(List<String> text){
-        Map<String, Map<Integer, Integer>> found = new HashMap<>();
-        for (int line_number = 0; line_number < text.size(); line_number++) {
-            String line = text.get(line_number);
-            for (String placeholder : PLACEHOLDERS) {
-                if (line.contains(placeholder)) {
-                    Map<Integer, Integer> inner = found.computeIfAbsent(placeholder, k -> new HashMap<>());
-                    inner.put(line_number, 1);
-                }
-            }
+    private final Map<String, String> resolved_scratch = new HashMap<>();
+    private final List<String> output_scratch = new ArrayList<>();
+    private final Map<String, String> condition_scratch = new HashMap<>();
 
-            for (String placeholder : PLACEHOLDERS_DYNAMIC) {
-                int index = 0;
-                while ((index = line.indexOf(placeholder, index)) != -1) {
-                    int start = index;
-                    int end = start + placeholder.length();
-
-                    int placeholder_end = line.indexOf('%', end);
-                    if (placeholder_end != -1) {
-                        String value_string = line.substring(end, placeholder_end);
-                        try{
-                            int value = Integer.parseInt(value_string);
-
-                            Map<Integer, Integer> inner = found.computeIfAbsent(placeholder, k -> new HashMap<>());
-                            inner.put(line_number, value);
-                        }catch (Throwable ignored){}
-                    }
-                    index = end;
-                }
-            }
-
-        }
-        return found;
-    }
-    //
-    //
-    //
-    //
-    public String replace_placeholders_string(String text, HOLDER holder_data){
-        return replace_placeholders_string(List.of(text), holder_data);
-    }
-    public String replace_placeholders_string(List<String> text, HOLDER holder_data){
-        return String.join("\n", replace_placeholders_list_string(text, holder_data));
-    }
-    public List<String> replace_placeholders_list_string(String text, HOLDER holder_data){
-        return replace_placeholders_list_string(List.of(text), holder_data);
-    }
-    public List<String> replace_placeholders_list_string(List<String> text, HOLDER holder_data){
+    public String replace_placeholders_string(String text, HOLDER holder_data) {
         if (text == null) return null;
 
-        Player player = null;
-        String player_name = null;
-        UUID player_uuid = null;
-        if (holder_data != null){
-            player = holder_data.get(NKEY.player.getKey(), Player.class, null);
-            if (player != null){
-                player_name = player.getName();
-                player_uuid = player.getUniqueId();
-            }
+        resolved_scratch.clear();
+        for (String placeholder : PLACEHOLDER_HANDLERS.keySet()) {
+            if (!text.contains(placeholder)) continue;
+            HANDLER_Placeholder handler = PLACEHOLDER_HANDLERS.get(placeholder);
+            String value = handler != null ? handler.handle(holder_data) : null;
+            if (value == null || value.isEmpty()) value = "null";
+            resolved_scratch.put(placeholder, value);
         }
 
-        Map<String, Map<Integer, Integer>> placeholders_within = get_placeholders_within(text);
-        Map<Integer, Map<String, String>> placeholder_values = new HashMap<>();
-        for (String placeholder : placeholders_within.keySet()){
-            Map<Integer, Integer> line_map = placeholders_within.get(placeholder);
+        if (resolved_scratch.isEmpty()) return text;
 
-            for (Integer line_number : line_map.keySet()){
-                int line_value = line_map.get(line_number);
-                Map<String, String> inner = placeholder_values.computeIfAbsent(line_number, k -> new HashMap<>());
+        for (Map.Entry<String, String> entry : resolved_scratch.entrySet()) {
+            text = text.replace(entry.getKey(), entry.getValue());
+        }
+        return text;
+    }
 
-                String value = null;
+    public List<String> replace_placeholders_list_string(List<String> text, HOLDER holder_data) {
+        if (text == null) return null;
 
-                switch (placeholder){
-                    case "%random-value%" -> {
-                        value = String.valueOf(Math.random());
-                    }
-                    case "%plugin-current-version%" -> {
-                        value = plugin_current_version;
-                    }
-                    case "%plugin-latest-version%" -> {
-                        value = plugin_latest_version;
-                    }
-                    case "%plugin-update-link%" -> {
-                        value = plugin_update_link;
-                    }
-                    case "%item-slot%" -> {
-                        if (holder_data != null){
-                            if (holder_data.contains(NKEY.item_slot.getKey())){
-                                value = getOrDefault(holder_data.get(NKEY.item_slot.getKey(), String.class, null));
-                            }else if (player != null){
-                                value = getOrDefault(player.getInventory().getHeldItemSlot());
-                            }
-                        }
-                    }
-                    case "%item-slot-category%" -> {
-                        if (holder_data != null){
-                            if (holder_data.contains(NKEY.item_slot_category.getKey())){
-                                value = getOrDefault(holder_data.get(NKEY.item_slot_category.getKey(), String.class, null));
-                            }else if (player != null){
-                                value = t_inventory.get_slot_name(player.getInventory().getHeldItemSlot());
-                            }
-                        }
-                    }
-                }
+        resolved_scratch.clear();
+        for (String placeholder : PLACEHOLDER_HANDLERS.keySet()) {
+            for (String line : text) {
+                if (!line.contains(placeholder)) continue;
+                HANDLER_Placeholder handler = PLACEHOLDER_HANDLERS.get(placeholder);
+                String value = handler != null ? handler.handle(holder_data) : null;
                 if (value == null || value.isEmpty()) value = "null";
-                inner.put(placeholder, value);
+                resolved_scratch.put(placeholder, value);
+                break;
             }
         }
 
-        List<String> output = new ArrayList<>();
-        for (int line_number = 0; line_number < text.size(); line_number++) {
-            String line = text.get(line_number);
+        if (resolved_scratch.isEmpty()) return text;
 
-            Map<String, String> placeholder_replacements = placeholder_values.get(line_number);
+        output_scratch.clear();
+        for (String line : text) {
             boolean skip = false;
 
-            if (placeholder_replacements != null){
-                for (String placeholder_key : placeholder_replacements.keySet()){
-                    String replacement_value = placeholder_replacements.get(placeholder_key);
+            for (Map.Entry<String, String> entry : resolved_scratch.entrySet()) {
+                if (!line.contains(entry.getKey())) continue;
 
-                    Map<String, DATA_Replacement> replacements = replacement_data_cache.get(placeholder_key);
-                    boolean remove_empty = false;
-                    if (replacements != null) {
+                String placeholder_key = entry.getKey();
+                String replacement_value = entry.getValue();
 
-                        DATA_Replacement replacement_data = replacements.containsKey(replacement_value) ? replacements.get(replacement_value) : replacements.get("default-null-replacement");
-                        if (replacement_data != null) {
-
-                            replacement_value = replacement_data.text;
-                            if (replacement_data.remove_whole_line) {
-                                skip = true;
-                                break;
-                            }
-                            if (replacement_data.remove_empty_line) {
-                                remove_empty = true;
-                            }
-                        }
-                    }
-
-                    if (remove_empty){
-                        line = line.replace(placeholder_key, replacement_value);
-                        if (line.isEmpty() || line.equals("null")){
-                            skip = true;
-                            break;
-                        }
-                    }else{
-                        line = line.replace(placeholder_key, replacement_value);
+                Map<String, DATA_Replacement> replacements = replacement_data_cache.get(placeholder_key);
+                boolean remove_empty = false;
+                if (replacements != null) {
+                    DATA_Replacement replacement_data = replacements.containsKey(replacement_value)
+                            ? replacements.get(replacement_value)
+                            : replacements.get("default-null-replacement");
+                    if (replacement_data != null) {
+                        replacement_value = replacement_data.text;
+                        if (replacement_data.remove_whole_line) { skip = true; break; }
+                        if (replacement_data.remove_empty_line) remove_empty = true;
                     }
                 }
+
+                line = line.replace(placeholder_key, replacement_value);
+                if (remove_empty && (line.isEmpty() || line.equals("null"))) { skip = true; break; }
             }
 
             if (skip) continue;
-
-            if (line.contains("\n")){
-                String[] splits = line.split("\n");
-                Collections.addAll(output, splits);
-            }else{
-                output.add(line);
-            }
+            output_scratch.add(line);
         }
-        return output;
+        return new ArrayList<>(output_scratch);
     }
-    public Component replace_placeholders_component(String text, HOLDER holder_data){
-        return colorize(replace_placeholders_string(List.of(text), holder_data));
+
+    public String replace_placeholders_string(List<String> text, HOLDER holder_data) {
+        return String.join("\n", replace_placeholders_list_string(text, holder_data));
     }
-    public Component replace_placeholders_component(List<String> text, HOLDER holder_data){
+    public List<String> replace_placeholders_list_string(String text, HOLDER holder_data) {
+        return replace_placeholders_list_string(Arrays.asList(text.split("\n")), holder_data);
+    }
+    public Component replace_placeholders_component(String text, HOLDER holder_data) {
         return colorize(replace_placeholders_string(text, holder_data));
     }
-    public List<Component> replace_placeholders_list_component(String text, HOLDER holder_data){
-        return colorize_list(replace_placeholders_list_string(List.of(text), holder_data));
+    public Component replace_placeholders_component(List<String> text, HOLDER holder_data) {
+        return colorize(replace_placeholders_string(text, holder_data));
+    }
+    public List<Component> replace_placeholders_list_component(String text, HOLDER holder_data) {
+        return colorize_list(replace_placeholders_list_string(text, holder_data));
     }
     public List<Component> replace_placeholders_list_component(List<String> text, HOLDER holder_data) {
         return colorize_list(replace_placeholders_list_string(text, holder_data));
@@ -506,16 +496,15 @@ public class MANAGER_Placeholder {
             "%item-slot-category%"
     ));
 
-    public final Set<String> CONDITION__PLACEHOLDERS_DYNAMIC = new HashSet<>(List.of(
-
-    ));
     public String replace_condition_placeholders(String text, HOLDER holder) {
         if (text == null) return null;
 
         Player player = holder != null ? holder.get(NKEY.player.getKey(), Player.class, null) : null;
 
-        Map<String, String> replacements = new HashMap<>();
+        condition_scratch.clear();
         for (String placeholder : CONDITION_PLACEHOLDERS) {
+            if (!text.contains(placeholder)) continue;
+
             String value = null;
             boolean number = false;
             switch (placeholder) {
@@ -548,12 +537,12 @@ public class MANAGER_Placeholder {
             }
 
             if (value != null) {
-                replacements.put(placeholder, format_condition(value, number));
+                condition_scratch.put(placeholder, format_condition(value, number));
             }
         }
 
         String result = text;
-        for (Map.Entry<String, String> entry : replacements.entrySet()) {
+        for (Map.Entry<String, String> entry : condition_scratch.entrySet()) {
             result = result.replace(entry.getKey(), entry.getValue());
         }
 
