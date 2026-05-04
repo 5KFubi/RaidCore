@@ -220,14 +220,7 @@ public class MANAGER_GUI implements Listener {
             utils.error_message("<white>Failed to open custom GUI: <yellow>" + path_string + "<white> | Invalid 'GUI' data.", null);
             return;
         }
-
         HOLDER holder = Objects.requireNonNullElseGet(t_holder_data, HOLDER::new);
-
-        if (holder.contains("dungeon_data")){
-            utils.broadcast("!!!! CONTAINS YES YES A");
-        }else{
-            utils.broadcast("--- DOES NOT");
-        }
 
         Component title = m_placeholder.replace_placeholders_component(g_data.get_title(), holder);
         int size = g_data.get_size();
@@ -489,6 +482,7 @@ public class MANAGER_GUI implements Listener {
 
         ItemStack to_place = update_item_meta(
                 original,
+                null,
                 gradual_model_data ? model_data + placed : model_data,
                 gradual_amount ? amount + placed : amount,
                 name,
@@ -501,6 +495,7 @@ public class MANAGER_GUI implements Listener {
     }
     public ItemStack update_item_meta(
             ItemStack original,
+            ItemMeta meta,
             int model_data,
             int amount,
             String name,
@@ -508,7 +503,11 @@ public class MANAGER_GUI implements Listener {
             HOLDER holder_data
     ) {
         ItemStack item = original.clone();
-        ItemMeta meta = item.getItemMeta();
+
+        if (meta == null){
+            meta = original.getItemMeta();
+        }
+
         if (meta != null) {
             if (model_data > 0) meta.setCustomModelData(model_data);
             if (amount > 0){
