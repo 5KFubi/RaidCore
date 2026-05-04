@@ -482,7 +482,6 @@ public class MANAGER_GUI implements Listener {
 
         ItemStack to_place = update_item_meta(
                 original,
-                null,
                 gradual_model_data ? model_data + placed : model_data,
                 gradual_amount ? amount + placed : amount,
                 name,
@@ -495,7 +494,6 @@ public class MANAGER_GUI implements Listener {
     }
     public ItemStack update_item_meta(
             ItemStack original,
-            ItemMeta meta,
             int model_data,
             int amount,
             String name,
@@ -503,11 +501,7 @@ public class MANAGER_GUI implements Listener {
             HOLDER holder_data
     ) {
         ItemStack item = original.clone();
-
-        if (meta == null){
-            meta = original.getItemMeta();
-        }
-
+        ItemMeta meta = item.getItemMeta();
         if (meta != null) {
             if (model_data > 0) meta.setCustomModelData(model_data);
             if (amount > 0){
