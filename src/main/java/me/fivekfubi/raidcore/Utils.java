@@ -387,10 +387,32 @@ public class Utils {
         return head;
     }
 
+    public ItemStack get_head_name(String player_name) {
+        OfflinePlayer offline_player = Bukkit.getOfflinePlayer(player_name);
+        return get_head_uuid(offline_player.getUniqueId());
+    }
+
     public ItemStack get_head_uuid(UUID player_uuid) {
         ItemStack skull = new ItemStack(Material.PLAYER_HEAD, 1);
         SkullMeta skull_meta = (SkullMeta) skull.getItemMeta();
 
+        if (skull_meta != null) {
+            OfflinePlayer offline_player = Bukkit.getOfflinePlayer(player_uuid);
+            skull_meta.setOwningPlayer(offline_player);
+            skull.setItemMeta(skull_meta);
+        }
+
+        return skull;
+    }
+
+    public ItemStack get_head_uuid_item(UUID player_uuid, ItemStack original) {
+        ItemStack skull = new ItemStack(Material.PLAYER_HEAD, 1);
+        Map<NamespacedKey, Object> original_container_data = get_container_data(original);
+
+        PersistentDataContainer container = skull.getItemMeta().getPersistentDataContainer();
+        apply_container_data(container,original_container_data);
+
+        SkullMeta skull_meta = (SkullMeta) skull.getItemMeta();
         if (skull_meta != null) {
             OfflinePlayer offline_player = Bukkit.getOfflinePlayer(player_uuid);
             skull_meta.setOwningPlayer(offline_player);
@@ -429,11 +451,6 @@ public class Utils {
                 container.set(new NamespacedKey(plugin, key), PersistentDataType.BOOLEAN, val);
             }
         }
-    }
-
-    public ItemStack get_head_uuid(String player_name) {
-        OfflinePlayer offline_player = Bukkit.getOfflinePlayer(player_name);
-        return get_head_uuid(offline_player.getUniqueId());
     }
 
 

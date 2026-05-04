@@ -223,6 +223,12 @@ public class MANAGER_GUI implements Listener {
 
         HOLDER holder = Objects.requireNonNullElseGet(t_holder_data, HOLDER::new);
 
+        if (holder.contains("dungeon_data")){
+            utils.broadcast("!!!! CONTAINS YES YES A");
+        }else{
+            utils.broadcast("--- DOES NOT");
+        }
+
         Component title = m_placeholder.replace_placeholders_component(g_data.get_title(), holder);
         int size = g_data.get_size();
         GUI_Inventory g_inventory = new GUI_Inventory(plugin_name, path_string, size, title, g_data);
@@ -686,6 +692,13 @@ public class MANAGER_GUI implements Listener {
                         NKEY.item_slot_category.getKey(), slot_name,
                         NKEY.player.getKey(), player
                 ));
+
+                GUI_Inventory g_inv = open_guis.get(player);
+                if (g_inv != null && g_inv.holder_data != null) {
+                    for (Map.Entry<String, Object> entry : g_inv.holder_data.get_data().entrySet()) {
+                        holder.set(entry.getKey(), entry.getValue());
+                    }
+                }
 
                 DATA_Action_Condition resolved = utils.resolve_condition(state.conditions, holder);
                 if (resolved == null) continue;
