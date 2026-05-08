@@ -190,12 +190,12 @@ public class MANAGER_GUI implements Listener {
         if (group != null && g_inventory != null && group_id != null){
             GUI_Group_settings group_settings = group.get_group_settings();
             if (group_settings != null){
-                boolean interact_stop = group_settings.get_switch_interact_stop();
+                boolean interact_stop = group_settings.switch_interact_stop;
                 if (interact_stop){
                     Map<String, GUI_Task> group_tasks = g_inventory.group_tasks;
                     GUI_Task gTask = group_tasks.get(group_id);
                     if (gTask != null){
-                        long interact_timer = group_settings.get_switch_interact_stop_timer();
+                        long interact_timer = group_settings.switch_interact_stop_timer;
                         if (interact_timer > 0){
                             gTask.set_interrupt_time(interact_timer);
                         }else{
@@ -254,11 +254,11 @@ public class MANAGER_GUI implements Listener {
             GUI_Group_settings group_settings = g_group.get_group_settings();
 
             if (group_settings != null){
-                boolean auto = group_settings.get_switch_enable();
+                boolean auto = group_settings.switch_enable;
                 if (auto){
-                    List<String> order = group_settings.get_switch_order();
+                    List<String> order = group_settings.switch_order;
                     int order_size = order.size();
-                    long delay = group_settings.get_switch_delay();
+                    long delay = group_settings.switch_delay;
 
                     GUI_Task gTask = new GUI_Task();
 
@@ -335,7 +335,7 @@ public class MANAGER_GUI implements Listener {
                             int page_id = g_page.get_page_number();
 
                             if (group_settings != null){
-                                boolean fill_empty = group_settings.get_fill_empty();
+                                boolean fill_empty = group_settings.fill_empty;
                                 if (fill_empty){
                                     Set<Integer> current_page_slots = new HashSet<>();
                                     for (GUI_Item data : g_page.get_items().values()) {

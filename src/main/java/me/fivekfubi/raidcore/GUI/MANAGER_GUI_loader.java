@@ -213,7 +213,9 @@ public class MANAGER_GUI_loader {
                         ConfigurationSection settings_section = group_section.getConfigurationSection("settings");
                         if (settings_section != null) {
                             boolean fill_empty = settings_section.getBoolean("fill-empty");
-                            group_settings.set_fill_empty(fill_empty);
+                            int repeat_last_page = settings_section.getInt("repeat-last-page");
+                            group_settings.fill_empty = fill_empty;
+                            group_settings.repeat_last_page = repeat_last_page;
 
                             ConfigurationSection switch_section = settings_section.getConfigurationSection("switch");
                             if (switch_section != null){
@@ -223,11 +225,11 @@ public class MANAGER_GUI_loader {
                                 boolean interact_stop = switch_section.getBoolean("interact.stop");
                                 long interact_timer = switch_section.getLong("interact.timer");
 
-                                group_settings.set_switch_enable(auto);
-                                group_settings.set_switch_order(order);
-                                group_settings.set_switch_delay(delay);
-                                group_settings.set_switch_interact_stop(interact_stop);
-                                group_settings.set_switch_interact_stop_timer(interact_timer);
+                                group_settings.switch_enable              = auto;
+                                group_settings.switch_order               = order;
+                                group_settings.switch_delay               = delay;
+                                group_settings.switch_interact_stop       = interact_stop;
+                                group_settings.switch_interact_stop_timer = interact_timer;
                             }
                         }
                         gGroup.set_group_settings(group_settings);
@@ -278,6 +280,17 @@ public class MANAGER_GUI_loader {
                             page_items.put(group_id, gui_item);
                             gPage.set_items(page_items);
                             pages.put(page_number, gPage);
+                        }
+
+                        if (group_settings.repeat_last_page > 0 && !pages.isEmpty()) {
+                            GUI_Page last_page = pages.get(page_number - 1);
+                            for (int r = 0; r < group_settings.repeat_last_page; r++) {
+                                GUI_Page repeated = new GUI_Page();
+                                repeated.set_page_number(page_number);
+                                repeated.set_items(last_page.get_items());
+                                pages.put(page_number, repeated);
+                                page_number++;
+                            }
                         }
                         //
 
