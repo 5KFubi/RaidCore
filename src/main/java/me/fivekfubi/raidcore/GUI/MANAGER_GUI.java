@@ -208,6 +208,9 @@ public class MANAGER_GUI implements Listener {
         }
     }
 
+    public final Map<Player, Deque<GUI_Inventory>> gui_history = new HashMap<>();
+    private static final int MAX_HISTORY = 10;
+
     public void open(
             String plugin_name,
             Player player,
@@ -454,8 +457,41 @@ public class MANAGER_GUI implements Listener {
 
         if (open_guis.containsKey(player)) {
             g_data.play_switch_sound(player);
+
+            if (!going_back.contains(player)){
+                GUI_Inventory previous = open_guis.get(player);
+                Deque<GUI_Inventory> history = gui_history.computeIfAbsent(player, k -> new ArrayDeque<>());
+                if (history.size() >= MAX_HISTORY) {
+                    history.pollLast();
+                }
+                previous.holder_data = new HOLDER(new HashMap<>(previous.holder_data.get_data()));
+                history.push(previous);
+            }
         }
+
         player.openInventory(inventory);
+    }
+    private final Set<Player> going_back = new HashSet<>();
+    public void back_gui(Player player) {
+        if (player == null) return;
+
+        Deque<GUI_Inventory> history = gui_history.get(player);
+        if (history == null || history.isEmpty()) return;
+
+        GUI_Inventory previous = history.peek();
+
+        going_back.add(player);
+        try {
+            DATA_GUI g_data = m_gui_loader.get_gui_data(previous.plugin_name, previous.file_path);
+            if (g_data == null) {
+                history.poll();
+                return;
+            }
+            history.poll();
+            open(previous.plugin_name, player, previous.file_path, previous.holder_data);
+        } finally {
+            going_back.remove(player);
+        }
     }
 
     public void place_default(
@@ -552,6 +588,8 @@ public class MANAGER_GUI implements Listener {
             if (!(current_holder instanceof GUI_Inventory)) {
                 g_inventory.gui_data.play_close_sound(player);
                 open_guis.remove(player);
+                gui_history.remove(player);
+                going_back.remove(player);
             }
         }, 1L);
     }
