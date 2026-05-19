@@ -203,7 +203,7 @@ public class MANAGER_Placeholder {
     }
 
     public interface HANDLER_Placeholder {
-        String handle(
+        Object handle(
                 HOLDER holder
         );
     }
@@ -394,7 +394,7 @@ public class MANAGER_Placeholder {
     //
     //
     //
-    private final Map<String, String> resolved_scratch = new HashMap<>();
+    private final Map<String, Object> resolved_scratch = new HashMap<>();
     private final List<String> output_scratch = new ArrayList<>();
     private final Map<String, String> condition_scratch = new HashMap<>();
 
@@ -405,15 +405,22 @@ public class MANAGER_Placeholder {
         for (String placeholder : PLACEHOLDER_HANDLERS.keySet()) {
             if (!text.contains(placeholder)) continue;
             HANDLER_Placeholder handler = PLACEHOLDER_HANDLERS.get(placeholder);
-            String value = handler != null ? handler.handle(holder_data) : null;
-            if (value == null || value.isEmpty()) value = "null";
+            Object value = handler != null ? handler.handle(holder_data) : null;
+            if (value == null) value = "null";
             resolved_scratch.put(placeholder, value);
         }
 
         if (resolved_scratch.isEmpty()) return text;
 
-        for (Map.Entry<String, String> entry : resolved_scratch.entrySet()) {
-            text = text.replace(entry.getKey(), entry.getValue());
+        for (Map.Entry<String, Object> entry : resolved_scratch.entrySet()) {
+            String replacement;
+            if (entry.getValue() instanceof List<?> list) {
+                replacement = list.stream().map(Object::toString).collect(Collectors.joining("\n"));
+            } else {
+                replacement = entry.getValue().toString();
+            }
+            if (replacement.isEmpty()) replacement = "null";
+            text = text.replace(entry.getKey(), replacement);
         }
         return text;
     }
@@ -426,8 +433,8 @@ public class MANAGER_Placeholder {
             for (String line : text) {
                 if (!line.contains(placeholder)) continue;
                 HANDLER_Placeholder handler = PLACEHOLDER_HANDLERS.get(placeholder);
-                String value = handler != null ? handler.handle(holder_data) : null;
-                if (value == null || value.isEmpty()) value = "null";
+                Object value = handler != null ? handler.handle(holder_data) : null;
+                if (value == null) value = "null";
                 resolved_scratch.put(placeholder, value);
                 break;
             }
@@ -437,13 +444,64 @@ public class MANAGER_Placeholder {
 
         output_scratch.clear();
         for (String line : text) {
-            boolean skip = false;
 
-            for (Map.Entry<String, String> entry : resolved_scratch.entrySet()) {
+            String expand_key = null;
+            List<String> expand_values = null;
+            for (Map.Entry<String, Object> entry : resolved_scratch.entrySet()) {
+                if (line.contains(entry.getKey()) && entry.getValue() instanceof List<?> list) {
+                    expand_key = entry.getKey();
+                    expand_values = list.stream().map(Object::toString).toList();
+                    break;
+                }
+            }
+
+            if (expand_key != null) {
+                Map<String, DATA_Replacement> replacements = replacement_data_cache.get(expand_key);
+                for (String element : expand_values) {
+                    String actual = element;
+                    boolean skip_element = false;
+                    boolean remove_if_empty = false;
+
+                    if (replacements != null) {
+                        DATA_Replacement rd = replacements.containsKey(actual)
+                                ? replacements.get(actual)
+                                : replacements.get("default-null-replacement");
+                        if (rd != null) {
+                            if (rd.remove_whole_line) { skip_element = true; }
+                            else {
+                                if (rd.remove_empty_line) remove_if_empty = true;
+                                actual = rd.text;
+                            }
+                        }
+                    }
+                    if (skip_element) continue;
+
+                    String expanded = line.replace(expand_key, actual);
+
+                    // apply remaining (non-list) replacements to the expanded line
+                    for (Map.Entry<String, Object> other : resolved_scratch.entrySet()) {
+                        if (other.getKey().equals(expand_key)) continue;
+                        if (!expanded.contains(other.getKey())) continue;
+                        String str = other.getValue() instanceof List<?> lst
+                                ? lst.stream().map(Object::toString).collect(Collectors.joining("\n"))
+                                : other.getValue().toString();
+                        if (str.isEmpty()) str = "null";
+                        expanded = expanded.replace(other.getKey(), str);
+                    }
+
+                    if (remove_if_empty && (expanded.isEmpty() || expanded.equals("null"))) continue;
+                    output_scratch.add(expanded);
+                }
+                continue;
+            }
+
+            boolean skip = false;
+            for (Map.Entry<String, Object> entry : resolved_scratch.entrySet()) {
                 if (!line.contains(entry.getKey())) continue;
 
                 String placeholder_key = entry.getKey();
-                String replacement_value = entry.getValue();
+                String replacement_value = entry.getValue().toString();
+                if (replacement_value.isEmpty()) replacement_value = "null";
 
                 Map<String, DATA_Replacement> replacements = replacement_data_cache.get(placeholder_key);
                 boolean remove_empty = false;

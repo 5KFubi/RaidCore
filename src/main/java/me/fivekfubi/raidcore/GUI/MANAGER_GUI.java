@@ -179,7 +179,8 @@ public class MANAGER_GUI implements Listener {
                 if (new_page < 1) new_page = 1;
             }catch (Exception ignored){}
         }
-
+        utils.broadcast("page_number: " + page_number);
+        utils.broadcast("new_page: " + new_page);
         if (by_player) {
             interrupt_group(group, g_inventory, group_id);
         }

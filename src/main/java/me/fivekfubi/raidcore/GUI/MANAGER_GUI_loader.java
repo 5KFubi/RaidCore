@@ -287,7 +287,17 @@ public class MANAGER_GUI_loader {
                             for (int r = 0; r < group_settings.repeat_last_page; r++) {
                                 GUI_Page repeated = new GUI_Page();
                                 repeated.set_page_number(page_number);
-                                repeated.set_items(last_page.get_items());
+
+                                Map<String, GUI_Item> repeated_items = new HashMap<>();
+                                for (Map.Entry<String, GUI_Item> entry : last_page.get_items().entrySet()) {
+                                    GUI_Item original_item = entry.getValue();
+                                    GUI_Item copied_item = original_item.clone();
+                                    //copied_item.start_index = original_item.start_index + (original_item.slots.size() * (r + 1));
+                                    copied_item.start_index = original_item.slots.size() * (r + 1);
+                                    repeated_items.put(entry.getKey(), copied_item);
+                                }
+
+                                repeated.set_items(repeated_items);
                                 pages.put(page_number, repeated);
                                 page_number++;
                             }

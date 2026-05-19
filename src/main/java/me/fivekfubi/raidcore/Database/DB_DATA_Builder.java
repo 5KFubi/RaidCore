@@ -63,8 +63,18 @@ public class DB_DATA_Builder {
 
             BiConsumer<Object, Object> setter_function = (instance, value) -> {
                 try {
-                    if (setter != null) setter.invoke(instance, value);
-                    else field.set(instance, value);
+                    if (setter != null) {
+                        setter.invoke(instance, value);
+                    } else {
+                        Class<?> type = field.getType();
+                        switch (value) {
+                            case Integer i when (type == boolean.class || type == Boolean.class) -> field.set(instance, i != 0);
+                            case Double v when (type == float.class || type == Float.class) -> field.set(instance, v.floatValue());
+                            case Integer i when (type == long.class || type == Long.class) -> field.set(instance, i.longValue());
+                            case Long l when (type == int.class || type == Integer.class) -> field.set(instance, l.intValue());
+                            case null, default -> field.set(instance, value);
+                        }
+                    }
                 } catch (Exception e) {
                     throw new RuntimeException(e);
                 }
