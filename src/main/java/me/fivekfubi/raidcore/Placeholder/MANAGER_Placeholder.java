@@ -1,6 +1,7 @@
 package me.fivekfubi.raidcore.Placeholder;
 
 import me.fivekfubi.raidcore.Executable.MANAGER_Executable;
+import me.fivekfubi.raidcore.GUI.Data.GUI_Inventory;
 import me.fivekfubi.raidcore.Holder.HOLDER;
 import me.fivekfubi.raidcore.Config.Data.DATA_Config;
 import net.kyori.adventure.text.Component;
@@ -256,6 +257,23 @@ public class MANAGER_Placeholder {
                     : m_placeholder.format_money(0);
         });
 
+        register_placeholder("%target-name%", (holder) -> {
+            Player target = holder.get(NKEY.target.getKey(), Player.class, null);
+            return target != null ? target.getName() : "null";
+        });
+
+        register_placeholder("%target-uuid%", (holder) -> {
+            Player target = holder.get(NKEY.target.getKey(), Player.class, null);
+            return target != null ? target.getUniqueId().toString() : "null";
+        });
+
+        register_placeholder("%target-balance-money%", (holder) -> {
+            Player target = holder.get(NKEY.target.getKey(), Player.class, null);
+            return target != null
+                    ? m_placeholder.format_money(m_economy.get_balance(target))
+                    : m_placeholder.format_money(0);
+        });
+
         register_placeholder("%item-slot%", (holder) -> {
             Player player = holder.get(NKEY.player.getKey(), Player.class, null);
 
@@ -282,6 +300,16 @@ public class MANAGER_Placeholder {
             }
 
             return "null";
+        });
+
+        register_placeholder("%previous-gui-name%", (holder) -> {
+            Player player = holder.get(NKEY.player.getKey(), Player.class, null);
+            if (player == null) return "null";
+
+            Deque<GUI_Inventory> history = m_gui.gui_history.get(player);
+            if (history == null || history.isEmpty()) return "null";
+
+            return history.peek().gui_data.placeholder_name;
         });
 
         register_placeholder("%protection-fuel-price-money", (holder) -> {

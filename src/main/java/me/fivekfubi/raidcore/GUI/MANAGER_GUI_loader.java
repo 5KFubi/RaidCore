@@ -27,6 +27,7 @@ public class MANAGER_GUI_loader {
 
     public final Map<String, Map<String, DATA_GUI>> guis = new HashMap<>();
     public final Map<String, Map<List<Integer>, String>> group_slot = new HashMap<>();
+    public static int MAX_HISTORY = 14;
 
     public DATA_GUI get_gui_data(String plugin_name, String path){
         Map<String, DATA_GUI> map = guis.get(plugin_name);
@@ -48,6 +49,12 @@ public class MANAGER_GUI_loader {
         return null;
     }
 
+    public void load_local(){
+        DATA_Config config_data = m_config.get_config_data(CORE_NAME, List.of("config.yml"));
+        FileConfiguration config = config_data.config;
+
+        MAX_HISTORY = config.getInt("gui.max-history", 14);
+    }
     public void load_all(){
         for (String plugin_name : CORE.registered_plugins.keySet()){
             load(plugin_name);
@@ -81,6 +88,7 @@ public class MANAGER_GUI_loader {
             DATA_GUI gData = new DATA_GUI();
 
             String title = gui_section.getString("title");
+            String placeholder_name = gui_section.getString("placeholder-name");
             if (title == null || title.isEmpty()) title = " ";
             int size = Math.max(1, Math.min(gui_section.getInt("size"), 6));
             List<Integer> used_slots = new ArrayList<>();
@@ -90,34 +98,32 @@ public class MANAGER_GUI_loader {
             try{
                 String string = gui_section.getString("open-sound");
                 if (string != null && !string.isEmpty()){
-                    Sound sound = utils.get_sound(string, path_string + " > gui.open-sound");
-                    gData.set_sound_gui_open(sound);
+                    gData.sound_gui_open = utils.get_sound(string, path_string + " > gui.open-sound");
                 }
             }catch (Exception ignored) {}
 
             try{
                 String string = gui_section.getString("close-sound");
                 if (string != null && !string.isEmpty()){
-                    Sound sound = utils.get_sound(string, path_string + " > gui.close-sound");
-                    gData.set_sound_gui_close(sound);
+                    gData.sound_gui_close = utils.get_sound(string, path_string + " > gui.close-sound");
                 }
             }catch (Exception ignored) {}
 
             try{
                 String string = gui_section.getString("switch-sound");
                 if (string != null && !string.isEmpty()){
-                    Sound sound = utils.get_sound(string, path_string + " > gui.switch-sound");
-                    gData.set_sound_gui_switch(sound);
+                    gData.sound_gui_switch = utils.get_sound(string, path_string + " > gui.switch-sound");
                 }
             }catch (Exception ignored) {}
 
-            gData.set_path(path);
-            gData.set_path_string(path_string);
-            gData.set_title(title);
-            gData.set_size(size);
-            gData.set_refresh_rate(refresh_rate);
-            gData.set_inactivity_timer(inactivity_timer);
-            gData.set_inactivity_message(inactivity_message);
+            gData.path               = path;
+            gData.path_string        = path_string;
+            gData.title              = title;
+            gData.placeholder_name   = placeholder_name;
+            gData.size               = size;
+            gData.refresh_rate       = refresh_rate;
+            gData.inactivity_timer   = inactivity_timer;
+            gData.inactivity_message = inactivity_message;
 
             // -------------------------------------------------------------------------------------------------------------------
             // EMPTY SLOT ITEM
@@ -184,7 +190,7 @@ public class MANAGER_GUI_loader {
 
                     item.setItemMeta(meta);
                 }
-                gData.set_empty_slot_item(item);
+                gData.empty_slot_item = item;
             }
 
             // -------------------------------------------------------------------------------------------------------------------
@@ -310,9 +316,9 @@ public class MANAGER_GUI_loader {
                     }
                     groups.put(group_id, gGroup);
                 }
-                gData.set_item_groups(groups);
+                gData.item_groups = groups;
             }
-            gData.set_used_slots(used_slots);
+            gData.used_slots = used_slots;
             g_map.put(path_string, gData);
         }
         guis.put(plugin_name, g_map);
@@ -441,7 +447,7 @@ public class MANAGER_GUI_loader {
                                     AttributeModifier.Operation.ADD_NUMBER,
                                     0.0
                             );
-                            meta.addAttributeModifier(Attribute.GENERIC_LUCK, modifier);
+                            meta.addAttributeModifier(Attribute.LUCK, modifier);
                         }
                     }
                     meta.addItemFlags(flag);

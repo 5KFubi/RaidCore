@@ -1,0 +1,7 @@
+
+messages:
+  chat-input:
+    cancel:
+      - "<red>Canceled input."
+    success:
+      - "<green>Input registered!"

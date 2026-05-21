@@ -275,6 +275,29 @@ public class MANAGER_Executable {
             }
             return true;
         });
+        register_special_tag("gui-back", (
+                plugin_name,
+                executable_parts,
+                split,
+                tag,
+                chance_string,
+                flag,
+                to_execute,
+                chance,
+                sender,
+                target,
+                self_use,
+                event_type,
+                targets,
+                blocks,
+                executables,
+                holder
+        ) -> {
+            if (target instanceof Player player){
+                m_gui.back_gui(player);
+            }
+            return true;
+        });
         register_special_tag("gui-close", (
                 plugin_name,
                 executable_parts,

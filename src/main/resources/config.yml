@@ -19,17 +19,18 @@
 
 
 database:
-  update-interval: 80L # Ticks | How often to update the databases | LOW PERFORMANCE IMPACT
+  update-interval: 80 # Ticks | How often to update the databases | LOW PERFORMANCE IMPACT
 
 passive-tracker:
   slots-per-tick: 3 # How many slots to check every tick for passive items in the player's inventory | HIGH PERFORMANCE IMPACT
 
+gui:
+  max-history: 14 # How many GUIs to store when using the "gui-back" special tag | LOW PERFORMANCE IMPACT
 
-
-# test 1 -- asd
-list: # comment 2
-  - "line 1" # comment 3
-
-list-2: ["hello", "world"] # comment 4
-
-# end
+chat-input:
+  default:
+    title: "<white>Type in chat"
+    subtitle: "<white>the new value"
+    fade-in: 0 # Ticks
+    stay: 20 # Ticks
+    fade-out: 0 # Ticks

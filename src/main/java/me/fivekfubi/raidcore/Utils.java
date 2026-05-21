@@ -13,6 +13,7 @@ import org.bukkit.attribute.AttributeModifier;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.EquipmentSlotGroup;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -387,38 +388,54 @@ public class Utils {
         return head;
     }
 
-    public ItemStack get_head_name(String player_name) {
-        OfflinePlayer offline_player = Bukkit.getOfflinePlayer(player_name);
-        return get_head_uuid(offline_player.getUniqueId());
-    }
+    public ItemStack get_head_name(String playerName) {
+        Player online = Bukkit.getPlayerExact(playerName);
+        if (online != null) return get_head_uuid(online.getUniqueId());
 
-    public ItemStack get_head_uuid(UUID player_uuid) {
-        ItemStack skull = new ItemStack(Material.PLAYER_HEAD, 1);
-        SkullMeta skull_meta = (SkullMeta) skull.getItemMeta();
+        OfflinePlayer cached = Bukkit.getOfflinePlayerIfCached(playerName);
+        if (cached != null) return get_head_uuid(cached.getUniqueId());
 
-        if (skull_meta != null) {
-            OfflinePlayer offline_player = Bukkit.getOfflinePlayer(player_uuid);
-            skull_meta.setOwningPlayer(offline_player);
-            skull.setItemMeta(skull_meta);
+        // Unknown player — resolve name → UUID → skin
+        PlayerProfile profile = Bukkit.createProfile(null, playerName);
+        profile.completeFromCache();
+        if (!profile.isComplete()) profile.complete(true);
+
+        ItemStack skull = new ItemStack(Material.PLAYER_HEAD);
+        SkullMeta meta = (SkullMeta) skull.getItemMeta();
+        if (meta != null) {
+            meta.setPlayerProfile(profile);
+            skull.setItemMeta(meta);
         }
-
         return skull;
     }
 
-    public ItemStack get_head_uuid_item(UUID player_uuid, ItemStack original) {
-        ItemStack skull = new ItemStack(Material.PLAYER_HEAD, 1);
-        Map<NamespacedKey, Object> original_container_data = get_container_data(original);
+    public ItemStack get_head_uuid(UUID playerUUID) {
+        ItemStack skull = new ItemStack(Material.PLAYER_HEAD);
+        SkullMeta meta = (SkullMeta) skull.getItemMeta();
+        if (meta == null) return skull;
 
-        PersistentDataContainer container = skull.getItemMeta().getPersistentDataContainer();
-        apply_container_data(container,original_container_data);
+        PlayerProfile profile = Bukkit.createProfile(playerUUID, null);
+        profile.completeFromCache();
+        if (!profile.isComplete()) profile.complete(true);
 
-        SkullMeta skull_meta = (SkullMeta) skull.getItemMeta();
-        if (skull_meta != null) {
-            OfflinePlayer offline_player = Bukkit.getOfflinePlayer(player_uuid);
-            skull_meta.setOwningPlayer(offline_player);
-            skull.setItemMeta(skull_meta);
-        }
+        meta.setPlayerProfile(profile);
+        skull.setItemMeta(meta);
+        return skull;
+    }
 
+    public ItemStack get_head_uuid_item(UUID playerUUID, ItemStack original) {
+        ItemStack skull = new ItemStack(Material.PLAYER_HEAD);
+        SkullMeta meta = (SkullMeta) skull.getItemMeta();
+        if (meta == null) return skull;
+
+        apply_container_data(meta.getPersistentDataContainer(), get_container_data(original));
+
+        PlayerProfile profile = Bukkit.createProfile(playerUUID, null);
+        profile.completeFromCache();
+        if (!profile.isComplete()) profile.complete(true);
+
+        meta.setPlayerProfile(profile);
+        skull.setItemMeta(meta);
         return skull;
     }
 

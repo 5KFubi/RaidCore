@@ -7,6 +7,7 @@ import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeModifier;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.inventory.EquipmentSlot;
+import org.bukkit.inventory.EquipmentSlotGroup;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -83,13 +84,12 @@ public class DATA_Item {
             switch (flag) {
                 case HIDE_ATTRIBUTES -> {
                     AttributeModifier modifier = new AttributeModifier(
-                            UUID.randomUUID(),
-                            "generic.hide_attributes",
+                            new NamespacedKey("generic", "hide_attributes"),
                             0.0,
                             AttributeModifier.Operation.ADD_NUMBER,
-                            EquipmentSlot.HAND
+                            EquipmentSlotGroup.ANY
                     );
-                    meta.addAttributeModifier(Attribute.GENERIC_LUCK, modifier);
+                    meta.addAttributeModifier(Attribute.LUCK, modifier);
                 }
             }
             meta.addItemFlags(flag);

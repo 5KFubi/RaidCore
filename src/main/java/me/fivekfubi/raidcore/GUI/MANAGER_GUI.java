@@ -27,6 +27,7 @@ import org.bukkit.scheduler.BukkitTask;
 import java.util.*;
 
 import static me.fivekfubi.raidcore.EVENT_TYPE.*;
+import static me.fivekfubi.raidcore.GUI.MANAGER_GUI_loader.MAX_HISTORY;
 import static me.fivekfubi.raidcore.RaidCore.*;
 
 public class MANAGER_GUI implements Listener {
@@ -148,7 +149,7 @@ public class MANAGER_GUI implements Listener {
         DATA_GUI gData = g_inventory.gui_data;
         if (gData == null) return;
 
-        Map<String, GUI_Group> groups = gData.get_item_groups();
+        Map<String, GUI_Group> groups = gData.item_groups;
         GUI_Group group = groups.get(group_id);
         if (group == null) return;
 
@@ -179,8 +180,6 @@ public class MANAGER_GUI implements Listener {
                 if (new_page < 1) new_page = 1;
             }catch (Exception ignored){}
         }
-        utils.broadcast("page_number: " + page_number);
-        utils.broadcast("new_page: " + new_page);
         if (by_player) {
             interrupt_group(group, g_inventory, group_id);
         }
@@ -209,7 +208,6 @@ public class MANAGER_GUI implements Listener {
     }
 
     public final Map<Player, Deque<GUI_Inventory>> gui_history = new HashMap<>();
-    private static final int MAX_HISTORY = 10;
 
     public void open(
             String plugin_name,
@@ -226,18 +224,18 @@ public class MANAGER_GUI implements Listener {
         }
         HOLDER holder = Objects.requireNonNullElseGet(t_holder_data, HOLDER::new);
 
-        Component title = m_placeholder.replace_placeholders_component(g_data.get_title(), holder);
-        int size = g_data.get_size();
+        Component title = m_placeholder.replace_placeholders_component(g_data.title, holder);
+        int size = g_data.size;
         GUI_Inventory g_inventory = new GUI_Inventory(plugin_name, path_string, size, title, g_data);
         g_inventory.holder_data = holder;
         Inventory inventory = g_inventory.getInventory();
 
-        long refresh_rate = g_data.get_refresh_rate();
-        long inactivity_timer = g_data.get_inactivity_timer();
-        List<String> inactivity_message = g_data.get_inactivity_message();
+        long refresh_rate = g_data.refresh_rate;
+        long inactivity_timer = g_data.inactivity_timer;
+        List<String> inactivity_message = g_data.inactivity_message;
 
-        ItemStack empty_stack = g_data.get_empty_slot_item();
-        List<Integer> used_slots = g_data.get_used_slots();
+        ItemStack empty_stack = g_data.empty_slot_item;
+        List<Integer> used_slots = g_data.used_slots;
         for (int i = 0; i < inventory.getSize(); i++) {
             if (!used_slots.contains(i)){
                 inventory.setItem(i, empty_stack);
@@ -250,7 +248,7 @@ public class MANAGER_GUI implements Listener {
 
         Map<String, Integer>   player_pages = g_inventory.player_pages;
         Map<String, GUI_Task>  group_tasks  = g_inventory.group_tasks;
-        Map<String, GUI_Group> groups       = g_data     .get_item_groups();
+        Map<String, GUI_Group> groups       = g_data     .item_groups;
 
         for (String group_id : groups.keySet()){
             player_pages.putIfAbsent(group_id, 1);
@@ -458,9 +456,12 @@ public class MANAGER_GUI implements Listener {
         if (open_guis.containsKey(player)) {
             g_data.play_switch_sound(player);
 
-            if (!going_back.contains(player)){
+            if (!going_back.contains(player)) {
                 GUI_Inventory previous = open_guis.get(player);
                 Deque<GUI_Inventory> history = gui_history.computeIfAbsent(player, k -> new ArrayDeque<>());
+
+                history.removeIf(entry -> entry.file_path.equals(path_string));
+
                 if (history.size() >= MAX_HISTORY) {
                     history.pollLast();
                 }
@@ -685,7 +686,7 @@ public class MANAGER_GUI implements Listener {
                 List<Integer> item_slots = gItem.slots;
                 int item_clicked_index = item_slots.indexOf(clicked_slot);
                 holder_data.set(NKEY.gui_item_clicked_index.getKey(), item_clicked_index);
-                String item_path = gData.get_path_string() + "|" + gItem.item_id + "|" + action_type;
+                String item_path = gData.path_string + "|" + gItem.item_id + "|" + action_type;
 
                 Set<String> event_actions = new HashSet<>();
 

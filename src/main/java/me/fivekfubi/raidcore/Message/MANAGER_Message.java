@@ -2,11 +2,15 @@ package me.fivekfubi.raidcore.Message;
 
 import me.fivekfubi.raidcore.Config.Data.DATA_Config;
 import me.fivekfubi.raidcore.Holder.HOLDER;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.title.Title;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.LivingEntity;
+import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import java.time.Duration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -74,5 +78,17 @@ public class MANAGER_Message {
                 }
             }
         }
+    }
+
+    public void show_title(Player player, String title, String subtitle, long fade_in, long stay, long fade_out, HOLDER holder){
+        player.showTitle(Title.title(
+                m_placeholder.replace_placeholders_component(title, holder),
+                m_placeholder.replace_placeholders_component(subtitle, holder),
+                Title.Times.times(
+                        Duration.ofMillis(fade_in * 50L),
+                        Duration.ofMillis(stay * 50L),
+                        Duration.ofMillis(fade_out * 50L)
+                )
+        ));
     }
 }
