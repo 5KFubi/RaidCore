@@ -30,6 +30,8 @@ public class MANAGER_Input implements Listener {
     public Long   default_stay     = null;
     public Long   default_fade_out = null;
 
+
+
     public void load() {
         DATA_Config config_data = m_config.get_config_data(CORE_NAME, List.of("config.yml"));
         FileConfiguration config = config_data.config;
