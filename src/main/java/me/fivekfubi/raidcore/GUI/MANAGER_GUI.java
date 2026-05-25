@@ -33,6 +33,7 @@ import static me.fivekfubi.raidcore.RaidCore.*;
 public class MANAGER_GUI implements Listener {
 
     public final Map<Player, GUI_Inventory> open_guis = new HashMap<>();
+    public final Set<Player> suppress_history_clear = new HashSet<>();
 
     public void register_default(){
         register_item_type("protection-members",
@@ -589,8 +590,11 @@ public class MANAGER_GUI implements Listener {
             if (!(current_holder instanceof GUI_Inventory)) {
                 g_inventory.gui_data.play_close_sound(player);
                 open_guis.remove(player);
-                gui_history.remove(player);
-                going_back.remove(player);
+                if (!suppress_history_clear.contains(player)) {
+                    gui_history.remove(player);
+                    going_back.remove(player);
+                }
+                suppress_history_clear.remove(player);
             }
         }, 1L);
     }
