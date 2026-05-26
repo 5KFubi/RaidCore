@@ -2,6 +2,8 @@ package me.fivekfubi.raidcore;
 
 public class EVENT_TYPE {
     public static final String JUMP                        = "JUMP";
+    public static final String SNEAK_JUMP                  = "SNEAK_JUMP";
+    public static final String SPRINT_JUMP                 = "SPRINT_JUMP";
 
     public static final String SNEAK                       = "SNEAK";
     public static final String SNEAK_TOGGLE_ON             = "SNEAK_TOGGLE_ON";
@@ -10,6 +12,13 @@ public class EVENT_TYPE {
     public static final String SPRINT                      = "SPRINT";
     public static final String SPRINT_TOGGLE_ON            = "SPRINT_TOGGLE_ON";
     public static final String SPRINT_TOGGLE_OFF           = "SPRINT_TOGGLE_OFF";
+
+    public static final String PROJECTILE_LAUNCH           = "PROJECTILE_LAUNCH";
+    public static final String SNEAK_PROJECTILE_LAUNCH     = "SNEAK_PROJECTILE_LAUNCH";
+    public static final String SPRINT_PROJECTILE_LAUNCH    = "SPRINT_PROJECTILE_LAUNCH";
+    public static final String PROJECTILE_HIT              = "PROJECTILE_HIT";
+    public static final String PROJECTILE_HIT_ENTITY       = "PROJECTILE_HIT_ENTITY";
+    public static final String PROJECTILE_HIT_BLOCK        = "PROJECTILE_HIT_BLOCK";
 
     public static final String LEFT_CLICK                  = "LEFT_CLICK";
     public static final String LEFT_CLICK_AIR              = "LEFT_CLICK_AIR";
@@ -66,6 +75,8 @@ public class EVENT_TYPE {
     public static final String CREATIVE_CLICK              = "CREATIVE_CLICK";
 
     public static final String SWAP_OFFHAND                = "SWAP_OFFHAND";
+    public static final String SNEAK_SWAP_OFFHAND          = "SNEAK_SWAP_OFFHAND";
+    public static final String SPRINT_SWAP_OFFHAND         = "SPRINT_SWAP_OFFHAND";
     public static final String SWAP_NUMBER_KEY             = "SWAP_NUMBER_KEY";
 
     public static final String DROP_ITEM                   = "DROP_ITEM";
