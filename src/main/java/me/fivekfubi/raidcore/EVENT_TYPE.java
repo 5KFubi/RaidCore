@@ -13,6 +13,14 @@ public class EVENT_TYPE {
     public static final String SPRINT_TOGGLE_ON            = "SPRINT_TOGGLE_ON";
     public static final String SPRINT_TOGGLE_OFF           = "SPRINT_TOGGLE_OFF";
 
+    public static final String KILL_ENTITY                 = "KILL_ENTITY";
+    public static final String SNEAK_KILL_ENTITY           = "SNEAK_KILL_ENTITY";
+    public static final String SPRINT_KILL_ENTITY          = "SPRINT_KILL_ENTITY";
+
+    public static final String TAKE_DAMAGE                 = "TAKE_DAMAGE";
+    public static final String SNEAK_TAKE_DAMAGE           = "SNEAK_TAKE_DAMAGE";
+    public static final String SPRINT_TAKE_DAMAGE          = "SPRINT_TAKE_DAMAGE";
+
     public static final String PROJECTILE_LAUNCH           = "PROJECTILE_LAUNCH";
     public static final String SNEAK_PROJECTILE_LAUNCH     = "SNEAK_PROJECTILE_LAUNCH";
     public static final String SPRINT_PROJECTILE_LAUNCH    = "SPRINT_PROJECTILE_LAUNCH";
@@ -82,6 +90,10 @@ public class EVENT_TYPE {
     public static final String DROP_ITEM                   = "DROP_ITEM";
     public static final String SNEAK_DROP_ITEM             = "SNEAK_DROP_ITEM";
     public static final String SPRINT_DROP_ITEM            = "SPRINT_DROP_ITEM";
+
+    public static final String PICKUP_ITEM                 = "PICKUP_ITEM";
+    public static final String SNEAK_PICKUP_ITEM           = "SNEAK_PICKUP_ITEM";
+    public static final String SPRINT_PICKUP_ITEM          = "SPRINT_PICKUP_ITEM";
 
     public static final String UNKNOWN                     = "UNKNOWN";
 }

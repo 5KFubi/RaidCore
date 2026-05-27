@@ -15,9 +15,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockDamageEvent;
-import org.bukkit.event.entity.EntityDamageByEntityEvent;
-import org.bukkit.event.entity.ProjectileHitEvent;
-import org.bukkit.event.entity.ProjectileLaunchEvent;
+import org.bukkit.event.entity.*;
 import org.bukkit.event.player.*;
 import org.bukkit.inventory.ItemStack;
 
@@ -34,6 +32,25 @@ public class MANAGER_Event implements Listener {
     @EventHandler
     public void onDrop(PlayerDropItemEvent event){
         drop_events.add(event.getPlayer().getUniqueId());
+    }
+
+    @EventHandler
+    public void onPickupItem(EntityPickupItemEvent event) {
+        if (!(event.getEntity() instanceof Player player)) return;
+        boolean sneak = player.isSneaking();
+        boolean sprint = player.isSprinting();
+
+        Set<String> event_actions = new HashSet<>();
+
+        event_actions.add(PICKUP_ITEM);
+        if (sneak){
+            event_actions.add(SNEAK_PICKUP_ITEM);
+        }
+        if (sprint){
+            event_actions.add(SPRINT_PICKUP_ITEM);
+        }
+
+        event.setCancelled(handle_actions(player, event.getEventName(), event_actions, null, null, event));
     }
 
     @EventHandler
@@ -206,8 +223,10 @@ public class MANAGER_Event implements Listener {
     }
 
     @EventHandler
-    public void onEntityDamage(EntityDamageByEntityEvent event) {
-        if (!(event.getDamager() instanceof Player player)) return;
+    public void onEntityDeath(EntityDeathEvent event) {
+        Player player = event.getEntity().getKiller();
+        if (player == null) return;
+
         Entity target = event.getEntity();
         boolean sneak = player.isSneaking();
         boolean sprint = player.isSprinting();
@@ -218,18 +237,78 @@ public class MANAGER_Event implements Listener {
 
         event_targets.add(target);
 
-        event_actions.add(LEFT_CLICK);
-        event_actions.add(LEFT_CLICK_ENTITY);
+        event_actions.add(KILL_ENTITY);
         if (sneak) {
-            event_actions.add(SNEAK_LEFT_CLICK);
-            event_actions.add(SNEAK_LEFT_CLICK_ENTITY);
+            event_actions.add(SNEAK_KILL_ENTITY);
         }
         if (sprint) {
-            event_actions.add(SPRINT_LEFT_CLICK);
-            event_actions.add(SPRINT_LEFT_CLICK_ENTITY);
+            event_actions.add(SPRINT_KILL_ENTITY);
         }
 
-        event.setCancelled(handle_actions(player, event.getEventName(), event_actions, event_targets, event_blocks, event));
+        handle_actions(player, event.getEventName(), event_actions, event_targets, event_blocks, event);
+    }
+
+    @EventHandler
+    public void onEntityDamage(EntityDamageEvent event) {
+        boolean sneak, sprint;
+        Set<String> event_actions = new HashSet<>();
+        Set<Entity> event_targets = new HashSet<>();
+
+        if (event instanceof EntityDamageByEntityEvent edbe) {
+            // player is damager
+            if (edbe.getDamager() instanceof Player player) {
+                sneak = player.isSneaking();
+                sprint = player.isSprinting();
+                event_targets.add(edbe.getEntity());
+
+                event_actions.add(LEFT_CLICK);
+                event_actions.add(LEFT_CLICK_ENTITY);
+                if (sneak) {
+                    event_actions.add(SNEAK_LEFT_CLICK);
+                    event_actions.add(SNEAK_LEFT_CLICK_ENTITY);
+                }
+                if (sprint) {
+                    event_actions.add(SPRINT_LEFT_CLICK);
+                    event_actions.add(SPRINT_LEFT_CLICK_ENTITY);
+                }
+
+                edbe.setCancelled(handle_actions(player, event.getEventName(), event_actions, event_targets, null, event));
+                return;
+            }
+
+            // player is victim, attacker is entity
+            if (edbe.getEntity() instanceof Player player) {
+                sneak = player.isSneaking();
+                sprint = player.isSprinting();
+                event_targets.add(edbe.getDamager());
+
+                event_actions.add(TAKE_DAMAGE);
+                if (sneak){
+                    event_actions.add(SNEAK_TAKE_DAMAGE);
+                }
+                if (sprint){
+                    event_actions.add(SPRINT_TAKE_DAMAGE);
+                }
+
+                edbe.setCancelled(handle_actions(player, event.getEventName(), event_actions, event_targets, null, event));
+                return;
+            }
+        }
+
+        // player is victim, no entity attacker
+        if (!(event.getEntity() instanceof Player player)) return;
+        sneak = player.isSneaking();
+        sprint = player.isSprinting();
+
+        event_actions.add(TAKE_DAMAGE);
+        if (sneak){
+            event_actions.add(SNEAK_TAKE_DAMAGE);
+        }
+        if (sprint){
+            event_actions.add(SPRINT_TAKE_DAMAGE);
+        }
+
+        event.setCancelled(handle_actions(player, event.getEventName(), event_actions, null, null, event));
     }
 
     @EventHandler
