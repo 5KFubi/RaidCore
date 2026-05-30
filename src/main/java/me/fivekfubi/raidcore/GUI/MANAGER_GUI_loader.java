@@ -68,7 +68,7 @@ public class MANAGER_GUI_loader {
         JavaPlugin plugin = CORE.registered_plugins.get(plugin_name);
         if (plugin == null) return;
 
-        List<DATA_Config> configs = m_config.get_configs_from_root(plugin,"GUIs");
+        List<DATA_Config> configs = m_config.get_configs_from_root(plugin_name,"GUIs");
         if (configs == null || configs.isEmpty()) return;
 
         Map<String, DATA_GUI> g_map = new HashMap<>();

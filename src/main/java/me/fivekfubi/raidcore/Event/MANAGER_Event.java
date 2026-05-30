@@ -15,6 +15,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockDamageEvent;
+import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.*;
 import org.bukkit.event.player.*;
 import org.bukkit.inventory.ItemStack;
@@ -371,13 +372,46 @@ public class MANAGER_Event implements Listener {
 
         event_actions.add(LEFT_CLICK);
         event_actions.add(LEFT_CLICK_BLOCK);
+        event_actions.add(BLOCK_BREAK);
         if (sneak){
             event_actions.add(SNEAK_LEFT_CLICK);
             event_actions.add(SNEAK_LEFT_CLICK_BLOCK);
+            event_actions.add(SNEAK_BLOCK_BREAK);
         }
         if (sprint){
             event_actions.add(SPRINT_LEFT_CLICK);
             event_actions.add(SPRINT_LEFT_CLICK_BLOCK);
+            event_actions.add(SPRINT_BLOCK_BREAK);
+        }
+
+        event.setCancelled(handle_actions(player, event.getEventName(), event_actions, event_targets, event_blocks, event));
+    }
+
+    @EventHandler
+    public void onBlockPlace(BlockPlaceEvent event) {
+        Player player = event.getPlayer();
+        Block block = event.getBlockPlaced();
+        boolean sneak = player.isSneaking();
+        boolean sprint = player.isSprinting();
+
+        Set<String> event_actions = new HashSet<>();
+        Set<Entity> event_targets = new HashSet<>();
+        Set<Block> event_blocks = new HashSet<>();
+
+        event_blocks.add(block);
+
+        event_actions.add(RIGHT_CLICK);
+        event_actions.add(RIGHT_CLICK_BLOCK);
+        event_actions.add(BLOCK_PLACE);
+        if (sneak) {
+            event_actions.add(SNEAK_RIGHT_CLICK);
+            event_actions.add(SNEAK_RIGHT_CLICK_BLOCK);
+            event_actions.add(SNEAK_BLOCK_PLACE);
+        }
+        if (sprint) {
+            event_actions.add(SPRINT_RIGHT_CLICK);
+            event_actions.add(SPRINT_RIGHT_CLICK_BLOCK);
+            event_actions.add(SPRINT_BLOCK_PLACE);
         }
 
         event.setCancelled(handle_actions(player, event.getEventName(), event_actions, event_targets, event_blocks, event));
@@ -450,11 +484,11 @@ public class MANAGER_Event implements Listener {
         UUID player_uuid = player.getUniqueId();
 
         for (String action_string : actions) {
-            boolean on_clump = m_cooldown.on_cooldown(null, player_uuid, NKEY.CLUMP_KEY_EVENT);
+            boolean on_clump = m_cooldown.on_cooldown(null, player_uuid, NKEY.CLUMP_KEY_EVENT + ":" + action_string);
             if (on_clump){
                 continue;
             }
-            m_cooldown.add_cooldown(null, player_uuid, NKEY.CLUMP_KEY_EVENT, 1);
+            m_cooldown.add_cooldown(null, player_uuid, NKEY.CLUMP_KEY_EVENT + ":" + action_string, 1);
             notify_listeners(player, event_type, action_string, targets, blocks, event);
         }
 
@@ -474,11 +508,11 @@ public class MANAGER_Event implements Listener {
             if (!item_actions.action_event.containsKey(action_string)) continue;
 
             // [COOLDOWN] ----------------------------------------------------------------------------------------------
-            boolean on_clump = m_cooldown.on_cooldown(plugin_name, player_uuid, NKEY.CLUMP_KEY_EVENT);
+            boolean on_clump = m_cooldown.on_cooldown(plugin_name, player_uuid, NKEY.CLUMP_KEY_EVENT + ":" + action_string);
             if (on_clump){
                 continue;
             }
-            m_cooldown.add_cooldown(plugin_name, player_uuid, NKEY.CLUMP_KEY_EVENT, 1);
+            m_cooldown.add_cooldown(plugin_name, player_uuid, NKEY.CLUMP_KEY_EVENT + ":" + action_string, 1);
 
             for (DATA_Action_State state : item_actions.action_event.get(action_string)){
 

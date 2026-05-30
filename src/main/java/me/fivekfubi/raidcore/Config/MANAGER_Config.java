@@ -185,10 +185,10 @@ public class MANAGER_Config {
         return result;
     }
 
-    public List<DATA_Config> get_configs_inside_root(JavaPlugin plugin, String root_folder) {
+    public List<DATA_Config> get_configs_inside_root(String plugin_name, String root_folder) {
         List<DATA_Config> root_configs = new ArrayList<>();
 
-        for (List<String> path : configs.get(plugin.getName()).keySet()) {
+        for (List<String> path : configs.get(plugin_name).keySet()) {
             if (!path.isEmpty()) {
                 boolean starts_with_root = root_folder.equals(path.get(0));
 
@@ -196,18 +196,18 @@ public class MANAGER_Config {
                 boolean ends_in_file = is_allowed_extension(last);
 
                 if (starts_with_root && ends_in_file) {
-                    root_configs.add(configs.get(plugin.getName()).get(path));
+                    root_configs.add(configs.get(plugin_name).get(path));
                 }
             }
         }
         return root_configs;
     }
-    public List<DATA_Config> get_configs_from_root(JavaPlugin plugin, String root_folder) {
+    public List<DATA_Config> get_configs_from_root(String plugin_name, String root_folder) {
         List<DATA_Config> root_configs = new ArrayList<>();
 
-        for (List<String> path : configs.get(plugin.getName()).keySet()) {
-            if (!path.isEmpty() && root_folder.equals(path.get(0))) {
-                root_configs.add(configs.get(plugin.getName()).get(path));
+        for (List<String> path : configs.get(plugin_name).keySet()) {
+            if (!path.isEmpty() && root_folder.equals(path.getFirst())) {
+                root_configs.add(configs.get(plugin_name).get(path));
             }
         }
 
@@ -365,13 +365,13 @@ public class MANAGER_Config {
     /// TODO: ----------------------------------------------------------------------------------------------------------
     /// TODO: ----------------------------------------------------------------------------------------------------------
 
-    public void append_to_config(JavaPlugin plugin, List<String> path, List<String> lines) {
+    public void append_to_config(String plugin_name, List<String> path, List<String> lines) {
         String text = String.join("\n", lines);
-        append_to_config(plugin, path, text);
+        append_to_config(plugin_name, path, text);
     }
-    public void append_to_config(JavaPlugin plugin, List<String> path, String text) {
+    public void append_to_config(String plugin_name, List<String> path, String text) {
         try {
-            DATA_Config config_data = get_config_data(plugin.getName(), path);
+            DATA_Config config_data = get_config_data(plugin_name, path);
             if (config_data == null){
                 utils.error_message("<white>Failed to append to config file, path <yellow>`" + String.join("/", path) + "`<white, null.>", null);
                 return;
@@ -399,13 +399,13 @@ public class MANAGER_Config {
     /// TODO: ----------------------------------------------------------------------------------------------------------
     /// TODO: ----------------------------------------------------------------------------------------------------------
 
-    public void add_to_config_path(JavaPlugin plugin, List<String> path, List<String> lines) {
+    public void add_to_config_path(String plugin_name, List<String> path, List<String> lines) {
         String text = String.join("\n", lines);
-        add_to_config_path(plugin, path, text);
+        add_to_config_path(plugin_name, path, text);
     }
-    public void add_to_config_path(JavaPlugin plugin, List<String> path, String textToAdd) {
+    public void add_to_config_path(String plugin_name, List<String> path, String textToAdd) {
         try {
-            DATA_Config config_data = get_config_data(plugin.getName(), path);
+            DATA_Config config_data = get_config_data(plugin_name, path);
             if (config_data == null) {
                 utils.error_message("<white>Failed to add to config path <yellow>`" + String.join(".", path) + "`<white>, null.", null);
                 return;
@@ -461,9 +461,9 @@ public class MANAGER_Config {
     /// TODO: ----------------------------------------------------------------------------------------------------------
 
 
-    public void modify_config_value(JavaPlugin plugin, List<String> path, Object newValue) {
+    public void modify_config_value(String plugin_name, List<String> path, Object newValue) {
         try {
-            DATA_Config configData = get_config_data(plugin.getName(), path);
+            DATA_Config configData = get_config_data(plugin_name, path);
             if (configData == null) {
                 utils.error_message("<white>Failed to modify config, path not found <yellow>`" + String.join(".", path) + "`", null);
                 return;

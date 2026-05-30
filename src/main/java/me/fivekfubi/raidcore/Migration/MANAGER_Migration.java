@@ -115,7 +115,7 @@ public class MANAGER_Migration {
                 List<String> path = paths_entry.getKey();
                 String text = paths_entry.getValue();
 
-                m_config.append_to_config(CORE, path, text);
+                m_config.append_to_config(CORE_NAME, path, text);
             }
 
             System.out.println();

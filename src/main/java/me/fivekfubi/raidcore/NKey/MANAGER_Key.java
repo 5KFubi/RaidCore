@@ -50,8 +50,7 @@ public class MANAGER_Key {
         return generate(CORE, key);
     }
     public NamespacedKey generate(JavaPlugin plugin, String key){
-        NamespacedKey n = new NamespacedKey(plugin, key);
-        return n;
+        return new NamespacedKey(plugin, key.toLowerCase());
     }
 
 
