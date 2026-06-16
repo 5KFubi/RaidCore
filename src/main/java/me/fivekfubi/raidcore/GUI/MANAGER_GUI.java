@@ -229,6 +229,7 @@ public class MANAGER_GUI implements Listener {
         int size = g_data.size;
         GUI_Inventory g_inventory = new GUI_Inventory(plugin_name, path_string, size, title, g_data);
         g_inventory.holder_data = holder;
+        holder.set(NKEY.player.getKey(), player);
         Inventory inventory = g_inventory.getInventory();
 
         long refresh_rate = g_data.refresh_rate;
@@ -389,7 +390,11 @@ public class MANAGER_GUI implements Listener {
                                 // ----------------------------------------------
                                 try{
                                     for (int slot : slots){
-                                        HOLDER item_holder_data = new HOLDER();
+                                        //HOLDER item_holder_data = new HOLDER();
+                                        //item_holder_data.set(NKEY.player.getKey(), player);
+                                        //item_holder_data.set(NKEY.player_name.getKey(), player_name);
+                                        //item_holder_data.set(NKEY.player_uuid.getKey(), player_uuid_string);
+                                        HOLDER item_holder_data = new HOLDER(new HashMap<>(holder.get_data()));
                                         item_holder_data.set(NKEY.player.getKey(), player);
                                         item_holder_data.set(NKEY.player_name.getKey(), player_name);
                                         item_holder_data.set(NKEY.player_uuid.getKey(), player_uuid_string);
@@ -525,7 +530,7 @@ public class MANAGER_GUI implements Listener {
                 gradual_amount ? amount + placed : amount,
                 name,
                 lore,
-                holder_data
+                item_holder_data
         );
 
         inventory.setItem(slot, to_place);
@@ -640,18 +645,6 @@ public class MANAGER_GUI implements Listener {
                 if (present_holder_data.containsKey(clicked_slot)){
                     HOLDER item_holder_data = present_holder_data.get(clicked_slot);
 
-                    //DATA_Member target_member_data = item_holder_data.get(HKEY_TARGET_MEMBER_DATA, DATA_Member.class, null);
-                    //DATA_Upgrade upgrade_data = item_holder_data.get(HKEY_UPGRADE_DATA, DATA_Upgrade.class, null);
-                    //DATA_Status status_data = item_holder_data.get(HKEY_STATUS_DATA, DATA_Status.class, null);
-                    //if (target_member_data != null){
-                    //    holder_data.set(HKEY_TARGET_MEMBER_DATA, target_member_data);
-                    //}
-                    //if (upgrade_data != null){
-                    //    holder_data.set(HKEY_UPGRADE_DATA, upgrade_data);
-                    //}
-                    //if (status_data != null){
-                    //    holder_data.set(HKEY_STATUS_DATA, status_data);
-                    //}
                     Map<String, Object> itemData = item_holder_data.get_data();
                     for (Map.Entry<String, Object> entry : itemData.entrySet()) {
                         holder_data.set(entry.getKey(), entry.getValue());

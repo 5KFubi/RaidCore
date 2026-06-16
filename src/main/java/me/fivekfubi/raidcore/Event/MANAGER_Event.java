@@ -6,6 +6,7 @@ import me.fivekfubi.raidcore.Item.Data.Action.DATA_Action;
 import me.fivekfubi.raidcore.Item.Data.Action.DATA_Action_Condition;
 import me.fivekfubi.raidcore.Item.Data.Action.DATA_Action_State;
 import me.fivekfubi.raidcore.Item.Data.DATA_Item;
+import org.bukkit.Location;
 import org.bukkit.NamespacedKey;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Entity;
@@ -28,11 +29,13 @@ import static me.fivekfubi.raidcore.RaidCore.*;
 public class MANAGER_Event implements Listener {
 
     public final Set<UUID> gui_drop_events = new HashSet<>();
-    public final Set<UUID> drop_events =  new HashSet<>();
+    //public final Set<UUID> drop_events =  new HashSet<>();
+    public final Map<UUID, PlayerDropItemEvent> drop_events = new HashMap<>();
 
     @EventHandler
     public void onDrop(PlayerDropItemEvent event){
-        drop_events.add(event.getPlayer().getUniqueId());
+        //drop_events.add(event.getPlayer().getUniqueId());
+        drop_events.put(event.getPlayer().getUniqueId(), event);
     }
 
     @EventHandler
@@ -51,7 +54,7 @@ public class MANAGER_Event implements Listener {
             event_actions.add(SPRINT_PICKUP_ITEM);
         }
 
-        event.setCancelled(handle_actions(player, event.getEventName(), event_actions, null, null, event));
+        event.setCancelled(handle_actions(player, event.getEventName(), event_actions, null, null, event, event.isCancelled()));
     }
 
     @EventHandler
@@ -68,17 +71,30 @@ public class MANAGER_Event implements Listener {
 
         Set<String> event_actions = new HashSet<>();
 
-        if (drop_events.remove(player_uuid)) {
+        //if (drop_events.remove(player_uuid)) {
+        //    event_actions.add(DROP_ITEM);
+        //    if (sneak) event_actions.add(SNEAK_DROP_ITEM);
+        //    if (sprint) event_actions.add(SPRINT_DROP_ITEM);
+
+        //    event.setCancelled(handle_actions(player, event.getEventName(), event_actions, null, null, event, event.isCancelled()));
+        //    return;
+        //}
+
+        Set<Entity> event_targets = new HashSet<>();
+        Set<Block> event_blocks = new HashSet<>();
+
+        if (drop_events.containsKey(player_uuid)) {
+            PlayerDropItemEvent drop_event = drop_events.remove(player_uuid);
+            Entity dropped = drop_event.getItemDrop();
+            event_targets.add(dropped);
+
             event_actions.add(DROP_ITEM);
             if (sneak) event_actions.add(SNEAK_DROP_ITEM);
             if (sprint) event_actions.add(SPRINT_DROP_ITEM);
 
-            event.setCancelled(handle_actions(player, event.getEventName(), event_actions, null, null, event));
+            event.setCancelled(handle_actions(player, event.getEventName(), event_actions, event_targets, event_blocks, event, event.isCancelled()));
             return;
         }
-
-        Set<Entity> event_targets = new HashSet<>();
-        Set<Block> event_blocks = new HashSet<>();
 
         switch (event.getAction()){
             case LEFT_CLICK_AIR -> {
@@ -137,7 +153,9 @@ public class MANAGER_Event implements Listener {
             }
         }
 
-        event.setCancelled(handle_actions(player, event.getEventName(), event_actions, event_targets, event_blocks, event));
+        if (event.getClickedBlock() != null) event_blocks.add(event.getClickedBlock());
+
+        event.setCancelled(handle_actions(player, event.getEventName(), event_actions, event_targets, event_blocks, event, event.isCancelled()));
     }
     // precision use
     //@EventHandler
@@ -172,7 +190,7 @@ public class MANAGER_Event implements Listener {
             event_actions.add(SPRINT_RIGHT_CLICK_ENTITY);
         }
 
-        event.setCancelled(handle_actions(player, event.getEventName(), event_actions, event_targets, event_blocks, event));
+        event.setCancelled(handle_actions(player, event.getEventName(), event_actions, event_targets, event_blocks, event, event.isCancelled()));
     }
 
     @EventHandler
@@ -193,7 +211,7 @@ public class MANAGER_Event implements Listener {
             event_actions.add(SPRINT_PROJECTILE_LAUNCH);
         }
 
-        event.setCancelled(handle_actions(player, event.getEventName(), event_actions, event_targets, event_blocks, event));
+        event.setCancelled(handle_actions(player, event.getEventName(), event_actions, event_targets, event_blocks, event, event.isCancelled()));
     }
 
     @EventHandler
@@ -220,7 +238,7 @@ public class MANAGER_Event implements Listener {
             event_actions.add(PROJECTILE_HIT_BLOCK);
         }
 
-        event.setCancelled(handle_actions(player, event.getEventName(), event_actions, event_targets, event_blocks, event));
+        event.setCancelled(handle_actions(player, event.getEventName(), event_actions, event_targets, event_blocks, event, event.isCancelled()));
     }
 
     @EventHandler
@@ -246,7 +264,7 @@ public class MANAGER_Event implements Listener {
             event_actions.add(SPRINT_KILL_ENTITY);
         }
 
-        handle_actions(player, event.getEventName(), event_actions, event_targets, event_blocks, event);
+        handle_actions(player, event.getEventName(), event_actions, event_targets, event_blocks, event, event.isCancelled());
     }
 
     @EventHandler
@@ -273,7 +291,7 @@ public class MANAGER_Event implements Listener {
                     event_actions.add(SPRINT_LEFT_CLICK_ENTITY);
                 }
 
-                edbe.setCancelled(handle_actions(player, event.getEventName(), event_actions, event_targets, null, event));
+                edbe.setCancelled(handle_actions(player, event.getEventName(), event_actions, event_targets, null, event, event.isCancelled()));
                 return;
             }
 
@@ -291,7 +309,7 @@ public class MANAGER_Event implements Listener {
                     event_actions.add(SPRINT_TAKE_DAMAGE);
                 }
 
-                edbe.setCancelled(handle_actions(player, event.getEventName(), event_actions, event_targets, null, event));
+                edbe.setCancelled(handle_actions(player, event.getEventName(), event_actions, event_targets, null, event, event.isCancelled()));
                 return;
             }
         }
@@ -309,7 +327,7 @@ public class MANAGER_Event implements Listener {
             event_actions.add(SPRINT_TAKE_DAMAGE);
         }
 
-        event.setCancelled(handle_actions(player, event.getEventName(), event_actions, null, null, event));
+        event.setCancelled(handle_actions(player, event.getEventName(), event_actions, null, null, event, event.isCancelled()));
     }
 
     @EventHandler
@@ -327,7 +345,7 @@ public class MANAGER_Event implements Listener {
             event_actions.add(SPRINT_SWAP_OFFHAND);
         }
 
-        event.setCancelled(handle_actions(player, event.getEventName(), event_actions, event));
+        event.setCancelled(handle_actions(player, event.getEventName(), event_actions, event, event.isCancelled()));
     }
 
     @EventHandler
@@ -354,7 +372,7 @@ public class MANAGER_Event implements Listener {
             event_actions.add(SPRINT_LEFT_CLICK_BLOCK);
         }
 
-        event.setCancelled(handle_actions(player, event.getEventName(), event_actions, event_targets, event_blocks, event));
+        event.setCancelled(handle_actions(player, event.getEventName(), event_actions, event_targets, event_blocks, event, event.isCancelled()));
     }
 
     @EventHandler
@@ -384,7 +402,60 @@ public class MANAGER_Event implements Listener {
             event_actions.add(SPRINT_BLOCK_BREAK);
         }
 
-        event.setCancelled(handle_actions(player, event.getEventName(), event_actions, event_targets, event_blocks, event));
+        event.setCancelled(handle_actions(player, event.getEventName(), event_actions, event_targets, event_blocks, event, event.isCancelled()));
+    }
+
+    public final Map<UUID, double[]> move_last_position = new HashMap<>(); // x, y, z
+    public final Map<UUID, float[]> move_last_look = new HashMap<>();      // yaw, pitch
+
+    @EventHandler
+    public void onPlayerMove(PlayerMoveEvent event) {
+        Player player = event.getPlayer();
+        UUID uuid = player.getUniqueId();
+        boolean sneak = player.isSneaking();
+        boolean sprint = player.isSprinting();
+
+        Location from = event.getFrom();
+        Location to = event.getTo();
+
+        double[] last_pos = move_last_position.getOrDefault(uuid, new double[]{from.getX(), from.getY(), from.getZ()});
+        float[] last_look_dir = move_last_look.getOrDefault(uuid, new float[]{from.getYaw(), from.getPitch()});
+
+        boolean moved = last_pos[0] != to.getX() || last_pos[1] != to.getY() || last_pos[2] != to.getZ();
+        boolean looked = last_look_dir[0] != to.getYaw() || last_look_dir[1] != to.getPitch();
+
+        Set<String> event_actions = new HashSet<>();
+        Set<Entity> event_targets = new HashSet<>();
+        Set<Block> event_blocks = new HashSet<>();
+
+        if (moved) {
+            event_actions.add(WALK);
+            if (sneak) event_actions.add(SNEAK_WALK);
+            if (sprint) event_actions.add(SPRINT_WALK);
+        }
+
+        if (looked) {
+            event_actions.add(LOOK);
+            if (sneak) event_actions.add(SNEAK_LOOK);
+            if (sprint) event_actions.add(SPRINT_LOOK);
+        }
+
+        if (event_actions.isEmpty()) return;
+
+        boolean cancelled = handle_actions(player, event.getEventName(), event_actions, event_targets, event_blocks, event, event.isCancelled());
+        event.setCancelled(cancelled);
+
+        if (!cancelled) {
+            move_last_position.put(uuid, new double[]{to.getX(), to.getY(), to.getZ()});
+            move_last_look.put(uuid, new float[]{to.getYaw(), to.getPitch()});
+        }
+    }
+
+    @EventHandler
+    public void onQuit(PlayerQuitEvent event) {
+        UUID uuid = event.getPlayer().getUniqueId();
+        move_last_position.remove(uuid);
+        move_last_look.remove(uuid);
     }
 
     @EventHandler
@@ -414,7 +485,7 @@ public class MANAGER_Event implements Listener {
             event_actions.add(SPRINT_BLOCK_PLACE);
         }
 
-        event.setCancelled(handle_actions(player, event.getEventName(), event_actions, event_targets, event_blocks, event));
+        event.setCancelled(handle_actions(player, event.getEventName(), event_actions, event_targets, event_blocks, event, event.isCancelled()));
     }
 
     @EventHandler
@@ -435,7 +506,7 @@ public class MANAGER_Event implements Listener {
             event_actions.add(SPRINT_JUMP);
         }
 
-        event.setCancelled(handle_actions(player, event.getEventName(), event_actions, event_targets, event_blocks, event));
+        event.setCancelled(handle_actions(player, event.getEventName(), event_actions, event_targets, event_blocks, event, event.isCancelled()));
     }
 
     @EventHandler
@@ -454,7 +525,7 @@ public class MANAGER_Event implements Listener {
             event_actions.add(SNEAK_TOGGLE_OFF);
         }
 
-        event.setCancelled(handle_actions(player, event.getEventName(), event_actions, event_targets, event_blocks, event));
+        event.setCancelled(handle_actions(player, event.getEventName(), event_actions, event_targets, event_blocks, event, event.isCancelled()));
     }
 
     @EventHandler
@@ -473,14 +544,17 @@ public class MANAGER_Event implements Listener {
             event_actions.add(SPRINT_TOGGLE_OFF);
         }
 
-        event.setCancelled(handle_actions(player, event.getEventName(), event_actions, event_targets, event_blocks, event));
+        event.setCancelled(handle_actions(player, event.getEventName(), event_actions, event_targets, event_blocks, event, event.isCancelled()));
     }
 
-    public boolean handle_actions(Player player, String event_type, Set<String> actions, Event event){ return handle_actions(player, event_type, actions, null, null, event); }
-    public boolean handle_actions(Player player, String event_type, Set<String> actions, Set<Entity> targets, Event event){ return handle_actions(player, event_type, actions, targets, null, event); }
-    public boolean handle_actions(Player player, String event_type, Set<String> actions, Set<Entity> targets, Set<Block> blocks, Event event){
-        boolean should_cancel = false;
-        if (player == null) return should_cancel;
+    public boolean handle_actions(Player player, String event_type, Set<String> actions, Event event, boolean was_cancelled){
+        return handle_actions(player, event_type, actions, null, null, event, was_cancelled);
+    }
+    public boolean handle_actions(Player player, String event_type, Set<String> actions, Set<Entity> targets, Event event, boolean was_cancelled){
+        return handle_actions(player, event_type, actions, targets, null, event, was_cancelled);
+    }
+    public boolean handle_actions(Player player, String event_type, Set<String> actions, Set<Entity> targets, Set<Block> blocks, Event event, boolean was_cancelled){
+        if (player == null) return was_cancelled;
         UUID player_uuid = player.getUniqueId();
 
         for (String action_string : actions) {
@@ -493,16 +567,16 @@ public class MANAGER_Event implements Listener {
         }
 
         ItemStack item = player.getInventory().getItemInMainHand();
-        if (item.getItemMeta() == null) return should_cancel;
+        if (item.getItemMeta() == null) return was_cancelled;
 
         Map<NamespacedKey, Object> container_data = utils.get_container_data(item.getItemMeta().getPersistentDataContainer());
         String plugin_name = (String) container_data.get(NKEY.file_plugin);
         String file_path = (String) container_data.get(NKEY.file_path);
         DATA_Item item_data = m_item.get_item_data(plugin_name, file_path);
-        if (item_data == null) return should_cancel;
+        if (item_data == null) return was_cancelled;
 
         DATA_Action item_actions = item_data.action_data;
-        if (item_actions == null) return should_cancel;
+        if (item_actions == null) return was_cancelled;
 
         for (String action_string : actions) {
             if (!item_actions.action_event.containsKey(action_string)) continue;
@@ -567,7 +641,7 @@ public class MANAGER_Event implements Listener {
                 );
             }
         }
-        return should_cancel;
+        return was_cancelled;
     }
 
 

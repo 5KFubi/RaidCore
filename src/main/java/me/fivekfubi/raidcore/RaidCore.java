@@ -6,6 +6,7 @@ import me.fivekfubi.raidcore.Cooldown.MANAGER_Cooldown;
 import me.fivekfubi.raidcore.Database.MANAGER_Database;
 import me.fivekfubi.raidcore.Economy.MANAGER_Discount;
 import me.fivekfubi.raidcore.Economy.MANAGER_Economy;
+import me.fivekfubi.raidcore.Entity.MANAGER_Entity;
 import me.fivekfubi.raidcore.Event.MANAGER_Event;
 import me.fivekfubi.raidcore.Event.TRACKER_Inventory;
 import me.fivekfubi.raidcore.Executable.MANAGER_Executable;
@@ -55,7 +56,7 @@ public final class RaidCore extends JavaPlugin {
     public static MANAGER_Database m_database = new MANAGER_Database();
     public static MANAGER_Event m_event = new MANAGER_Event();
     public static TRACKER_Inventory t_inventory = new TRACKER_Inventory();
-    //public static LISTENER_Packet test_LISTENERPacket = null;
+    public static MANAGER_Entity m_entity = new MANAGER_Entity();
     public static MANAGER_Cooldown m_cooldown = new MANAGER_Cooldown();
     public static MANAGER_GUI m_gui = new MANAGER_GUI();
     public static MANAGER_GUI_loader m_gui_loader = new MANAGER_GUI_loader();
@@ -165,6 +166,7 @@ public final class RaidCore extends JavaPlugin {
         if (!loaded) update_databases();
         t_inventory.load();
         m_placeholder.load();
+        m_entity.load();
         m_command.load();
         m_item.load();
         m_discount.load();

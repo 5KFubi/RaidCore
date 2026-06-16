@@ -35,6 +35,13 @@ public class EVENT_TYPE {
     public static final String SNEAK_BLOCK_PLACE           = "SNEAK_BLOCK_PLACE";
     public static final String SPRINT_BLOCK_PLACE          = "SPRINT_BLOCK_PLACE";
 
+    public static final String WALK                        = "WALK";
+    public static final String SNEAK_WALK                  = "SNEAK_WALK";
+    public static final String SPRINT_WALK                 = "SPRINT_WALK";
+    public static final String LOOK                        = "LOOK";
+    public static final String SNEAK_LOOK                  = "SNEAK_LOOK";
+    public static final String SPRINT_LOOK                 = "SPRINT_LOOK";
+
     public static final String LEFT_CLICK                  = "LEFT_CLICK";
     public static final String LEFT_CLICK_AIR              = "LEFT_CLICK_AIR";
     public static final String LEFT_CLICK_BLOCK            = "LEFT_CLICK_BLOCK";
@@ -86,9 +93,6 @@ public class EVENT_TYPE {
     public static final String SPRINT_DOUBLE_CLICK_AIR     = "SPRINT_DOUBLE_CLICK_AIR";
     public static final String SPRINT_DOUBLE_CLICK_BLOCK   = "SPRINT_DOUBLE_CLICK_BLOCK";
     public static final String SPRINT_DOUBLE_CLICK_ENTITY  = "SPRINT_DOUBLE_CLICK_ENTITY";
-
-    // block break
-    // block place
 
     public static final String CREATIVE_CLICK              = "CREATIVE_CLICK";
 
