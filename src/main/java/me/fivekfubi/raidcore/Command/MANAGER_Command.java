@@ -19,7 +19,7 @@ import static me.fivekfubi.raidcore.RaidCore.*;
 
 public class MANAGER_Command {
 
-    private final Map<String, DATA_Command> commands = new HashMap<>();
+    public final Map<String, DATA_Command> commands = new HashMap<>();
 
     public final Map<String, List<String>> command_list = new HashMap<>() {{
         put("raidcore", new ArrayList<>(Arrays.asList(
@@ -49,7 +49,7 @@ public class MANAGER_Command {
             if (!has_permission(sender, command_data)){
                 send_missing_permission_message(sender, command_data, holder_data);
             }
-            Map<String, List<String>> messages = command_data.getMessages();
+            Map<String, List<String>> messages = command_data.messages;
             send_message(sender, messages.get("no-command"), holder_data);
 
             {
@@ -71,8 +71,8 @@ public class MANAGER_Command {
                 switch (sub_command_name) {
                     case "reload" -> {
                         // ... reload
-                        DATA_Sub_command sub_command_data = command_data.get_sub_commands().get(sub_command_name);
-                        Map<String, List<String>> messages = sub_command_data.getMessages();
+                        DATA_Sub_command sub_command_data = command_data.sub_commands.get(sub_command_name);
+                        Map<String, List<String>> messages = sub_command_data.messages;
                         if (!has_permission(sender, sub_command_data)) {
                             send_missing_permission_message(sender, sub_command_data, holder_data);
                             return true;
@@ -83,8 +83,8 @@ public class MANAGER_Command {
                     }
                     case "test" -> {
                         // ... test
-                        DATA_Sub_command sub_command_data = command_data.get_sub_commands().get(sub_command_name);
-                        Map<String, List<String>> messages = sub_command_data.getMessages();
+                        DATA_Sub_command sub_command_data = command_data.sub_commands.get(sub_command_name);
+                        Map<String, List<String>> messages = sub_command_data.messages;
                         if (!has_permission(sender, sub_command_data)) {
                             send_missing_permission_message(sender, sub_command_data, holder_data);
                             return true;
@@ -108,8 +108,8 @@ public class MANAGER_Command {
                         send_message(sender, messages.get("success"), holder_data);
                     }
                     case "give" -> {
-                        DATA_Sub_command sub_command_data = command_data.get_sub_commands().get(sub_command_name);
-                        Map<String, List<String>> messages = sub_command_data.getMessages();
+                        DATA_Sub_command sub_command_data = command_data.sub_commands.get(sub_command_name);
+                        Map<String, List<String>> messages = sub_command_data.messages;
                         if (!has_permission(sender, sub_command_data)) {
                             send_missing_permission_message(sender, sub_command_data, holder_data);
                             return true;
@@ -175,10 +175,10 @@ public class MANAGER_Command {
         switch (command_name){
             case "raidcore" -> {
                 if (args_length == 1) {
-                    Map<String, DATA_Sub_command> sub_commands = command_data.get_sub_commands();
+                    Map<String, DATA_Sub_command> sub_commands = command_data.sub_commands;
                     for (DATA_Sub_command sub_command_data : sub_commands.values()) {
                         if (has_permission(player, sub_command_data)) {
-                            completions.add(sub_command_data.getSub_command_id());
+                            completions.add(sub_command_data.sub_command_id);
                         }
                     }
                 }else{
@@ -239,9 +239,9 @@ public class MANAGER_Command {
                 String permission = command_section.getString("permission");
                 List<String> description = command_section.getStringList("description");
                 DATA_Command commandData = new DATA_Command();
-                commandData.setCommand_id(command_id);
-                commandData.setPermission(permission);
-                commandData.setDescription(description);
+                commandData.command_id = command_id;
+                commandData.permission = permission;
+                commandData.description = description;
 
                 ConfigurationSection messages_section = command_section.getConfigurationSection("messages");
                 if (messages_section != null){
@@ -249,7 +249,7 @@ public class MANAGER_Command {
                     for (String message_id : messages_section.getKeys(false)){
                         messages_map.put(message_id, messages_section.getStringList(message_id));
                     }
-                    commandData.setMessages(messages_map);
+                    commandData.messages = messages_map;
                 }
 
                 // --
@@ -261,22 +261,22 @@ public class MANAGER_Command {
                         List<String> sub_description = sub_command_section.getStringList(sub_command_id + ".description");
 
                         DATA_Sub_command sub_command_data = new DATA_Sub_command();
-                        sub_command_data.setSub_command_id(sub_command_id);
-                        sub_command_data.setPermission(sub_permission);
-                        sub_command_data.setDescription(sub_description);
+                        sub_command_data.sub_command_id = sub_command_id;
+                        sub_command_data.permission = sub_permission;
+                        sub_command_data.description = sub_description;
                         ConfigurationSection sub_messages_section = sub_command_section.getConfigurationSection(sub_command_id + ".messages");
                         if (sub_messages_section != null){
                             Map<String, List<String>> messages_map = new HashMap<>();
                             for (String message_id : sub_messages_section.getKeys(false)){
                                 messages_map.put(message_id, sub_messages_section.getStringList(message_id));
                             }
-                            sub_command_data.setMessages(messages_map);
+                            sub_command_data.messages = messages_map;
                         }
 
                         sub_commands.put(sub_command_id, sub_command_data);
                     }
                 }
-                commandData.set_sub_commands(sub_commands);
+                commandData.sub_commands = sub_commands;
                 // --
 
                 commands.put(command_id, commandData);
@@ -310,49 +310,49 @@ public class MANAGER_Command {
         }
         player.sendMessage(m_placeholder.replace_placeholders_component(message, holder_data));
     }
-    private void send_missing_permission_message(CommandSender commandSender, DATA_Sub_command commandData, HOLDER holder_data){
+    public void send_missing_permission_message(CommandSender commandSender, DATA_Sub_command commandData, HOLDER holder_data){
         if (commandData != null) {
-            List<String> message = commandData.getMessages().get("missing-permission");
+            List<String> message = commandData.messages.get("missing-permission");
             if (message != null && !message.isEmpty()) {
                 commandSender.sendMessage(m_placeholder.replace_placeholders_component(message, holder_data));
             }
         }
     }
-    private void send_missing_permission_message(Player player, DATA_Sub_command commandData, HOLDER holder_data){
+    public void send_missing_permission_message(Player player, DATA_Sub_command commandData, HOLDER holder_data){
         if (commandData != null){
-            List<String> message = commandData.getMessages().get("missing-permission");
+            List<String> message = commandData.messages.get("missing-permission");
             if (message != null && !message.isEmpty()){
                 player.sendMessage(m_placeholder.replace_placeholders_component(message, holder_data));
             }
         }
     }
-    private void send_missing_permission_message(CommandSender commandSender, DATA_Command commandData, HOLDER holder_data){
+    public void send_missing_permission_message(CommandSender commandSender, DATA_Command commandData, HOLDER holder_data){
         if (commandData != null) {
-            List<String> message = commandData.getMessages().get("missing-permission");
+            List<String> message = commandData.messages.get("missing-permission");
             if (message != null && !message.isEmpty()) {
                 commandSender.sendMessage(m_placeholder.replace_placeholders_component(message, holder_data));
             }
         }
     }
-    private void send_missing_permission_message(Player player, DATA_Command commandData, HOLDER holder_data){
+    public void send_missing_permission_message(Player player, DATA_Command commandData, HOLDER holder_data){
         if (commandData != null){
-            List<String> message = commandData.getMessages().get("missing-permission");
+            List<String> message = commandData.messages.get("missing-permission");
             if (message != null && !message.isEmpty()){
                 player.sendMessage(m_placeholder.replace_placeholders_component(message, holder_data));
             }
         }
     }
-    private boolean has_permission(CommandSender commandSender, DATA_Command commandData){
-        return commandData != null && commandSender.hasPermission(commandData.getPermission());
+    public boolean has_permission(CommandSender command_sender, DATA_Command command_data){
+        return command_data != null && command_sender.hasPermission(command_data.permission);
     }
-    private boolean has_permission(Player player, DATA_Command commandData){
-        return commandData != null && player.hasPermission(commandData.getPermission());
+    public boolean has_permission(Player player, DATA_Command command_data){
+        return command_data != null && player.hasPermission(command_data.permission);
     }
-    private boolean has_permission(CommandSender commandSender, DATA_Sub_command commandData){
-        return commandData != null && commandSender.hasPermission(commandData.getPermission());
+    public boolean has_permission(CommandSender command_sender, DATA_Sub_command command_data){
+        return command_data != null && command_sender.hasPermission(command_data.permission);
     }
-    private boolean has_permission(Player player, DATA_Sub_command commandData){
-        return commandData != null && player.hasPermission(commandData.getPermission());
+    public boolean has_permission(Player player, DATA_Sub_command command_data){
+        return command_data != null && player.hasPermission(command_data.permission);
     }
     public String listToString(List<String> list) {
         return String.join("\n", list);

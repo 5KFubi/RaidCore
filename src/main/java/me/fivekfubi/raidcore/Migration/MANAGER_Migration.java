@@ -122,7 +122,7 @@ public class MANAGER_Migration {
         }
     }
 
-    private int compare_versions(String v1, String v2) {
+    public int compare_versions(String v1, String v2) {
         String[] parts_1 = v1 != null ? v1.split("\\.") : null;
         String[] parts_2 = v2 != null ? v2.split("\\.") : null;
 

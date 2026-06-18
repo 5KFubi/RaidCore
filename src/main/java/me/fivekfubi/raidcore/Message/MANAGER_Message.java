@@ -56,7 +56,7 @@ public class MANAGER_Message {
         }
     }
 
-    private void load_section_recursive(String plugin_name, String prefix, ConfigurationSection section) {
+    public void load_section_recursive(String plugin_name, String prefix, ConfigurationSection section) {
         for (String key : section.getKeys(false)) {
             String path = prefix + "." + key;
             if (section.isConfigurationSection(key)) {

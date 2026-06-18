@@ -203,7 +203,7 @@ public class MANAGER_GUI_loader {
 
                 for (String group_id : groups_section.getKeys(false)) {
                     GUI_Group gGroup = new GUI_Group();
-                    gGroup.set_group_id(group_id);
+                    gGroup.group_id = group_id;
 
                     // group / paged group;
 
@@ -238,7 +238,7 @@ public class MANAGER_GUI_loader {
                                 group_settings.switch_interact_stop_timer = interact_timer;
                             }
                         }
-                        gGroup.set_group_settings(group_settings);
+                        gGroup.group_settings = group_settings;
 
                         int page_number = 1;
                         if (is_paged){
@@ -246,7 +246,7 @@ public class MANAGER_GUI_loader {
                                 if (!page_key.matches("\\d+")) continue;
 
                                 GUI_Page gPage = new GUI_Page();
-                                gPage.set_page_number(page_number);
+                                gPage.page_number = page_number;
 
                                 ConfigurationSection items_section = group_section.getConfigurationSection(page_key);
                                 if (items_section != null) {
@@ -265,14 +265,14 @@ public class MANAGER_GUI_loader {
                                         //
                                         page_items.put(item_id, gui_item);
                                     }
-                                    gPage.set_items(page_items);
+                                    gPage.items = page_items;
                                 }
                                 pages.put(page_number, gPage);
                                 page_number++;
                             }
                         }else{
                             GUI_Page gPage = new GUI_Page();
-                            gPage.set_page_number(page_number);
+                            gPage.page_number = page_number;
 
                             Map<String, GUI_Item> page_items = new HashMap<>();
                             //
@@ -284,7 +284,7 @@ public class MANAGER_GUI_loader {
                             gui_item.item_id = group_id;
                             //
                             page_items.put(group_id, gui_item);
-                            gPage.set_items(page_items);
+                            gPage.items = page_items;
                             pages.put(page_number, gPage);
                         }
 
@@ -292,10 +292,10 @@ public class MANAGER_GUI_loader {
                             GUI_Page last_page = pages.get(page_number - 1);
                             for (int r = 0; r < group_settings.repeat_last_page; r++) {
                                 GUI_Page repeated = new GUI_Page();
-                                repeated.set_page_number(page_number);
+                                repeated.page_number = page_number;
 
                                 Map<String, GUI_Item> repeated_items = new HashMap<>();
-                                for (Map.Entry<String, GUI_Item> entry : last_page.get_items().entrySet()) {
+                                for (Map.Entry<String, GUI_Item> entry : last_page.items.entrySet()) {
                                     GUI_Item original_item = entry.getValue();
                                     GUI_Item copied_item = original_item.clone();
                                     //copied_item.start_index = original_item.start_index + (original_item.slots.size() * (r + 1));
@@ -303,14 +303,14 @@ public class MANAGER_GUI_loader {
                                     repeated_items.put(entry.getKey(), copied_item);
                                 }
 
-                                repeated.set_items(repeated_items);
+                                repeated.items = repeated_items;
                                 pages.put(page_number, repeated);
                                 page_number++;
                             }
                         }
                         //
 
-                        gGroup.set_pages(pages);
+                        gGroup.pages = pages;
 
                         //
                     }

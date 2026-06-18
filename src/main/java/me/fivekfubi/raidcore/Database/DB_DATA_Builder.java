@@ -10,11 +10,11 @@ import java.util.function.BiConsumer;
 import java.util.function.Function;
 
 public class DB_DATA_Builder {
-    private final Class<?> class_;
-    private final LinkedHashMap<String, DB_DATA_Column> columns = new LinkedHashMap<>();
-    private Function<Object, Object> id_getter_global = null;
+    public final Class<?> class_;
+    public final LinkedHashMap<String, DB_DATA_Column> columns = new LinkedHashMap<>();
+    public Function<Object, Object> id_getter_global = null;
 
-    private DB_DATA_Builder(Class<?> class_) {
+    public DB_DATA_Builder(Class<?> class_) {
         this.class_ = class_;
         setup_id_getter();
     }
@@ -23,7 +23,7 @@ public class DB_DATA_Builder {
         return new DB_DATA_Builder(class_);
     }
 
-    private void setup_id_getter() {
+    public void setup_id_getter() {
         try {
             Field id_field = class_.getDeclaredField("id");
             id_field.setAccessible(true);
@@ -97,7 +97,7 @@ public class DB_DATA_Builder {
         return map;
     }
 
-    private static Method find_setter(Class<?> class_, String name, Class<?> param_type) throws Exception {
+    public static Method find_setter(Class<?> class_, String name, Class<?> param_type) throws Exception {
         for (Method m : class_.getDeclaredMethods()) {
             if (m.getName().equals(name) && m.getParameterCount() == 1) {
                 m.setAccessible(true);

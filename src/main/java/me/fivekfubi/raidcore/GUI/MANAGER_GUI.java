@@ -156,7 +156,7 @@ public class MANAGER_GUI implements Listener {
 
         g_inventory.first_time.put(group_id, true);
 
-        Map<Integer, GUI_Page> pages = group.get_pages();
+        Map<Integer, GUI_Page> pages = group.pages;
         int size = pages.size();
 
         //handleStorage(g_inventory, g_inventory.getInventory());
@@ -189,7 +189,7 @@ public class MANAGER_GUI implements Listener {
     }
     public void interrupt_group(GUI_Group group, GUI_Inventory g_inventory, String group_id){
         if (group != null && g_inventory != null && group_id != null){
-            GUI_Group_settings group_settings = group.get_group_settings();
+            GUI_Group_settings group_settings = group.group_settings;
             if (group_settings != null){
                 boolean interact_stop = group_settings.switch_interact_stop;
                 if (interact_stop){
@@ -198,9 +198,9 @@ public class MANAGER_GUI implements Listener {
                     if (gTask != null){
                         long interact_timer = group_settings.switch_interact_stop_timer;
                         if (interact_timer > 0){
-                            gTask.set_interrupt_time(interact_timer);
+                            gTask.interrupt_time = interact_timer;
                         }else{
-                            gTask.get_task().cancel();
+                            gTask.task.cancel();
                         }
                     }
                 }
@@ -255,7 +255,7 @@ public class MANAGER_GUI implements Listener {
         for (String group_id : groups.keySet()){
             player_pages.putIfAbsent(group_id, 1);
             GUI_Group g_group = groups.get(group_id);
-            GUI_Group_settings group_settings = g_group.get_group_settings();
+            GUI_Group_settings group_settings = g_group.group_settings;
 
             if (group_settings != null){
                 boolean auto = group_settings.switch_enable;
@@ -273,14 +273,14 @@ public class MANAGER_GUI implements Listener {
                         public void run() {
                             Bukkit.getScheduler().runTask(CORE, () -> {
                                 if (player.getOpenInventory().getTopInventory().equals(inventory)) {
-                                    long interrupt_time = gTask.get_interrupt_time();
-                                    long current_time = gTask.get_current_time();
+                                    long interrupt_time = gTask.interrupt_time;
+                                    long current_time = gTask.current_time;
 
                                     if (interrupt_time > 0){
-                                        gTask.set_interrupt_time(interrupt_time - 1L);
+                                        gTask.interrupt_time = interrupt_time - 1L;
                                     }else{
                                         boolean run = current_time % delay == 0;
-                                        gTask.set_current_time(current_time + 1L);
+                                        gTask.current_time = current_time + 1L;
 
                                         if (run){
                                             if (current >= order_size) {
@@ -296,7 +296,7 @@ public class MANAGER_GUI implements Listener {
                             });
                         }
                     }.runTaskTimer(CORE, 0, 1L);
-                    gTask.set_task(task);
+                    gTask.task = task;
                     group_tasks.put(group_id, gTask);
                 }
             }
@@ -332,23 +332,23 @@ public class MANAGER_GUI implements Listener {
 
                         for (String group_id : groups.keySet()){
                             GUI_Group g_group = groups.get(group_id);
-                            GUI_Group_settings group_settings = g_group.get_group_settings();
+                            GUI_Group_settings group_settings = g_group.group_settings;
 
-                            Map<Integer, GUI_Page> pages = g_group.get_pages();
+                            Map<Integer, GUI_Page> pages = g_group.pages;
                             GUI_Page g_page = pages.get(player_pages.getOrDefault(group_id, 1));
-                            int page_id = g_page.get_page_number();
+                            int page_id = g_page.page_number;
 
                             if (group_settings != null){
                                 boolean fill_empty = group_settings.fill_empty;
                                 if (fill_empty){
                                     Set<Integer> current_page_slots = new HashSet<>();
-                                    for (GUI_Item data : g_page.get_items().values()) {
+                                    for (GUI_Item data : g_page.items.values()) {
                                         current_page_slots.addAll(data.slots);
                                     }
                                     Set<Integer> other_page_slots = new HashSet<>();
                                     for (Map.Entry<Integer, GUI_Page> entry : pages.entrySet()) {
                                         if (entry.getKey().equals(player_pages.getOrDefault(group_id, 1))) continue;
-                                        for (GUI_Item data : entry.getValue().get_items().values()) {
+                                        for (GUI_Item data : entry.getValue().items.values()) {
                                             other_page_slots.addAll(data.slots);
                                         }
                                     }
@@ -359,7 +359,7 @@ public class MANAGER_GUI implements Listener {
                                 }
                             }
 
-                            Map<String, GUI_Item> items = g_page.get_items();
+                            Map<String, GUI_Item> items = g_page.items;
                             for (String item_id : items.keySet()){
                                 GUI_Item data = items.get(item_id);
 
@@ -478,7 +478,7 @@ public class MANAGER_GUI implements Listener {
 
         player.openInventory(inventory);
     }
-    private final Set<Player> going_back = new HashSet<>();
+    public final Set<Player> going_back = new HashSet<>();
     public void back_gui(Player player) {
         if (player == null) return;
 

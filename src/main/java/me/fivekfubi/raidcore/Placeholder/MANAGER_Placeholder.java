@@ -422,9 +422,9 @@ public class MANAGER_Placeholder {
     //
     //
     //
-    private final Map<String, Object> resolved_scratch = new HashMap<>();
-    private final List<String> output_scratch = new ArrayList<>();
-    private final Map<String, String> condition_scratch = new HashMap<>();
+    public final Map<String, Object> resolved_scratch = new HashMap<>();
+    public final List<String> output_scratch = new ArrayList<>();
+    public final Map<String, String> condition_scratch = new HashMap<>();
 
     public String replace_placeholders_string(String text, HOLDER holder_data) {
         if (text == null) return null;

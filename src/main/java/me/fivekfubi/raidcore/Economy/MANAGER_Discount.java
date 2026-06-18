@@ -19,7 +19,7 @@ public class MANAGER_Discount {
         functionate();
     }
 
-    private Object functionate_task = null;
+    public Object functionate_task = null;
     public void functionate(){
         m_scheduler.cancel(functionate_task);
 

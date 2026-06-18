@@ -9,8 +9,8 @@ import java.util.Map;
 
 public class SERIALIZER_Item {
 
-    private static final String ITEM_DIVIDER = ";";
-    private static final String SLOT_DIVIDER = ":";
+    public static final String ITEM_DIVIDER = ";";
+    public static final String SLOT_DIVIDER = ":";
 
     public static String serialize_single(ItemStack item, int slot) throws IOException {
         ByteArrayOutputStream bos = new ByteArrayOutputStream();

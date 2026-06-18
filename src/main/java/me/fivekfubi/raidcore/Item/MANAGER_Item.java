@@ -555,7 +555,7 @@ public class MANAGER_Item {
         return data;
     }
 
-    private ConfigurationSection get_section_flexible(
+    public ConfigurationSection get_section_flexible(
             ConfigurationSection section,
             String... acceptedNames
     ) {

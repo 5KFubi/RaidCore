@@ -5,11 +5,14 @@ import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.NamespacedKey;
 import org.bukkit.World;
 import org.bukkit.entity.ArmorStand;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Zombie;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.persistence.PersistentDataContainer;
+import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.scheduler.BukkitTask;
 
 import java.io.File;
@@ -27,16 +30,18 @@ public class MANAGER_Entity {
     public final Map<UUID, String> entity_map = new HashMap<>();
     public final Map<String, Supplier<CUSTOM_Entity>> rebuilders = new LinkedHashMap<>();
 
+    public boolean use_pdc = false;
+
+    public static final NamespacedKey PDC_KEY = new NamespacedKey("raidcore", "entity_instance");
+
     public File save_file;
     public BukkitTask tick_task;
     public int global_tick = 0;
 
     public void load() {
         register_test();
-        Bukkit.getScheduler().runTask(CORE, () -> {
-            load_files(CORE.getDataFolder());
-            start_ticker();
-        });
+        start_ticker();
+        Bukkit.getScheduler().runTask(CORE, () -> load_files(CORE.getDataFolder()));
     }
 
     public void register_test() {
@@ -126,25 +131,25 @@ public class MANAGER_Entity {
         return entity;
     }
 
-    private <T extends Entity> Entity spawn_part(World world, Location loc, ENTITY_Part<T> part) {
+    public <T extends Entity> Entity spawn_part(World world, Location loc, ENTITY_Part<T> part) {
         loc.getChunk().load(true);
         return world.spawn(loc, part.entity_class, e -> part.configurator.accept(e));
     }
 
     @SuppressWarnings("unchecked")
-    private <T extends Entity> void run_post_spawn(ENTITY_Part<T> part, CUSTOM_Entity entity) {
+    public <T extends Entity> void run_post_spawn(ENTITY_Part<T> part, CUSTOM_Entity entity) {
         T live = (T) part.get();
         if (live != null) part.post_spawn.accept(live, entity);
     }
 
     @SuppressWarnings("unchecked")
-    private <T extends Entity> void run_deserializer(ENTITY_Part<T> part, CUSTOM_Entity entity, JsonObject data) {
+    public <T extends Entity> void run_deserializer(ENTITY_Part<T> part, CUSTOM_Entity entity, JsonObject data) {
         T live = (T) part.get();
         if (live != null && part.deserializer != null) part.deserializer.deserialize(live, entity, data);
     }
 
     @SuppressWarnings("unchecked")
-    private <T extends Entity> void run_serializer(ENTITY_Part<T> part, CUSTOM_Entity entity, JsonObject out) {
+    public <T extends Entity> void run_serializer(ENTITY_Part<T> part, CUSTOM_Entity entity, JsonObject out) {
         T live = (T) part.get();
         if (live != null && part.serializer != null) part.serializer.serialize(live, entity, out);
     }
@@ -154,10 +159,13 @@ public class MANAGER_Entity {
         if (entity == null) return;
         for (ENTITY_Part<?> part : entity.parts) {
             Entity e = part.get();
-            if (e != null) e.remove();
+            if (e != null) {
+                if (use_pdc) e.getPersistentDataContainer().remove(PDC_KEY);
+                e.remove();
+            }
             if (part.uuid != null) entity_map.remove(part.uuid);
         }
-        save();
+        if (!use_pdc) save();
     }
 
     public void remove_by_entity(UUID entity_uuid) {
@@ -185,79 +193,91 @@ public class MANAGER_Entity {
     }
 
     @SuppressWarnings("unchecked")
-    private <T extends Entity> void run_ticker(ENTITY_Ticker<T> ticker, CUSTOM_Entity entity) {
+    public <T extends Entity> void run_ticker(ENTITY_Ticker<T> ticker, CUSTOM_Entity entity) {
         T live = (T) ticker.part.get();
         if (live != null) ticker.handler.accept(live, entity);
     }
 
-    public void load_files(File data_folder) {
-        save_file = new File(data_folder, "entity_instances.json");
-        if (!save_file.exists()) return;
+    public JsonObject build_instance_json(CUSTOM_Entity entity) {
+        Entity first = entity.parts.get(0).get();
+        if (first == null) return null;
+        Location loc = first.getLocation();
 
+        JsonObject obj = new JsonObject();
+        obj.addProperty("instance_id", entity.instance_id);
+        obj.addProperty("kind", entity.get_meta_string("__kind"));
+        obj.addProperty("world", loc.getWorld().getName());
+        obj.addProperty("x", loc.getX());
+        obj.addProperty("y", loc.getY());
+        obj.addProperty("z", loc.getZ());
+
+        JsonObject meta_obj = new JsonObject();
+        for (Map.Entry<String, JsonElement> m : entity.meta.entrySet()) meta_obj.add(m.getKey(), m.getValue());
+        obj.add("meta", meta_obj);
+
+        JsonObject parts_data = new JsonObject();
+        for (int i = 0; i < entity.parts.size(); i++) {
+            ENTITY_Part<?> part = entity.parts.get(i);
+            JsonObject part_out = new JsonObject();
+            if (part.uuid != null) part_out.addProperty("__uuid", part.uuid.toString());
+            if (part.serializer != null) run_serializer(part, entity, part_out);
+            parts_data.add("part_" + i, part_out);
+        }
+        obj.add("parts_data", parts_data);
+        return obj;
+    }
+
+    public void save_pdc() {
+        for (CUSTOM_Entity entity : instances.values()) {
+            if (!entity.persistent || entity.parts.isEmpty()) continue;
+            Entity first = entity.parts.get(0).get();
+            if (first == null) continue;
+            JsonObject obj = build_instance_json(entity);
+            if (obj == null) continue;
+            first.getPersistentDataContainer().set(PDC_KEY, PersistentDataType.STRING, obj.toString());
+        }
+    }
+
+    public void load_pdc() {
+        for (World world : Bukkit.getWorlds()) {
+            for (Entity e : world.getEntities()) {
+                PersistentDataContainer pdc = e.getPersistentDataContainer();
+                if (!pdc.has(PDC_KEY, PersistentDataType.STRING)) continue;
+                String json = pdc.get(PDC_KEY, PersistentDataType.STRING);
+                if (json == null) continue;
+                try {
+                    restore_instance(JsonParser.parseString(json).getAsJsonObject());
+                } catch (Exception ex) {
+                    utils.error_message("Failed to restore PDC entity instance.", ex);
+                }
+            }
+        }
+    }
+
+    public void save_json() {
+        if (save_file == null) return;
+        JsonArray arr = new JsonArray();
+        for (CUSTOM_Entity entity : instances.values()) {
+            if (!entity.persistent || entity.parts.isEmpty()) continue;
+            JsonObject obj = build_instance_json(entity);
+            if (obj != null) arr.add(obj);
+        }
+        try (FileWriter writer = new FileWriter(save_file)) {
+            new GsonBuilder().setPrettyPrinting().create().toJson(arr, writer);
+        } catch (IOException e) {
+            utils.error_message("Failed to save entity instances.", e);
+        }
+    }
+
+    public void load_json() {
+        if (!save_file.exists()) return;
         try (FileReader reader = new FileReader(save_file)) {
             JsonArray arr = JsonParser.parseReader(reader).getAsJsonArray();
-
             for (JsonElement el : arr) {
-                JsonObject obj = el.getAsJsonObject();
-                String inst_id    = obj.get("instance_id").getAsString();
-                String kind       = obj.get("kind").getAsString();
-                String world_name = obj.get("world").getAsString();
-                double x = obj.get("x").getAsDouble();
-                double y = obj.get("y").getAsDouble();
-                double z = obj.get("z").getAsDouble();
-
-                World world = Bukkit.getWorld(world_name);
-                if (world == null) continue;
-
-                Supplier<CUSTOM_Entity> rebuilder = rebuilders.get(kind);
-                if (rebuilder == null) continue;
-
-                CUSTOM_Entity entity = rebuilder.get();
-                entity.instance_id = inst_id;
-
-                if (obj.has("meta")) {
-                    for (Map.Entry<String, JsonElement> m : obj.getAsJsonObject("meta").entrySet())
-                        entity.meta.put(m.getKey(), m.getValue());
-                }
-
-                entity.location = new Location(world, x, y, z);
-                entity.location.getChunk().load(true);
-
-                boolean all_found = false;
-                if (obj.has("parts_data")) {
-                    JsonObject parts_data = obj.getAsJsonObject("parts_data");
-                    all_found = true;
-                    for (int i = 0; i < entity.parts.size(); i++) {
-                        String part_key = "part_" + i;
-                        if (!parts_data.has(part_key)) { all_found = false; break; }
-                        JsonObject part_data = parts_data.getAsJsonObject(part_key);
-                        if (!part_data.has("__uuid")) { all_found = false; break; }
-                        UUID part_uuid = UUID.fromString(part_data.get("__uuid").getAsString());
-                        Location part_loc = entity.location.clone();
-                        if (entity.parts.get(i).offset != null) part_loc.add(entity.parts.get(i).offset[0], entity.parts.get(i).offset[1], entity.parts.get(i).offset[2]);
-                        part_loc.getChunk().load(true);
-                        Entity existing = Bukkit.getEntity(part_uuid);
-                        if (existing == null) { all_found = false; break; }
-                        entity.parts.get(i).uuid = part_uuid;
-                        entity_map.put(part_uuid, inst_id);
-                    }
-                }
-
-                if (!all_found) {
-                    spawn(entity);
-                } else {
-                    instances.put(inst_id, entity);
-                }
-
-                if (obj.has("parts_data")) {
-                    JsonObject parts_data = obj.getAsJsonObject("parts_data");
-                    for (int i = 0; i < entity.parts.size(); i++) {
-                        ENTITY_Part<?> part = entity.parts.get(i);
-                        String part_key = "part_" + i;
-                        if (parts_data.has(part_key)) {
-                            run_deserializer(part, entity, parts_data.getAsJsonObject(part_key));
-                        }
-                    }
+                try {
+                    restore_instance(el.getAsJsonObject());
+                } catch (Exception ex) {
+                    utils.error_message("Failed to restore JSON entity instance.", ex);
                 }
             }
         } catch (Exception e) {
@@ -265,45 +285,81 @@ public class MANAGER_Entity {
         }
     }
 
-    public void save() {
-        if (save_file == null) return;
-        JsonArray arr = new JsonArray();
+    public void restore_instance(JsonObject obj) {
+        String inst_id    = obj.get("instance_id").getAsString();
+        String kind       = obj.get("kind").getAsString();
+        String world_name = obj.get("world").getAsString();
+        double x = obj.get("x").getAsDouble();
+        double y = obj.get("y").getAsDouble();
+        double z = obj.get("z").getAsDouble();
 
-        for (CUSTOM_Entity entity : instances.values()) {
-            if (!entity.persistent) continue;
-            if (entity.parts.isEmpty()) continue;
-            Entity first = entity.parts.get(0).get();
-            if (first == null) continue;
-            Location loc = first.getLocation();
+        if (instances.containsKey(inst_id)) return; // already restored (PDC can have duplicates across parts)
 
-            JsonObject obj = new JsonObject();
-            obj.addProperty("instance_id", entity.instance_id);
-            obj.addProperty("kind", entity.get_meta_string("__kind"));
-            obj.addProperty("world", loc.getWorld().getName());
-            obj.addProperty("x", loc.getX());
-            obj.addProperty("y", loc.getY());
-            obj.addProperty("z", loc.getZ());
+        World world = Bukkit.getWorld(world_name);
+        if (world == null) return;
 
-            JsonObject meta_obj = new JsonObject();
-            for (Map.Entry<String, JsonElement> m : entity.meta.entrySet()) meta_obj.add(m.getKey(), m.getValue());
-            obj.add("meta", meta_obj);
+        Supplier<CUSTOM_Entity> rebuilder = rebuilders.get(kind);
+        if (rebuilder == null) return;
 
-            JsonObject parts_data = new JsonObject();
-            for (int i = 0; i < entity.parts.size(); i++) {
-                ENTITY_Part<?> part = entity.parts.get(i);
-                JsonObject part_out = new JsonObject();
-                if (part.uuid != null) part_out.addProperty("__uuid", part.uuid.toString());
-                if (part.serializer != null) run_serializer(part, entity, part_out);
-                parts_data.add("part_" + i, part_out);
-            }
-            obj.add("parts_data", parts_data);
-            arr.add(obj);
+        CUSTOM_Entity entity = rebuilder.get();
+        entity.instance_id = inst_id;
+
+        if (obj.has("meta")) {
+            for (Map.Entry<String, JsonElement> m : obj.getAsJsonObject("meta").entrySet())
+                entity.meta.put(m.getKey(), m.getValue());
         }
 
-        try (FileWriter writer = new FileWriter(save_file)) {
-            new GsonBuilder().setPrettyPrinting().create().toJson(arr, writer);
-        } catch (IOException e) {
-            utils.error_message("Failed to save entity instances.", e);
+        entity.location = new Location(world, x, y, z);
+        entity.location.getChunk().load(true);
+
+        boolean all_found = false;
+        if (obj.has("parts_data")) {
+            JsonObject parts_data = obj.getAsJsonObject("parts_data");
+            all_found = true;
+            for (int i = 0; i < entity.parts.size(); i++) {
+                String part_key = "part_" + i;
+                if (!parts_data.has(part_key)) { all_found = false; break; }
+                JsonObject part_data = parts_data.getAsJsonObject(part_key);
+                if (!part_data.has("__uuid")) { all_found = false; break; }
+                UUID part_uuid = UUID.fromString(part_data.get("__uuid").getAsString());
+                Location part_loc = entity.location.clone();
+                if (entity.parts.get(i).offset != null) part_loc.add(entity.parts.get(i).offset[0], entity.parts.get(i).offset[1], entity.parts.get(i).offset[2]);
+                part_loc.getChunk().load(true);
+                Entity existing = Bukkit.getEntity(part_uuid);
+                if (existing == null) { all_found = false; break; }
+                entity.parts.get(i).uuid = part_uuid;
+                entity_map.put(part_uuid, inst_id);
+            }
+        }
+
+        if (!all_found) {
+            spawn(entity);
+        } else {
+            instances.put(inst_id, entity);
+        }
+
+        if (obj.has("parts_data")) {
+            JsonObject parts_data = obj.getAsJsonObject("parts_data");
+            for (int i = 0; i < entity.parts.size(); i++) {
+                ENTITY_Part<?> part = entity.parts.get(i);
+                String part_key = "part_" + i;
+                if (parts_data.has(part_key))
+                    run_deserializer(part, entity, parts_data.getAsJsonObject(part_key));
+            }
+        }
+    }
+
+    public void save() {
+        if (use_pdc) save_pdc();
+        else save_json();
+    }
+
+    public void load_files(File data_folder) {
+        if (use_pdc) {
+            load_pdc();
+        } else {
+            save_file = new File(data_folder, "entity_instances.json");
+            load_json();
         }
     }
 

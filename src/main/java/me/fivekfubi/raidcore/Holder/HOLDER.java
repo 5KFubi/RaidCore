@@ -10,7 +10,7 @@ public class HOLDER implements Cloneable {
         if (initial_data != null) data.putAll(initial_data);
     }
 
-    private final Map<String, Object> data = new HashMap<>();
+    public final Map<String, Object> data = new HashMap<>();
     public Map<String, Object> get_data() { return this.data; }
     public void set(String key, Object object) { this.data.put(key, object); }
 

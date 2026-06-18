@@ -667,7 +667,7 @@ public class MANAGER_Event implements Listener {
         List<LISTENER_Action> listeners = registered_listeners.get(action);
         if (listeners != null) listeners.remove(listener);
     }
-    private void notify_listeners(Player player, String event_type, String action, Set<Entity> targets, Set<Block> blocks, Event event) {
+    public void notify_listeners(Player player, String event_type, String action, Set<Entity> targets, Set<Block> blocks, Event event) {
         List<LISTENER_Action> specific = registered_listeners.getOrDefault(action, Collections.emptyList());
         List<LISTENER_Action> wildcard = registered_listeners.getOrDefault("*", Collections.emptyList());
 
