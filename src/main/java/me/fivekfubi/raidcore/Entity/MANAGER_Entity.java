@@ -17,164 +17,145 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.*;
+import java.util.function.Supplier;
 
 import static me.fivekfubi.raidcore.RaidCore.*;
 import static me.fivekfubi.raidcore.Utils.gson;
 
 public class MANAGER_Entity {
-    public final Map<String, ENTITY_Template> templates  = new LinkedHashMap<>();
-    public final Map<String, ENTITY_Instance> instances  = new LinkedHashMap<>();
-    public final Map<UUID, String>            entity_map = new HashMap<>();
+    public final Map<String, CUSTOM_Entity> instances = new LinkedHashMap<>();
+    public final Map<UUID, String> entity_map = new HashMap<>();
+    public final Map<String, Supplier<CUSTOM_Entity>> rebuilders = new LinkedHashMap<>();
 
     public File save_file;
     public BukkitTask tick_task;
+    public int global_tick = 0;
 
-    public void load(){
-        register_templates();
-        load_files(CORE.getDataFolder());
-        start_ticker();
+    public void load() {
+        register_test();
+        Bukkit.getScheduler().runTask(CORE, () -> {
+            load_files(CORE.getDataFolder());
+            start_ticker();
+        });
     }
 
-    public void register_templates(){
-        m_entity.register_template("test_zombie")
-                .part("body", Zombie.class, z -> {
-                    z.setPersistent(true);
-                    z.setCustomNameVisible(true);
-                }, (z, instance) -> {
-                    String name = instance.get_meta_string("name");
-                    if (name != null) z.customName(m_placeholder.replace_placeholders_component(name, null));
+    public void register_test() {
+        m_entity.register_rebuilder("test_zombie", () -> {
+            CUSTOM_Entity entity = new CUSTOM_Entity();
+            entity.meta("__kind", "test_zombie");
 
-                    z.getEquipment().setHelmet(new ItemStack(Material.IRON_HELMET));
-                })
-                .persist("body",
-                        (Zombie z, ENTITY_Instance instance, JsonObject out) -> {
-                            ItemStack helmet = z.getEquipment().getHelmet();
-                            if (helmet != null) out.add("helmet", gson.toJsonTree(helmet.serialize()));
-                        },
-                        (Zombie z, ENTITY_Instance instance, JsonObject in) -> {
-                            if (in.has("helmet")) {
-                                Map<String, Object> map = gson.fromJson(in.get("helmet"), Map.class);
-                                z.getEquipment().setHelmet(ItemStack.deserialize(map));
-                            }
+            ENTITY_Part<Zombie> body = entity.part(Zombie.class, z -> {
+                z.setPersistent(true);
+                z.setCustomNameVisible(true);
+            });
+            entity.post_spawn(body, (z, self) -> {
+                z.getEquipment().setHelmet(new ItemStack(Material.IRON_HELMET));
+            });
+            entity.persist(body,
+                    (z, self, out) -> {
+                        ItemStack helmet = z.getEquipment().getHelmet();
+                        if (helmet != null) out.add("helmet", gson.toJsonTree(helmet.serialize()));
+                    },
+                    (z, self, in) -> {
+                        if (in.has("helmet")) {
+                            Map<String, Object> map = gson.fromJson(in.get("helmet"), Map.class);
+                            z.getEquipment().setHelmet(ItemStack.deserialize(map));
                         }
-                )
-                .part("hologram", ArmorStand.class, s -> {
-                    s.setPersistent(true);
-                    s.setVisible(false);
-                    s.setGravity(false);
-                    s.setInvulnerable(true);
-                    s.setSmall(true);
-                    s.setMarker(true);
-                    s.setCustomNameVisible(true);
-                })
-                .persist("hologram",
-                        (ArmorStand s, ENTITY_Instance instance, JsonObject out) -> {
-                            out.addProperty("holo_count", instance.get_meta_int("holo_count") != null ? instance.get_meta_int("holo_count") : 0);
-                        },
-                        (ArmorStand s, ENTITY_Instance instance, JsonObject in) -> {
-                            int count = in.has("holo_count") ? in.get("holo_count").getAsInt() : 0;
-                            instance.set_meta("holo_count", count);
-                            s.customName(Component.text(String.valueOf(count)));
-                        }
-                )
-                .ticker("body", 1, (Zombie z, ENTITY_Instance instance) -> {
-                    UUID holo_uuid = instance.get_part("hologram");
-                    if (holo_uuid == null) return;
-                    Entity holo = Bukkit.getEntity(holo_uuid);
-                    if (holo == null) return;
-                    holo.teleport(z.getLocation().add(0, 2.5, 0));
-                })
-                .ticker("hologram", 20, (ArmorStand s, ENTITY_Instance instance) -> {
-                    int count = (instance.get_meta_int("holo_count") != null ? instance.get_meta_int("holo_count") : 0) + 1;
-                    instance.set_meta("holo_count", count);
-                    s.customName(Component.text(String.valueOf(count)));
-                });
+                    }
+            );
+
+            ENTITY_Part<ArmorStand> hologram = entity.part(ArmorStand.class, h -> {
+                h.setPersistent(true);
+                h.setVisible(false);
+                h.setGravity(false);
+                h.setInvulnerable(true);
+                h.setSmall(true);
+                h.setMarker(true);
+                h.setCustomNameVisible(true);
+            });
+            entity.offset(hologram, 0, 2.5, 0);
+            entity.post_spawn(hologram, (h, self) -> {
+                h.customName(Component.text("0"));
+            });
+            entity.persist(hologram,
+                    (h, self, out) -> {
+                        int count = self.get_meta_int("holo_count") != null ? self.get_meta_int("holo_count") : 0;
+                        out.addProperty("holo_count", count);
+                    },
+                    (h, self, in) -> {
+                        int count = in.has("holo_count") ? in.get("holo_count").getAsInt() : 0;
+                        self.meta("holo_count", count);
+                        h.customName(Component.text(String.valueOf(count)));
+                    }
+            );
+
+            entity.ticker(body, 1, (z, self) -> {
+                ArmorStand h = hologram.get();
+                if (h != null) h.teleport(z.getLocation().add(0, 2.5, 0));
+            });
+            entity.ticker(hologram, 20, (h, self) -> {
+                int count = (self.get_meta_int("holo_count") != null ? self.get_meta_int("holo_count") : 0) + 1;
+                self.meta("holo_count", count);
+                h.customName(Component.text(String.valueOf(count)));
+            });
+
+            return entity;
+        });
     }
 
-    public void spawn_test_zombie(Location loc, String name, ItemStack helmet_item) {
-        Map<String, JsonElement> meta = new HashMap<>();
-        meta.put("name", new JsonPrimitive(name));
-        if (helmet_item != null) {
-            meta.put("helmet", gson.toJsonTree(helmet_item.serialize()));
-        }
-        m_entity.spawn("test_zombie", loc, meta);
+    public void register_rebuilder(String kind, Supplier<CUSTOM_Entity> rebuilder) {
+        rebuilders.put(kind, rebuilder);
     }
 
-    public ENTITY_Template register_template(String template_id) {
-        ENTITY_Template template = new ENTITY_Template(template_id);
-        templates.put(template_id, template);
-        return template;
-    }
-
-    public ENTITY_Template get_template(String template_id) {
-        return templates.get(template_id);
-    }
-
-    public ENTITY_Instance spawn(
-            String template_id,
-            Location location,
-            Map<String, JsonElement> meta,
-            String instance_id
-    ) {
-        ENTITY_Template template = templates.get(template_id);
-        if (template == null) throw new IllegalArgumentException("Unknown template: " + template_id);
-
-        String id = instance_id != null ? instance_id : template_id + ":" + UUID.randomUUID();
-        ENTITY_Instance instance = new ENTITY_Instance(id, template_id);
-        if (meta != null) meta.forEach(instance::set_meta);
-
-        for (ENTITY_Template.PART_Definition part : template.get_parts()) {
-            Location part_loc = resolve_part_location(location, instance, part.role);
-            Entity entity = location.getWorld().spawn(part_loc, part.entity_class, e -> part.configurator.accept(e));
-            instance.add_part(part.role, entity.getUniqueId());
-            entity_map.put(entity.getUniqueId(), id);
+    public CUSTOM_Entity spawn(CUSTOM_Entity entity) {
+        for (ENTITY_Part<?> part : entity.parts) {
+            Location part_loc = entity.location.clone();
+            if (part.offset != null) part_loc.add(part.offset[0], part.offset[1], part.offset[2]);
+            Entity bukkit_entity = spawn_part(entity.location.getWorld(), part_loc, part);
+            part.uuid = bukkit_entity.getUniqueId();
+            entity_map.put(bukkit_entity.getUniqueId(), entity.instance_id);
         }
 
-        for (ENTITY_Template.PART_Definition part : template.get_parts()) {
+        for (ENTITY_Part<?> part : entity.parts) {
             if (part.post_spawn == null) continue;
-            UUID uuid = instance.get_part(part.role);
-            Entity entity = Bukkit.getEntity(uuid);
-            if (entity != null) part.post_spawn.accept(entity, instance);
+            run_post_spawn(part, entity);
         }
 
-        // apply any saved per-part state via deserializer, after spawn + post_spawn
-        for (ENTITY_Template.PART_Definition part : template.get_parts()) {
-            if (part.deserializer == null) continue;
-            JsonObject part_data = instance.get_meta_object("__part_" + part.role);
-            if (part_data == null) continue;
-            UUID uuid = instance.get_part(part.role);
-            Entity entity = Bukkit.getEntity(uuid);
-            if (entity != null) part.deserializer.deserialize(entity, instance, part_data);
-        }
-
-        instances.put(id, instance);
+        instances.put(entity.instance_id, entity);
         save();
-        return instance;
+        return entity;
     }
 
-    public ENTITY_Instance spawn(String template_id, Location location, Map<String, JsonElement> meta) {
-        return spawn(template_id, location, meta, null);
+    private <T extends Entity> Entity spawn_part(World world, Location loc, ENTITY_Part<T> part) {
+        loc.getChunk().load(true);
+        return world.spawn(loc, part.entity_class, e -> part.configurator.accept(e));
     }
 
-    public ENTITY_Instance spawn(String template_id, Location location) {
-        return spawn(template_id, location, null, null);
+    @SuppressWarnings("unchecked")
+    private <T extends Entity> void run_post_spawn(ENTITY_Part<T> part, CUSTOM_Entity entity) {
+        T live = (T) part.get();
+        if (live != null) part.post_spawn.accept(live, entity);
     }
 
-    public Location resolve_part_location(Location base, ENTITY_Instance instance, String role) {
-        JsonElement offset = instance.get_meta_raw("offset_" + role);
-        if (offset == null || !offset.isJsonArray()) return base.clone();
-        JsonArray arr = offset.getAsJsonArray();
-        if (arr.size() < 3) return base.clone();
-        return base.clone().add(arr.get(0).getAsDouble(), arr.get(1).getAsDouble(), arr.get(2).getAsDouble());
+    @SuppressWarnings("unchecked")
+    private <T extends Entity> void run_deserializer(ENTITY_Part<T> part, CUSTOM_Entity entity, JsonObject data) {
+        T live = (T) part.get();
+        if (live != null && part.deserializer != null) part.deserializer.deserialize(live, entity, data);
+    }
+
+    @SuppressWarnings("unchecked")
+    private <T extends Entity> void run_serializer(ENTITY_Part<T> part, CUSTOM_Entity entity, JsonObject out) {
+        T live = (T) part.get();
+        if (live != null && part.serializer != null) part.serializer.serialize(live, entity, out);
     }
 
     public void remove(String instance_id) {
-        ENTITY_Instance instance = instances.remove(instance_id);
-        if (instance == null) return;
-        for (UUID uuid : instance.get_parts().values()) {
-            Entity e = Bukkit.getEntity(uuid);
+        CUSTOM_Entity entity = instances.remove(instance_id);
+        if (entity == null) return;
+        for (ENTITY_Part<?> part : entity.parts) {
+            Entity e = part.get();
             if (e != null) e.remove();
-            entity_map.remove(uuid);
+            if (part.uuid != null) entity_map.remove(part.uuid);
         }
         save();
     }
@@ -184,16 +165,8 @@ public class MANAGER_Entity {
         if (instance_id != null) remove(instance_id);
     }
 
-    public ENTITY_Instance get_instance(String instance_id)  { return instances.get(instance_id); }
-    public ENTITY_Instance get_instance_by_entity(UUID uuid) { return instances.get(entity_map.get(uuid)); }
-
-    public List<ENTITY_Instance> get_all_of_template(String template_id) {
-        List<ENTITY_Instance> result = new ArrayList<>();
-        for (ENTITY_Instance i : instances.values()) {
-            if (i.template_id.equals(template_id)) result.add(i);
-        }
-        return result;
-    }
+    public CUSTOM_Entity get_instance(String instance_id) { return instances.get(instance_id); }
+    public CUSTOM_Entity get_instance_by_entity(UUID uuid) { return instances.get(entity_map.get(uuid)); }
 
     public void start_ticker() {
         if (tick_task != null) return;
@@ -201,24 +174,20 @@ public class MANAGER_Entity {
     }
 
     public void tick() {
-        for (ENTITY_Instance instance : instances.values()) {
-            ENTITY_Template template = templates.get(instance.template_id);
-            if (template == null) continue;
-
-            for (Map.Entry<String, ENTITY_Template.PART_Ticker> entry : template.get_tickers().entrySet()) {
-                String role = entry.getKey();
-                ENTITY_Template.PART_Ticker ticker = entry.getValue();
-
-                int count = instance.tick_counters.merge(role, 1, Integer::sum);
-                if (count % ticker.refresh_rate != 0) continue;
-
-                UUID uuid = instance.get_part(role);
-                if (uuid == null) continue;
-                Entity entity = Bukkit.getEntity(uuid);
-                if (entity == null) continue;
-                ticker.handler.accept(entity, instance);
+        if (++global_tick % 200 == 0) save();
+        for (CUSTOM_Entity entity : instances.values()) {
+            for (ENTITY_Ticker<?> ticker : entity.tickers) {
+                ticker.counter++;
+                if (ticker.counter % ticker.refresh_rate != 0) continue;
+                run_ticker(ticker, entity);
             }
         }
+    }
+
+    @SuppressWarnings("unchecked")
+    private <T extends Entity> void run_ticker(ENTITY_Ticker<T> ticker, CUSTOM_Entity entity) {
+        T live = (T) ticker.part.get();
+        if (live != null) ticker.handler.accept(live, entity);
     }
 
     public void load_files(File data_folder) {
@@ -227,32 +196,69 @@ public class MANAGER_Entity {
 
         try (FileReader reader = new FileReader(save_file)) {
             JsonArray arr = JsonParser.parseReader(reader).getAsJsonArray();
+
             for (JsonElement el : arr) {
                 JsonObject obj = el.getAsJsonObject();
-                String inst_id     = obj.get("instance_id").getAsString();
-                String tmpl_id     = obj.get("template_id").getAsString();
-                String world_name  = obj.get("world").getAsString();
+                String inst_id    = obj.get("instance_id").getAsString();
+                String kind       = obj.get("kind").getAsString();
+                String world_name = obj.get("world").getAsString();
                 double x = obj.get("x").getAsDouble();
                 double y = obj.get("y").getAsDouble();
                 double z = obj.get("z").getAsDouble();
 
                 World world = Bukkit.getWorld(world_name);
                 if (world == null) continue;
-                if (!templates.containsKey(tmpl_id)) continue;
 
-                Map<String, JsonElement> meta = new HashMap<>();
+                Supplier<CUSTOM_Entity> rebuilder = rebuilders.get(kind);
+                if (rebuilder == null) continue;
+
+                CUSTOM_Entity entity = rebuilder.get();
+                entity.instance_id = inst_id;
+
                 if (obj.has("meta")) {
-                    for (Map.Entry<String, JsonElement> m : obj.getAsJsonObject("meta").entrySet()) {
-                        meta.put(m.getKey(), m.getValue());
-                    }
+                    for (Map.Entry<String, JsonElement> m : obj.getAsJsonObject("meta").entrySet())
+                        entity.meta.put(m.getKey(), m.getValue());
                 }
+
+                entity.location = new Location(world, x, y, z);
+                entity.location.getChunk().load(true);
+
+                boolean all_found = false;
                 if (obj.has("parts_data")) {
-                    for (Map.Entry<String, JsonElement> p : obj.getAsJsonObject("parts_data").entrySet()) {
-                        meta.put("__part_" + p.getKey(), p.getValue());
+                    JsonObject parts_data = obj.getAsJsonObject("parts_data");
+                    all_found = true;
+                    for (int i = 0; i < entity.parts.size(); i++) {
+                        String part_key = "part_" + i;
+                        if (!parts_data.has(part_key)) { all_found = false; break; }
+                        JsonObject part_data = parts_data.getAsJsonObject(part_key);
+                        if (!part_data.has("__uuid")) { all_found = false; break; }
+                        UUID part_uuid = UUID.fromString(part_data.get("__uuid").getAsString());
+                        Location part_loc = entity.location.clone();
+                        if (entity.parts.get(i).offset != null) part_loc.add(entity.parts.get(i).offset[0], entity.parts.get(i).offset[1], entity.parts.get(i).offset[2]);
+                        part_loc.getChunk().load(true);
+                        Entity existing = Bukkit.getEntity(part_uuid);
+                        if (existing == null) { all_found = false; break; }
+                        entity.parts.get(i).uuid = part_uuid;
+                        entity_map.put(part_uuid, inst_id);
                     }
                 }
 
-                spawn(tmpl_id, new Location(world, x, y, z), meta, inst_id);
+                if (!all_found) {
+                    spawn(entity);
+                } else {
+                    instances.put(inst_id, entity);
+                }
+
+                if (obj.has("parts_data")) {
+                    JsonObject parts_data = obj.getAsJsonObject("parts_data");
+                    for (int i = 0; i < entity.parts.size(); i++) {
+                        ENTITY_Part<?> part = entity.parts.get(i);
+                        String part_key = "part_" + i;
+                        if (parts_data.has(part_key)) {
+                            run_deserializer(part, entity, parts_data.getAsJsonObject(part_key));
+                        }
+                    }
+                }
             }
         } catch (Exception e) {
             utils.error_message("Failed to load entity instances.", e);
@@ -263,43 +269,34 @@ public class MANAGER_Entity {
         if (save_file == null) return;
         JsonArray arr = new JsonArray();
 
-        for (ENTITY_Instance instance : instances.values()) {
-            if (instance.get_parts().isEmpty()) continue;
-            UUID first_uuid = instance.get_parts().values().iterator().next();
-            Entity first = Bukkit.getEntity(first_uuid);
+        for (CUSTOM_Entity entity : instances.values()) {
+            if (!entity.persistent) continue;
+            if (entity.parts.isEmpty()) continue;
+            Entity first = entity.parts.get(0).get();
             if (first == null) continue;
             Location loc = first.getLocation();
 
             JsonObject obj = new JsonObject();
-            obj.addProperty("instance_id", instance.instance_id);
-            obj.addProperty("template_id", instance.template_id);
-            obj.addProperty("world",       loc.getWorld().getName());
-            obj.addProperty("x",           loc.getX());
-            obj.addProperty("y",           loc.getY());
-            obj.addProperty("z",           loc.getZ());
+            obj.addProperty("instance_id", entity.instance_id);
+            obj.addProperty("kind", entity.get_meta_string("__kind"));
+            obj.addProperty("world", loc.getWorld().getName());
+            obj.addProperty("x", loc.getX());
+            obj.addProperty("y", loc.getY());
+            obj.addProperty("z", loc.getZ());
 
             JsonObject meta_obj = new JsonObject();
-            for (Map.Entry<String, JsonElement> m : instance.get_meta().entrySet()) {
-                if (m.getKey().startsWith("__part_")) continue;
-                meta_obj.add(m.getKey(), m.getValue());
-            }
+            for (Map.Entry<String, JsonElement> m : entity.meta.entrySet()) meta_obj.add(m.getKey(), m.getValue());
             obj.add("meta", meta_obj);
 
-            ENTITY_Template template = templates.get(instance.template_id);
-            if (template != null) {
-                JsonObject parts_data = new JsonObject();
-                for (ENTITY_Template.PART_Definition part : template.get_parts()) {
-                    if (part.serializer == null) continue;
-                    UUID uuid = instance.get_part(part.role);
-                    Entity entity = uuid != null ? Bukkit.getEntity(uuid) : null;
-                    if (entity == null) continue;
-                    JsonObject part_out = new JsonObject();
-                    part.serializer.serialize(entity, instance, part_out);
-                    parts_data.add(part.role, part_out);
-                }
-                obj.add("parts_data", parts_data);
+            JsonObject parts_data = new JsonObject();
+            for (int i = 0; i < entity.parts.size(); i++) {
+                ENTITY_Part<?> part = entity.parts.get(i);
+                JsonObject part_out = new JsonObject();
+                if (part.uuid != null) part_out.addProperty("__uuid", part.uuid.toString());
+                if (part.serializer != null) run_serializer(part, entity, part_out);
+                parts_data.add("part_" + i, part_out);
             }
-
+            obj.add("parts_data", parts_data);
             arr.add(obj);
         }
 

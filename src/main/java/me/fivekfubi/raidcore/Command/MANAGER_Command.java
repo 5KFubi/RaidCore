@@ -3,7 +3,6 @@ package me.fivekfubi.raidcore.Command;
 import me.fivekfubi.raidcore.Command.Data.DATA_Command;
 import me.fivekfubi.raidcore.Command.Data.DATA_Sub_command;
 import me.fivekfubi.raidcore.Config.Data.DATA_Config;
-import me.fivekfubi.raidcore.Entity.ENTITY_Instance;
 import me.fivekfubi.raidcore.Holder.HOLDER;
 import me.fivekfubi.raidcore.Item.Data.DATA_Item;
 import org.bukkit.Bukkit;
@@ -53,7 +52,9 @@ public class MANAGER_Command {
             Map<String, List<String>> messages = command_data.getMessages();
             send_message(sender, messages.get("no-command"), holder_data);
 
-            m_entity.spawn_test_zombie(player.getLocation(),"<red>Zombie",null);
+            {
+                m_entity.rebuilders.get("test_zombie").get().spawn(player.getLocation());
+            }
             return true;
         }
 
