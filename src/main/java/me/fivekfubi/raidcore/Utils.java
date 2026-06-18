@@ -13,7 +13,6 @@ import org.bukkit.attribute.AttributeModifier;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
-import org.bukkit.inventory.EquipmentSlotGroup;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -44,11 +43,11 @@ public class Utils {
     public Enchantment infinity_enchant = null;
     public Enchantment get_infinity(){ return this.infinity_enchant; }
     public void load(){ infinity_enchant = get_enchant("infinity", "[Utils]"); }
-    public final Gson GSON = new Gson();
+    public static final Gson gson = new Gson();
 
-    public String serialize_list_string(List<String> string_list) { return GSON.toJson(string_list); }
+    public String serialize_list_string(List<String> string_list) { return gson.toJson(string_list); }
     public List<String> deserialize_list_string(String json_array) {
-        return GSON.fromJson(
+        return gson.fromJson(
                 json_array,
                 new TypeToken<List<String>>(){}.getType()
         );

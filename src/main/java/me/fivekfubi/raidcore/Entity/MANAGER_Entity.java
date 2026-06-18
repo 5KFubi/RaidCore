@@ -1,6 +1,7 @@
 package me.fivekfubi.raidcore.Entity;
 
 import com.google.gson.*;
+import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -18,20 +19,86 @@ import java.io.IOException;
 import java.util.*;
 
 import static me.fivekfubi.raidcore.RaidCore.*;
+import static me.fivekfubi.raidcore.Utils.gson;
 
 public class MANAGER_Entity {
-    private final Map<String, ENTITY_Template> templates  = new LinkedHashMap<>();
-    private final Map<String, ENTITY_Instance> instances  = new LinkedHashMap<>();
-    private final Map<UUID, String>            entity_map = new HashMap<>();
+    public final Map<String, ENTITY_Template> templates  = new LinkedHashMap<>();
+    public final Map<String, ENTITY_Instance> instances  = new LinkedHashMap<>();
+    public final Map<UUID, String>            entity_map = new HashMap<>();
 
+    public File save_file;
+    public BukkitTask tick_task;
 
     public void load(){
+        register_templates();
         load_files(CORE.getDataFolder());
         start_ticker();
     }
 
-    private File save_file;
-    private BukkitTask tick_task;
+    public void register_templates(){
+        m_entity.register_template("test_zombie")
+                .part("body", Zombie.class, z -> {
+                    z.setPersistent(true);
+                    z.setCustomNameVisible(true);
+                }, (z, instance) -> {
+                    String name = instance.get_meta_string("name");
+                    if (name != null) z.customName(m_placeholder.replace_placeholders_component(name, null));
+
+                    z.getEquipment().setHelmet(new ItemStack(Material.IRON_HELMET));
+                })
+                .persist("body",
+                        (Zombie z, ENTITY_Instance instance, JsonObject out) -> {
+                            ItemStack helmet = z.getEquipment().getHelmet();
+                            if (helmet != null) out.add("helmet", gson.toJsonTree(helmet.serialize()));
+                        },
+                        (Zombie z, ENTITY_Instance instance, JsonObject in) -> {
+                            if (in.has("helmet")) {
+                                Map<String, Object> map = gson.fromJson(in.get("helmet"), Map.class);
+                                z.getEquipment().setHelmet(ItemStack.deserialize(map));
+                            }
+                        }
+                )
+                .part("hologram", ArmorStand.class, s -> {
+                    s.setPersistent(true);
+                    s.setVisible(false);
+                    s.setGravity(false);
+                    s.setInvulnerable(true);
+                    s.setSmall(true);
+                    s.setMarker(true);
+                    s.setCustomNameVisible(true);
+                })
+                .persist("hologram",
+                        (ArmorStand s, ENTITY_Instance instance, JsonObject out) -> {
+                            out.addProperty("holo_count", instance.get_meta_int("holo_count") != null ? instance.get_meta_int("holo_count") : 0);
+                        },
+                        (ArmorStand s, ENTITY_Instance instance, JsonObject in) -> {
+                            int count = in.has("holo_count") ? in.get("holo_count").getAsInt() : 0;
+                            instance.set_meta("holo_count", count);
+                            s.customName(Component.text(String.valueOf(count)));
+                        }
+                )
+                .ticker("body", 1, (Zombie z, ENTITY_Instance instance) -> {
+                    UUID holo_uuid = instance.get_part("hologram");
+                    if (holo_uuid == null) return;
+                    Entity holo = Bukkit.getEntity(holo_uuid);
+                    if (holo == null) return;
+                    holo.teleport(z.getLocation().add(0, 2.5, 0));
+                })
+                .ticker("hologram", 20, (ArmorStand s, ENTITY_Instance instance) -> {
+                    int count = (instance.get_meta_int("holo_count") != null ? instance.get_meta_int("holo_count") : 0) + 1;
+                    instance.set_meta("holo_count", count);
+                    s.customName(Component.text(String.valueOf(count)));
+                });
+    }
+
+    public void spawn_test_zombie(Location loc, String name, ItemStack helmet_item) {
+        Map<String, JsonElement> meta = new HashMap<>();
+        meta.put("name", new JsonPrimitive(name));
+        if (helmet_item != null) {
+            meta.put("helmet", gson.toJsonTree(helmet_item.serialize()));
+        }
+        m_entity.spawn("test_zombie", loc, meta);
+    }
 
     public ENTITY_Template register_template(String template_id) {
         ENTITY_Template template = new ENTITY_Template(template_id);
@@ -46,7 +113,7 @@ public class MANAGER_Entity {
     public ENTITY_Instance spawn(
             String template_id,
             Location location,
-            Map<String, Object> meta,
+            Map<String, JsonElement> meta,
             String instance_id
     ) {
         ENTITY_Template template = templates.get(template_id);
@@ -70,12 +137,22 @@ public class MANAGER_Entity {
             if (entity != null) part.post_spawn.accept(entity, instance);
         }
 
+        // apply any saved per-part state via deserializer, after spawn + post_spawn
+        for (ENTITY_Template.PART_Definition part : template.get_parts()) {
+            if (part.deserializer == null) continue;
+            JsonObject part_data = instance.get_meta_object("__part_" + part.role);
+            if (part_data == null) continue;
+            UUID uuid = instance.get_part(part.role);
+            Entity entity = Bukkit.getEntity(uuid);
+            if (entity != null) part.deserializer.deserialize(entity, instance, part_data);
+        }
+
         instances.put(id, instance);
         save();
         return instance;
     }
 
-    public ENTITY_Instance spawn(String template_id, Location location, Map<String, Object> meta) {
+    public ENTITY_Instance spawn(String template_id, Location location, Map<String, JsonElement> meta) {
         return spawn(template_id, location, meta, null);
     }
 
@@ -83,10 +160,12 @@ public class MANAGER_Entity {
         return spawn(template_id, location, null, null);
     }
 
-    private Location resolve_part_location(Location base, ENTITY_Instance instance, String role) {
-        double[] offset = instance.get_meta("offset_" + role, double[].class);
-        if (offset == null) return base.clone();
-        return base.clone().add(offset[0], offset[1], offset[2]);
+    public Location resolve_part_location(Location base, ENTITY_Instance instance, String role) {
+        JsonElement offset = instance.get_meta_raw("offset_" + role);
+        if (offset == null || !offset.isJsonArray()) return base.clone();
+        JsonArray arr = offset.getAsJsonArray();
+        if (arr.size() < 3) return base.clone();
+        return base.clone().add(arr.get(0).getAsDouble(), arr.get(1).getAsDouble(), arr.get(2).getAsDouble());
     }
 
     public void remove(String instance_id) {
@@ -121,7 +200,7 @@ public class MANAGER_Entity {
         tick_task = Bukkit.getScheduler().runTaskTimer(CORE, this::tick, 1L, 1L);
     }
 
-    private void tick() {
+    public void tick() {
         for (ENTITY_Instance instance : instances.values()) {
             ENTITY_Template template = templates.get(instance.template_id);
             if (template == null) continue;
@@ -161,10 +240,15 @@ public class MANAGER_Entity {
                 if (world == null) continue;
                 if (!templates.containsKey(tmpl_id)) continue;
 
-                Map<String, Object> meta = new HashMap<>();
+                Map<String, JsonElement> meta = new HashMap<>();
                 if (obj.has("meta")) {
                     for (Map.Entry<String, JsonElement> m : obj.getAsJsonObject("meta").entrySet()) {
-                        meta.put(m.getKey(), m.getValue().getAsString());
+                        meta.put(m.getKey(), m.getValue());
+                    }
+                }
+                if (obj.has("parts_data")) {
+                    for (Map.Entry<String, JsonElement> p : obj.getAsJsonObject("parts_data").entrySet()) {
+                        meta.put("__part_" + p.getKey(), p.getValue());
                     }
                 }
 
@@ -195,10 +279,27 @@ public class MANAGER_Entity {
             obj.addProperty("z",           loc.getZ());
 
             JsonObject meta_obj = new JsonObject();
-            for (Map.Entry<String, Object> m : instance.get_meta().entrySet()) {
-                if (m.getValue() instanceof String s) meta_obj.addProperty(m.getKey(), s);
+            for (Map.Entry<String, JsonElement> m : instance.get_meta().entrySet()) {
+                if (m.getKey().startsWith("__part_")) continue;
+                meta_obj.add(m.getKey(), m.getValue());
             }
             obj.add("meta", meta_obj);
+
+            ENTITY_Template template = templates.get(instance.template_id);
+            if (template != null) {
+                JsonObject parts_data = new JsonObject();
+                for (ENTITY_Template.PART_Definition part : template.get_parts()) {
+                    if (part.serializer == null) continue;
+                    UUID uuid = instance.get_part(part.role);
+                    Entity entity = uuid != null ? Bukkit.getEntity(uuid) : null;
+                    if (entity == null) continue;
+                    JsonObject part_out = new JsonObject();
+                    part.serializer.serialize(entity, instance, part_out);
+                    parts_data.add(part.role, part_out);
+                }
+                obj.add("parts_data", parts_data);
+            }
+
             arr.add(obj);
         }
 

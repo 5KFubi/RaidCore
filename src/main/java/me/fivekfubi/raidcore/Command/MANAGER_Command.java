@@ -53,11 +53,7 @@ public class MANAGER_Command {
             Map<String, List<String>> messages = command_data.getMessages();
             send_message(sender, messages.get("no-command"), holder_data);
 
-            m_entity.spawn("named_zombie", player.getLocation(), Map.of(
-                    "name",            "<red>Big Zombie",
-                    "helmet",          "DIAMOND_HELMET",
-                    "offset_hologram", new double[]{0, 2.5, 0}
-            ));
+            m_entity.spawn_test_zombie(player.getLocation(),"<red>Zombie",null);
             return true;
         }
 
