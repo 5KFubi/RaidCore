@@ -30,8 +30,6 @@ public class MANAGER_Entity {
     public final Map<UUID, String> entity_map = new HashMap<>();
     public final Map<String, Supplier<CUSTOM_Entity>> rebuilders = new LinkedHashMap<>();
 
-    public boolean use_pdc = false;
-
     public static final NamespacedKey PDC_KEY = new NamespacedKey("raidcore", "entity_instance");
 
     public File save_file;
@@ -160,12 +158,12 @@ public class MANAGER_Entity {
         for (ENTITY_Part<?> part : entity.parts) {
             Entity e = part.get();
             if (e != null) {
-                if (use_pdc) e.getPersistentDataContainer().remove(PDC_KEY);
+                if (entity.use_pdc) e.getPersistentDataContainer().remove(PDC_KEY);
                 e.remove();
             }
             if (part.uuid != null) entity_map.remove(part.uuid);
         }
-        if (!use_pdc) save();
+        if (!entity.use_pdc) save_json();
     }
 
     public void remove_by_entity(UUID entity_uuid) {
@@ -230,27 +228,11 @@ public class MANAGER_Entity {
     public void save_pdc() {
         for (CUSTOM_Entity entity : instances.values()) {
             if (!entity.persistent || entity.parts.isEmpty()) continue;
-            Entity first = entity.parts.get(0).get();
+            Entity first = entity.parts.getFirst().get();
             if (first == null) continue;
             JsonObject obj = build_instance_json(entity);
             if (obj == null) continue;
             first.getPersistentDataContainer().set(PDC_KEY, PersistentDataType.STRING, obj.toString());
-        }
-    }
-
-    public void load_pdc() {
-        for (World world : Bukkit.getWorlds()) {
-            for (Entity e : world.getEntities()) {
-                PersistentDataContainer pdc = e.getPersistentDataContainer();
-                if (!pdc.has(PDC_KEY, PersistentDataType.STRING)) continue;
-                String json = pdc.get(PDC_KEY, PersistentDataType.STRING);
-                if (json == null) continue;
-                try {
-                    restore_instance(JsonParser.parseString(json).getAsJsonObject());
-                } catch (Exception ex) {
-                    utils.error_message("Failed to restore PDC entity instance.", ex);
-                }
-            }
         }
     }
 
@@ -259,6 +241,7 @@ public class MANAGER_Entity {
         JsonArray arr = new JsonArray();
         for (CUSTOM_Entity entity : instances.values()) {
             if (!entity.persistent || entity.parts.isEmpty()) continue;
+            if (entity.use_pdc) continue;
             JsonObject obj = build_instance_json(entity);
             if (obj != null) arr.add(obj);
         }
@@ -350,17 +333,25 @@ public class MANAGER_Entity {
     }
 
     public void save() {
-        if (use_pdc) save_pdc();
-        else save_json();
+        boolean any_json = false;
+        for (CUSTOM_Entity entity : instances.values()) {
+            if (!entity.persistent || entity.parts.isEmpty()) continue;
+            if (entity.use_pdc) {
+                Entity first = entity.parts.getFirst().get();
+                if (first == null) continue;
+                JsonObject obj = build_instance_json(entity);
+                if (obj == null) continue;
+                first.getPersistentDataContainer().set(PDC_KEY, PersistentDataType.STRING, obj.toString());
+            } else {
+                any_json = true;
+            }
+        }
+        if (any_json) save_json();
     }
 
     public void load_files(File data_folder) {
-        if (use_pdc) {
-            load_pdc();
-        } else {
-            save_file = new File(data_folder, "entity_instances.json");
-            load_json();
-        }
+        save_file = new File(data_folder, "entity_instances.json");
+        load_json();
     }
 
     public void shutdown() {
