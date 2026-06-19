@@ -20,6 +20,7 @@ public class CUSTOM_Entity {
     public final List<ENTITY_Part<?>> parts = new ArrayList<>();
     public final List<ENTITY_Ticker<?>> tickers = new ArrayList<>();
     public final Map<String, JsonElement> meta = new HashMap<>();
+    public final Map<String, Object> spawn_data = new HashMap<>();
 
     public Location location;
 
@@ -65,6 +66,11 @@ public class CUSTOM_Entity {
     public String  get_meta_string(String key) { JsonElement v = meta.get(key); return (v != null && v.isJsonPrimitive()) ? v.getAsString() : null; }
     public Integer get_meta_int(String key)    { JsonElement v = meta.get(key); return (v != null && v.isJsonPrimitive()) ? v.getAsInt() : null; }
     public JsonObject get_meta_object(String key) { JsonElement v = meta.get(key); return (v != null && v.isJsonObject()) ? v.getAsJsonObject() : null; }
+
+    public CUSTOM_Entity data(String key, Object value) { spawn_data.put(key, value); return this; }
+
+    @SuppressWarnings("unchecked")
+    public <T> T get_data(String key) { return (T) spawn_data.get(key); }
 
     public CUSTOM_Entity id(String instance_id) { this.instance_id = instance_id; return this; }
     public CUSTOM_Entity persistent(boolean value) { this.persistent = value; return this; }
