@@ -19,6 +19,7 @@ import me.fivekfubi.raidcore.NKey.MANAGER_Key;
 import me.fivekfubi.raidcore.Migration.MANAGER_Migration;
 import me.fivekfubi.raidcore.Placeholder.MANAGER_Placeholder;
 import me.fivekfubi.raidcore.Scheduler.MANAGER_Scheduler;
+import me.fivekfubi.raidcore.Team.MANAGER_Team;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.Bukkit;
@@ -39,7 +40,7 @@ public final class RaidCore extends JavaPlugin {
     public static final MiniMessage mini_message = MiniMessage.miniMessage();
     public static final LegacyComponentSerializer legacy_serializer = LegacyComponentSerializer.legacyAmpersand();
 
-    public static final String PREFIX                             = "<dark_gray>[<gold>RaidCore<dark_gray>]" ;
+    public static final String PREFIX = "<dark_gray>[<gold>RaidCore<dark_gray>]" ;
 
     //
     public static Utils utils = new Utils();
@@ -62,6 +63,7 @@ public final class RaidCore extends JavaPlugin {
     public static MANAGER_GUI_loader m_gui_loader = new MANAGER_GUI_loader();
     public static MANAGER_Message m_message = new MANAGER_Message();
     public static MANAGER_Input m_input = new MANAGER_Input();
+    public static MANAGER_Team m_team = new MANAGER_Team();
     //
     public final Map<String, JavaPlugin> registered_plugins = new HashMap<>();
 
