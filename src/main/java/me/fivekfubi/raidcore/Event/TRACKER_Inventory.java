@@ -60,7 +60,8 @@ public class TRACKER_Inventory implements Listener {
 
         HOLDER holder = new HOLDER(Map.of(
                 NKEY.item_slot.getKey(),          String.valueOf(slot),
-                NKEY.item_slot_category.getKey(), get_slot_name(slot)
+                NKEY.item_slot_category.getKey(), get_slot_name(slot),
+                NKEY.player.getKey(),             player
         ));
 
         // Just store data — no task spawned

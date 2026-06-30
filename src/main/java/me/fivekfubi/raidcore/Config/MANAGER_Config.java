@@ -30,8 +30,11 @@ public class MANAGER_Config {
             Map.of(List.of("commands.yml"), true),
             Map.of(List.of("placeholders.yml"), true),
             Map.of(List.of("Items", "test-item.yml"), false),
+            Map.of(List.of("Items", "test-item-2.yml"), false),
 
-            Map.of(List.of("GUIs", "test.yml"), false)
+            Map.of(List.of("GUIs", "test.yml"), false),
+            Map.of(List.of("Dialogues", "test.yml"), false),
+            Map.of(List.of("Dialogues", "input-text.yml"), false)
     )));
 
     public void register_configs(String plugin_name, List<Map<List<String>, Boolean>> file_paths){

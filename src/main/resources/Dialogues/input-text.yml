@@ -1,0 +1,26 @@
+title: "<dark_gray>[ <gold><b>Enter Value</b> <dark_gray>]"
+external-title: "<gray>Input"
+can-close-escape: true
+after-action: "close"
+columns: 1
+
+body:
+  - "<white>Please enter a value below."
+
+inputs:
+  value:
+    type: "text"
+    label: "<gray>Value"
+
+buttons:
+  confirm:
+    label: "<green>Confirm"
+    tooltip: "<gray>Submit your input."
+    width: 150
+    then: []
+
+exit-button:
+  label: "<dark_gray>Cancel"
+  tooltip: "<gray>Close without submitting."
+  width: 150
+  then: []

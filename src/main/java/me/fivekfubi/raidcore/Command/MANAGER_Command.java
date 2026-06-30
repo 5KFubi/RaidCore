@@ -4,6 +4,7 @@ import me.fivekfubi.raidcore.Command.Data.DATA_Command;
 import me.fivekfubi.raidcore.Command.Data.DATA_Sub_command;
 import me.fivekfubi.raidcore.Config.Data.DATA_Config;
 import me.fivekfubi.raidcore.Holder.HOLDER;
+import me.fivekfubi.raidcore.Input.Data.REQUEST_Input;
 import me.fivekfubi.raidcore.Item.Data.DATA_Item;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -80,6 +81,33 @@ public class MANAGER_Command {
 
                         CORE.load();
                         send_message(sender, messages.get("success"), holder_data);
+                    }
+                    case "1" -> {
+                        m_input.request(REQUEST_Input.of("chat")
+                                .plugin(CORE_NAME)
+                                .player(player)
+                                .holder(new HOLDER())
+                                .message_path("admin.rename.prompt")
+                                .title("<gray>Enter a name")
+                                .subtitle("<dark_gray>Type 'cancel' to abort")
+                                .fade_in(10L)
+                                .stay(40L)
+                                .fade_out(10L)
+                                .callback(values -> {
+                                    String name = (String) values.get("value");
+                                    player.sendMessage("You entered: " + name);
+                                }));
+                    }
+                    case "2" -> {
+                        m_input.request(REQUEST_Input.of("dialogue")
+                                .plugin(CORE_NAME)
+                                .player(player)
+                                .holder(new HOLDER())
+                                .dialogue_path("Dialogues/input-text.yml")
+                                .callback(values -> {
+                                    String value = (String) values.get("value");
+                                    player.sendMessage("Got: " + value);
+                                }));
                     }
                     case "test" -> {
                         // ... test

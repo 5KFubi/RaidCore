@@ -6,6 +6,7 @@ import me.fivekfubi.raidcore.Item.Data.Action.DATA_Action;
 import me.fivekfubi.raidcore.Item.Data.Action.DATA_Action_Condition;
 import me.fivekfubi.raidcore.Item.Data.Action.DATA_Action_State;
 import me.fivekfubi.raidcore.Item.Data.DATA_Item;
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.NamespacedKey;
 import org.bukkit.block.Block;
@@ -29,13 +30,35 @@ import static me.fivekfubi.raidcore.RaidCore.*;
 public class MANAGER_Event implements Listener {
 
     public final Set<UUID> gui_drop_events = new HashSet<>();
-    //public final Set<UUID> drop_events =  new HashSet<>();
     public final Map<UUID, PlayerDropItemEvent> drop_events = new HashMap<>();
 
     @EventHandler
     public void onDrop(PlayerDropItemEvent event){
-        //drop_events.add(event.getPlayer().getUniqueId());
         drop_events.put(event.getPlayer().getUniqueId(), event);
+
+        Bukkit.getScheduler().runTask(CORE, () -> {
+            Player player = event.getPlayer();
+            UUID player_uuid = player.getUniqueId();
+
+            boolean sneak = player.isSneaking();
+            boolean sprint = player.isSprinting();
+
+            Set<String> event_actions = new HashSet<>();
+            Set<Entity> event_targets = new HashSet<>();
+            Set<Block> event_blocks = new HashSet<>();
+
+            if (drop_events.containsKey(player_uuid)) {
+                Entity dropped = event.getItemDrop();
+                event_targets.add(dropped);
+
+                event_actions.add(DROP_ITEM);
+                if (sneak) event_actions.add(SNEAK_DROP_ITEM);
+                if (sprint) event_actions.add(SPRINT_DROP_ITEM);
+
+                event.setCancelled(handle_actions(player, event.getEventName(), event_actions, event_targets, event_blocks, event, event.isCancelled(), event.getItemDrop().getItemStack()));
+                return;
+            }
+        });
     }
 
     @EventHandler
@@ -70,16 +93,6 @@ public class MANAGER_Event implements Listener {
         boolean sprint = player.isSprinting();
 
         Set<String> event_actions = new HashSet<>();
-
-        //if (drop_events.remove(player_uuid)) {
-        //    event_actions.add(DROP_ITEM);
-        //    if (sneak) event_actions.add(SNEAK_DROP_ITEM);
-        //    if (sprint) event_actions.add(SPRINT_DROP_ITEM);
-
-        //    event.setCancelled(handle_actions(player, event.getEventName(), event_actions, null, null, event, event.isCancelled()));
-        //    return;
-        //}
-
         Set<Entity> event_targets = new HashSet<>();
         Set<Block> event_blocks = new HashSet<>();
 
@@ -92,7 +105,7 @@ public class MANAGER_Event implements Listener {
             if (sneak) event_actions.add(SNEAK_DROP_ITEM);
             if (sprint) event_actions.add(SPRINT_DROP_ITEM);
 
-            event.setCancelled(handle_actions(player, event.getEventName(), event_actions, event_targets, event_blocks, event, event.isCancelled()));
+            event.setCancelled(handle_actions(player, event.getEventName(), event_actions, event_targets, event_blocks, event, event.useItemInHand() == Event.Result.DENY, drop_event.getItemDrop().getItemStack()));
             return;
         }
 
@@ -155,7 +168,7 @@ public class MANAGER_Event implements Listener {
 
         if (event.getClickedBlock() != null) event_blocks.add(event.getClickedBlock());
 
-        event.setCancelled(handle_actions(player, event.getEventName(), event_actions, event_targets, event_blocks, event, event.isCancelled()));
+        event.setCancelled(handle_actions(player, event.getEventName(), event_actions, event_targets, event_blocks, event, event.useItemInHand() == Event.Result.DENY));
     }
     // precision use
     //@EventHandler
@@ -217,8 +230,8 @@ public class MANAGER_Event implements Listener {
     @EventHandler
     public void onProjectileHit(ProjectileHitEvent event) {
         if (!(event.getEntity().getShooter() instanceof Player player)) return;
-        boolean sneak = player.isSneaking();
-        boolean sprint = player.isSprinting();
+        //boolean sneak = player.isSneaking();
+        //boolean sprint = player.isSprinting();
 
         Set<String> event_actions = new HashSet<>();
         Set<Entity> event_targets = new HashSet<>();
@@ -554,6 +567,9 @@ public class MANAGER_Event implements Listener {
         return handle_actions(player, event_type, actions, targets, null, event, was_cancelled);
     }
     public boolean handle_actions(Player player, String event_type, Set<String> actions, Set<Entity> targets, Set<Block> blocks, Event event, boolean was_cancelled){
+        return handle_actions(player, event_type, actions, targets, blocks, event, was_cancelled, null);
+    }
+    public boolean handle_actions(Player player, String event_type, Set<String> actions, Set<Entity> targets, Set<Block> blocks, Event event, boolean was_cancelled, ItemStack used_item){
         if (player == null) return was_cancelled;
         UUID player_uuid = player.getUniqueId();
 
@@ -566,7 +582,7 @@ public class MANAGER_Event implements Listener {
             notify_listeners(player, event_type, action_string, targets, blocks, event);
         }
 
-        ItemStack item = player.getInventory().getItemInMainHand();
+        ItemStack item = used_item != null ? used_item : player.getInventory().getItemInMainHand();
         if (item.getItemMeta() == null) return was_cancelled;
 
         Map<NamespacedKey, Object> container_data = utils.get_container_data(item.getItemMeta().getPersistentDataContainer());

@@ -1,0 +1,63 @@
+
+
+title: "<dark_gray>[ <gold><b>Showcase Dialog</b> <dark_gray>]"
+external-title: "<gray>Open Showcase"
+can-close-escape: true
+after-action: "close"
+columns: 4
+
+body:
+  - "<white>Welcome, <green>%player-name%<gray>."
+  - "<white>This dialog showcases every available feature available."
+body-item: "DIAMOND"
+
+inputs:
+  toggle:
+    type: "bool"
+    label: "<white>Enable something"
+  difficulty:
+    type: "single_option"
+    label: "<gray>Pick difficulty"
+    options:
+      - "<green>Easy"
+      - "<white>Normal"
+      - "<red>Hard"
+  custom_name:
+    type: "text"
+    label: "<gray>Enter a name"
+  level:
+    type: "number_range"
+    label: "<gray>Select level"
+    min: 1
+    max: 100
+    step: 1
+    initial: 1
+    width: 300
+    label-format: "Level: %s (value: %s)"
+
+buttons:
+  confirm:
+    label: "<green>Confirm"
+    tooltip: "<gray>Submit your input."
+    width: 150
+    then:
+      - "[MESSAGE] <green>Confirmed! Name: <white>%input_custom_name% <green>| Level: <white>%input_level% <green>| Difficulty: <white>%input_difficulty% <green>| Toggle: <white>%input_toggle%"
+  info:
+    label: "<aqua>Info"
+    tooltip: "<gray>Just a message."
+    width: 150
+    then:
+      - "[MESSAGE] <aqua>You clicked info."
+  open_gui:
+    label: "<yellow>Open GUI"
+    tooltip: "<gray>Opens a GUI."
+    width: 150
+    then:
+      - "[SPECIAL] gui-open GUIs/test.yml"
+
+exit-button:
+  label: "<dark_gray>Close"
+  tooltip: "<gray>Close without doing anything."
+  width: 150
+  then:
+    - "[MESSAGE] <dark_gray>Closed."

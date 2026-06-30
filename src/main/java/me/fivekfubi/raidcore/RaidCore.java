@@ -4,6 +4,8 @@ import me.fivekfubi.raidcore.Command.MANAGER_Command;
 import me.fivekfubi.raidcore.Config.MANAGER_Config;
 import me.fivekfubi.raidcore.Cooldown.MANAGER_Cooldown;
 import me.fivekfubi.raidcore.Database.MANAGER_Database;
+import me.fivekfubi.raidcore.Dialogue.MANAGER_Dialogue;
+import me.fivekfubi.raidcore.Dialogue.MANAGER_Dialogue_loader;
 import me.fivekfubi.raidcore.Economy.MANAGER_Discount;
 import me.fivekfubi.raidcore.Economy.MANAGER_Economy;
 import me.fivekfubi.raidcore.Entity.MANAGER_Entity;
@@ -61,6 +63,8 @@ public final class RaidCore extends JavaPlugin {
     public static MANAGER_Cooldown m_cooldown = new MANAGER_Cooldown();
     public static MANAGER_GUI m_gui = new MANAGER_GUI();
     public static MANAGER_GUI_loader m_gui_loader = new MANAGER_GUI_loader();
+    public static MANAGER_Dialogue m_dialogue = new MANAGER_Dialogue();
+    public static MANAGER_Dialogue_loader m_dialogue_loader = new MANAGER_Dialogue_loader();
     public static MANAGER_Message m_message = new MANAGER_Message();
     public static MANAGER_Input m_input = new MANAGER_Input();
     public static MANAGER_Team m_team = new MANAGER_Team();
@@ -110,8 +114,10 @@ public final class RaidCore extends JavaPlugin {
             t_inventory.functionate();
             getServer().getPluginManager().registerEvents(m_event, CORE);
             getServer().getPluginManager().registerEvents(m_gui, CORE);
+            getServer().getPluginManager().registerEvents(m_dialogue, CORE);
             getServer().getPluginManager().registerEvents(t_inventory, CORE);
             getServer().getPluginManager().registerEvents(m_input, CORE);
+            getServer().getPluginManager().registerEvents(m_entity, CORE);
 
             //test_LISTENERPacket = new LISTENER_Packet(this);
             //test_LISTENERPacket.listAllPackets();
@@ -176,6 +182,7 @@ public final class RaidCore extends JavaPlugin {
         m_gui_loader.load_all();
         m_gui_loader.load_local();
         if (!loaded) m_gui.register_default();
+        m_dialogue_loader.load_all();
         if (!loaded) m_executable.register_default();
         m_message.load_messages(CORE_NAME);
         m_input.load();

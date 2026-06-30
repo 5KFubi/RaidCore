@@ -1,5 +1,6 @@
 package me.fivekfubi.raidcore.Entity;
 
+import com.destroystokyo.paper.event.entity.EntityAddToWorldEvent;
 import com.google.gson.*;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
@@ -10,6 +11,8 @@ import org.bukkit.World;
 import org.bukkit.entity.ArmorStand;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Zombie;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
@@ -25,7 +28,7 @@ import java.util.function.Supplier;
 import static me.fivekfubi.raidcore.RaidCore.*;
 import static me.fivekfubi.raidcore.Utils.gson;
 
-public class MANAGER_Entity {
+public class MANAGER_Entity implements Listener {
     public final Map<String, CUSTOM_Entity> instances = new LinkedHashMap<>();
     public final Map<UUID, String> entity_map = new HashMap<>();
     public final Map<String, Supplier<CUSTOM_Entity>> rebuilders = new LinkedHashMap<>();
@@ -38,8 +41,10 @@ public class MANAGER_Entity {
 
     public void load() {
         register_test();
-        start_ticker();
-        Bukkit.getScheduler().runTask(CORE, () -> load_files(CORE.getDataFolder()));
+        Bukkit.getScheduler().runTask(CORE, () -> {
+            load_files(CORE.getDataFolder());
+            start_ticker();
+        });
     }
 
     public void register_test() {
@@ -132,6 +137,18 @@ public class MANAGER_Entity {
     public <T extends Entity> Entity spawn_part(World world, Location loc, ENTITY_Part<T> part) {
         loc.getChunk().load(true);
         return world.spawn(loc, part.entity_class, e -> part.configurator.accept(e));
+    }
+
+    private void spawn_when_chunk_ready(CUSTOM_Entity entity, int attempts_left) {
+        if (attempts_left <= 0) {
+            utils.error_message("Chunk never became ready for entity spawn: " + entity.instance_id, null);
+            return;
+        }
+        if (!entity.location.isChunkLoaded()) {
+            Bukkit.getScheduler().runTaskLater(CORE, () -> spawn_when_chunk_ready(entity, attempts_left - 1), 1L);
+            return;
+        }
+        spawn(entity);
     }
 
     @SuppressWarnings("unchecked")
@@ -267,6 +284,39 @@ public class MANAGER_Entity {
             utils.error_message("Failed to load entity instances.", e);
         }
     }
+    public void load_pdc() {
+        for (World world : Bukkit.getWorlds()) {
+            for (Entity e : world.getEntities()) {
+                PersistentDataContainer pdc = e.getPersistentDataContainer();
+                if (!pdc.has(PDC_KEY, PersistentDataType.STRING)) continue;
+                String json = pdc.get(PDC_KEY, PersistentDataType.STRING);
+                if (json == null) continue;
+                try {
+                    JsonObject obj = JsonParser.parseString(json).getAsJsonObject();
+                    restore_instance(obj);
+                } catch (Exception ex) {
+                    utils.error_message("Failed to restore PDC entity instance.", ex);
+                }
+            }
+        }
+    }
+
+    @EventHandler
+    public void on_entity_add(EntityAddToWorldEvent event) {
+        Entity entity = event.getEntity();
+        PersistentDataContainer pdc = entity.getPersistentDataContainer();
+        if (!pdc.has(PDC_KEY, PersistentDataType.STRING)) return;
+        String json = pdc.get(PDC_KEY, PersistentDataType.STRING);
+        if (json == null) return;
+        Bukkit.getScheduler().runTask(CORE, () -> {
+            try {
+                JsonObject obj = JsonParser.parseString(json).getAsJsonObject();
+                restore_instance(obj);
+            } catch (Exception ex) {
+                utils.error_message("Failed to restore PDC entity instance on load.", ex);
+            }
+        });
+    }
 
     public void restore_instance(JsonObject obj) {
         String inst_id    = obj.get("instance_id").getAsString();
@@ -316,7 +366,7 @@ public class MANAGER_Entity {
         }
 
         if (!all_found) {
-            spawn(entity);
+            Bukkit.getScheduler().runTask(CORE, () -> spawn_when_chunk_ready(entity, 20));
         } else {
             instances.put(inst_id, entity);
         }
@@ -352,6 +402,7 @@ public class MANAGER_Entity {
     public void load_files(File data_folder) {
         save_file = new File(data_folder, "entity_instances.json");
         load_json();
+        load_pdc();
     }
 
     public void shutdown() {

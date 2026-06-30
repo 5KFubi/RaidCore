@@ -356,6 +356,27 @@ public class MANAGER_Executable {
             }
             return true;
         });
+        register_special_tag("dialog-open", (
+                plugin_name, executable_parts, split, tag, chance_string, flag,
+                to_execute, chance, sender, target, self_use, event_type, targets, blocks, executables, holder
+        ) -> {
+            if (target instanceof Player player && executable_parts.length > 1) {
+                String path = executable_parts[1];
+                HOLDER h = holder != null ? new HOLDER(new HashMap<>(holder.get_data())) : new HOLDER();
+                h.set(NKEY.player.getKey(), player);
+                m_dialogue.open(plugin_name, player, path, h);
+            }
+            return true;
+        });
+        register_special_tag("dialog-close", (
+                plugin_name, executable_parts, split, tag, chance_string, flag,
+                to_execute, chance, sender, target, self_use, event_type, targets, blocks, executables, holder
+        ) -> {
+            if (target instanceof Player player) {
+                m_dialogue.close(player);
+            }
+            return true;
+        });
     }
     public interface HANDLER_Executable {
         boolean handle(
