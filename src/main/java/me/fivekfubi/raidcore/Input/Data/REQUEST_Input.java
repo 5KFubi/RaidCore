@@ -24,6 +24,7 @@ public class REQUEST_Input {
 
     // dialogue
     public String dialogue_path;
+    public Map<String, Object> prefill;
 
     private REQUEST_Input(String source) {
         this.source = source;
@@ -85,6 +86,11 @@ public class REQUEST_Input {
 
     public REQUEST_Input dialogue_path(String dialogue_path) {
         this.dialogue_path = dialogue_path;
+        return this;
+    }
+
+    public REQUEST_Input prefill(Map<String, Object> prefill) {
+        this.prefill = prefill;
         return this;
     }
 }

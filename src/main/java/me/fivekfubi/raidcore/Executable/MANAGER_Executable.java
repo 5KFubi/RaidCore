@@ -356,6 +356,7 @@ public class MANAGER_Executable {
             }
             return true;
         });
+
         register_special_tag("dialog-open", (
                 plugin_name, executable_parts, split, tag, chance_string, flag,
                 to_execute, chance, sender, target, self_use, event_type, targets, blocks, executables, holder
@@ -364,10 +365,22 @@ public class MANAGER_Executable {
                 String path = executable_parts[1];
                 HOLDER h = holder != null ? new HOLDER(new HashMap<>(holder.get_data())) : new HOLDER();
                 h.set(NKEY.player.getKey(), player);
-                m_dialogue.open(plugin_name, player, path, h);
+
+                Map<String, Object> prefill = new HashMap<>();
+                for (int i = 2; i < executable_parts.length; i++) {
+                    String part = executable_parts[i];
+                    int eq = part.indexOf('=');
+                    if (eq <= 0) continue;
+                    String key = part.substring(0, eq);
+                    String value = part.substring(eq + 1);
+                    prefill.put(key, value);
+                }
+
+                m_dialogue.open(plugin_name, player, path, prefill.isEmpty() ? null : prefill, h);
             }
             return true;
         });
+
         register_special_tag("dialog-close", (
                 plugin_name, executable_parts, split, tag, chance_string, flag,
                 to_execute, chance, sender, target, self_use, event_type, targets, blocks, executables, holder

@@ -23,8 +23,8 @@ public class MANAGER_Migration {
             "BBB: --",
             "Polymart: --"
     ));
-    public final String current_version = null;
-    public String latest_version = null;
+    public final String current_version = "0";
+    public String latest_version = "0";
     public Boolean has_latest = null;
     public String get_version(){
         try{ /**/ PluginMeta meta = CORE.getPluginMeta(); /**/ if (meta != null) return meta.getVersion(); /**/ }catch (Exception ignored){}

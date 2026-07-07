@@ -158,6 +158,9 @@ public class MANAGER_GUI implements Listener {
 
         Map<Integer, GUI_Page> pages = group.pages;
         int size = pages.size();
+        if (group.group_settings != null && group.group_settings.repeat_last_page_auto) {
+            size = Integer.MAX_VALUE;
+        }
 
         //handleStorage(g_inventory, g_inventory.getInventory());
 
@@ -335,7 +338,35 @@ public class MANAGER_GUI implements Listener {
                             GUI_Group_settings group_settings = g_group.group_settings;
 
                             Map<Integer, GUI_Page> pages = g_group.pages;
-                            GUI_Page g_page = pages.get(player_pages.getOrDefault(group_id, 1));
+                            int requested_page = player_pages.getOrDefault(group_id, 1);
+                            int last_real_page = pages.size();
+
+                            GUI_Page g_page;
+                            boolean is_synthetic = false;
+
+                            if (requested_page <= last_real_page) {
+                                g_page = pages.get(requested_page);
+                            } else if (group_settings != null && group_settings.repeat_last_page_auto) {
+                                GUI_Page last_page = pages.get(last_real_page);
+                                int repeat_index = requested_page - last_real_page;
+                                GUI_Page candidate = new GUI_Page();
+                                candidate.page_number = requested_page;
+                                Map<String, GUI_Item> candidate_items = new HashMap<>();
+                                for (Map.Entry<String, GUI_Item> entry : last_page.items.entrySet()) {
+                                    GUI_Item original_item = entry.getValue();
+                                    GUI_Item copied_item = original_item.clone();
+                                    copied_item.start_index = original_item.slots.size() * repeat_index;
+                                    candidate_items.put(entry.getKey(), copied_item);
+                                }
+                                candidate.items = candidate_items;
+                                g_page = candidate;
+                                is_synthetic = true;
+                            } else {
+                                player_pages.put(group_id, last_real_page);
+                                g_page = pages.get(last_real_page);
+                            }
+
+                            g_inventory.any_item_handled_this_page.put(group_id, false);
                             int page_id = g_page.page_number;
 
                             if (group_settings != null){
@@ -421,6 +452,7 @@ public class MANAGER_GUI implements Listener {
 
                                         if (handled) {
                                             placed++;
+                                            g_inventory.any_item_handled_this_page.put(group_id, true);
                                             continue;
                                         }
 
@@ -450,6 +482,10 @@ public class MANAGER_GUI implements Listener {
                                 }catch (Throwable t){
                                     utils.error_message("<white> Error loading GUI: <yellow>`" + path_string + "` <white>item id: <yellow>`" + item_id + "'<red>> " + t, t);
                                 }
+                            }
+
+                            if (is_synthetic && !g_inventory.any_item_handled_this_page.getOrDefault(group_id, false)) {
+                                player_pages.put(group_id, requested_page - 1);
                             }
                         }
                     } else {

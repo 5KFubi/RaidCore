@@ -1,13 +1,11 @@
 package me.fivekfubi.raidcore.GUI;
 
+import io.papermc.paper.datacomponent.DataComponentType;
 import me.fivekfubi.raidcore.Config.Data.DATA_Config;
 import me.fivekfubi.raidcore.GUI.Data.*;
-import net.kyori.adventure.sound.Sound;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
-import org.bukkit.attribute.Attribute;
-import org.bukkit.attribute.AttributeModifier;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.enchantments.Enchantment;
@@ -219,9 +217,15 @@ public class MANAGER_GUI_loader {
                         ConfigurationSection settings_section = group_section.getConfigurationSection("settings");
                         if (settings_section != null) {
                             boolean fill_empty = settings_section.getBoolean("fill-empty");
-                            int repeat_last_page = settings_section.getInt("repeat-last-page");
                             group_settings.fill_empty = fill_empty;
-                            group_settings.repeat_last_page = repeat_last_page;
+
+                            if (settings_section.isString("repeat-last-page")
+                                    && settings_section.getString("repeat-last-page", "").equalsIgnoreCase("auto")) {
+                                group_settings.repeat_last_page_auto = true;
+                                group_settings.repeat_last_page = 0;
+                            } else {
+                                group_settings.repeat_last_page = settings_section.getInt("repeat-last-page");
+                            }
 
                             ConfigurationSection switch_section = settings_section.getConfigurationSection("switch");
                             if (switch_section != null){
@@ -350,12 +354,9 @@ public class MANAGER_GUI_loader {
 
             g_item.item_type = section.getString("item-type", "none").toLowerCase();
             g_item.model_data = section.getInt("model-data");
-
             g_item.enchants = utils.get_enchants(section.getStringList("enchants"), path_string);
             g_item.flags = utils.get_item_flags(section.getStringList("flags"), path_string);
-
             g_item.item = utils.get_item(section.getString("material"), path_string);
-
             g_item.name = section.getString("name");
             g_item.lore = section.getStringList("lore");
             g_item.hide_tooltip = section.getBoolean("hide-tooltip");
@@ -432,31 +433,16 @@ public class MANAGER_GUI_loader {
                     } catch (Exception ignored) {
                     }
                 }
-
                 for (Map.Entry<Enchantment, Integer> entry : g_item.enchants.entrySet()) {
                     meta.addEnchant(entry.getKey(), entry.getValue(), true);
                 }
 
                 for (ItemFlag flag : g_item.flags) {
-                    switch (flag) {
-                        case HIDE_ATTRIBUTES -> {
-                            AttributeModifier modifier
-                                    = utils.get_attribute_modifier(
-                                    "dummy",
-                                    "GUI LOADER",
-                                    AttributeModifier.Operation.ADD_NUMBER,
-                                    0.0
-                            );
-                            meta.addAttributeModifier(Attribute.LUCK, modifier);
-                        }
-                    }
                     meta.addItemFlags(flag);
                 }
             }
             g_item.item.setItemMeta(meta);
             //item.addUnsafeEnchantments(enchants);
-
-            //
 
             g_item.variations = new HashMap<>();
             ConfigurationSection v_section = section.getConfigurationSection("variations");

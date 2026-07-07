@@ -17,4 +17,12 @@ public class DATA_Dialogue_Input {
     public float initial = 0f;
     public int width = 200;
     public String label_format; // optional, e.g. "%s: %s%%"
+
+    // text
+    public boolean label_visible = true;
+    public String text_initial = "";
+    public int max_length = 300;
+    public boolean multiline = false;
+    public int multiline_lines = 4;
+    public int multiline_height = 40;
 }

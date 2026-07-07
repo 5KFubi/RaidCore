@@ -79,16 +79,23 @@ public class MANAGER_Dialogue_loader {
                     if (inp == null) continue;
 
                     DATA_Dialogue_Input i = new DATA_Dialogue_Input();
-                    i.key          = input_id;
-                    i.type         = inp.getString("type", "text").toLowerCase();
-                    i.label        = inp.getString("label", input_id);
-                    i.options      = inp.getStringList("options");
-                    i.min          = (float) inp.getDouble("min", 0.0);
-                    i.max          = (float) inp.getDouble("max", 100.0);
-                    i.step         = (float) inp.getDouble("step", 1.0);
-                    i.initial      = (float) inp.getDouble("initial", 0.0);
-                    i.width        = inp.getInt("width", 200);
-                    i.label_format = inp.getString("label-format");
+                    i.key                 = input_id;
+                    i.type                = inp.getString("type", "text").toLowerCase();
+                    i.label               = inp.getString("label", input_id);
+                    i.options             = inp.getStringList("options");
+                    i.min                 = (float) inp.getDouble("min", 0.0);
+                    i.max                 = (float) inp.getDouble("max", 100.0);
+                    i.step                = (float) inp.getDouble("step", 1.0);
+                    i.initial             = (float) inp.getDouble("initial", 0.0);
+                    i.width               = inp.getInt("width", 200);
+                    i.label_format        = inp.getString("label-format");
+                    i.label_format        = inp.getString("label-format");
+                    i.label_visible       = inp.getBoolean("label-visible", true);
+                    i.text_initial        = inp.getString("initial", "");
+                    i.max_length          = inp.getInt("max-length", 300);
+                    i.multiline           = inp.getBoolean("multiline", false);
+                    i.multiline_lines     = inp.getInt("multiline-lines", 4);
+                    i.multiline_height    = inp.getInt("multiline-height", 40);
                     inputs.add(i);
                 }
             }

@@ -1,7 +1,6 @@
 package me.fivekfubi.raidcore.GUI.Data;
 
-import me.fivekfubi.raidcore.Economy.Data.ECO_Price;
-import me.fivekfubi.raidcore.Economy.Data.ECO_Price_item;
+import io.papermc.paper.datacomponent.DataComponentType;
 import me.fivekfubi.raidcore.Item.Data.Action.DATA_Action;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
@@ -90,7 +89,6 @@ public class GUI_Item implements Cloneable{
             copy.gradual_amount = this.gradual_amount;
             copy.gradual_model_data = this.gradual_model_data;
             copy.hide_tooltip = this.hide_tooltip;
-
             copy.material = this.material;
 
             return copy;

@@ -75,7 +75,7 @@ public class MANAGER_Input implements Listener {
 
     private void request_dialogue(REQUEST_Input req) {
         pending.put(req.player.getUniqueId(), req.callback);
-        m_dialogue.open(req.plugin_name, req.player, req.dialogue_path, req.holder);
+        m_dialogue.open(req.plugin_name, req.player, req.dialogue_path, req.prefill, req.holder);
     }
 
     public void cancel(Player player) {

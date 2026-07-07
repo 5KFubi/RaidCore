@@ -8,6 +8,7 @@ import io.papermc.paper.registry.data.dialog.DialogBase;
 import io.papermc.paper.registry.data.dialog.action.DialogAction;
 import io.papermc.paper.registry.data.dialog.body.DialogBody;
 import io.papermc.paper.registry.data.dialog.input.DialogInput;
+import io.papermc.paper.registry.data.dialog.input.TextDialogInput;
 import io.papermc.paper.registry.data.dialog.type.DialogType;
 import me.fivekfubi.raidcore.Dialogue.Data.DATA_Dialogue;
 import me.fivekfubi.raidcore.Dialogue.Data.DATA_Dialogue_Button;
@@ -33,6 +34,9 @@ public class MANAGER_Dialogue implements Listener {
     public final Map<UUID, Map<String, Object[]>> pending = new HashMap<>();
 
     public void open(String plugin_name, Player player, String path_string, HOLDER holder) {
+        open(plugin_name, player, path_string, null, holder);
+    }
+    public void open(String plugin_name, Player player, String path_string, Map<String, Object> prefill, HOLDER holder) {
         DATA_Dialogue data = m_dialogue_loader.get_dialogue_data(plugin_name, path_string);
         if (data == null) {
             utils.error_message("<white>Failed to open dialogue: <yellow>" + path_string, null);
@@ -92,7 +96,7 @@ public class MANAGER_Dialogue implements Listener {
         if (data.inputs != null && !data.inputs.isEmpty()) {
             List<io.papermc.paper.registry.data.dialog.input.DialogInput> dialog_inputs = new ArrayList<>();
             for (DATA_Dialogue_Input inp : data.inputs) {
-                io.papermc.paper.registry.data.dialog.input.DialogInput di = build_input(inp);
+                io.papermc.paper.registry.data.dialog.input.DialogInput di = build_input(inp, prefill);
                 if (di != null) dialog_inputs.add(di);
             }
             if (!dialog_inputs.isEmpty()) base_builder.inputs(dialog_inputs);
@@ -152,24 +156,46 @@ public class MANAGER_Dialogue implements Listener {
         return ab.build();
     }
 
-    private io.papermc.paper.registry.data.dialog.input.DialogInput build_input(DATA_Dialogue_Input inp) {
+    private io.papermc.paper.registry.data.dialog.input.DialogInput build_input(DATA_Dialogue_Input inp, Map<String, Object> prefill) {
         try {
             Component label = m_placeholder.replace_placeholders_component(inp.label, null);
+            Object override = prefill != null ? prefill.get(inp.key) : null;
+
             return switch (inp.type) {
-                case "bool" -> DialogInput.bool(inp.key, label).build();
+                case "bool" -> {
+                    boolean initial = override instanceof Boolean b ? b : false;
+                    yield DialogInput.bool(inp.key, label).initial(initial).build();
+                }
                 case "single_option" -> {
                     if (inp.options == null || inp.options.isEmpty()) yield null;
+                    String selected = override instanceof String s ? s : null;
                     List<io.papermc.paper.registry.data.dialog.input.SingleOptionDialogInput.OptionEntry> opts = new ArrayList<>();
                     for (String opt : inp.options) {
-                        opts.add(io.papermc.paper.registry.data.dialog.input.SingleOptionDialogInput.OptionEntry.create(opt, Component.text(opt), false));
+                        boolean is_selected = opt.equals(selected);
+                        opts.add(io.papermc.paper.registry.data.dialog.input.SingleOptionDialogInput.OptionEntry.create(opt, Component.text(opt), is_selected));
                     }
                     yield DialogInput.singleOption(inp.key, label, opts).build();
                 }
-                case "text" -> DialogInput.text(inp.key, label).build();
+                case "text" -> {
+                    TextDialogInput.MultilineOptions ml = inp.multiline
+                            ? TextDialogInput.MultilineOptions.create(inp.multiline_lines, inp.multiline_height)
+                            : null;
+                    String initial = override instanceof String s ? s : inp.text_initial;
+                    yield DialogInput.text(
+                            inp.key,
+                            inp.width,
+                            label,
+                            inp.label_visible,
+                            initial,
+                            inp.max_length,
+                            ml
+                    );
+                }
                 case "number_range" -> {
+                    float initial = override instanceof Number n ? n.floatValue() : inp.initial;
                     var builder = DialogInput.numberRange(inp.key, label, inp.min, inp.max)
                             .step(inp.step)
-                            .initial(inp.initial)
+                            .initial(initial)
                             .width(inp.width);
                     if (inp.label_format != null) builder.labelFormat(inp.label_format);
                     yield builder.build();
