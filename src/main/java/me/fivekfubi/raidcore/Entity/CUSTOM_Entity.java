@@ -16,6 +16,7 @@ public class CUSTOM_Entity {
     public String instance_id;
     public boolean persistent = true;
     public boolean use_pdc = true;
+    public boolean needs_save = true;
 
     public final List<ENTITY_Part<?>> parts = new ArrayList<>();
     public final List<ENTITY_Ticker<?>> tickers = new ArrayList<>();
@@ -75,6 +76,7 @@ public class CUSTOM_Entity {
     public CUSTOM_Entity id(String instance_id) { this.instance_id = instance_id; return this; }
     public CUSTOM_Entity persistent(boolean value) { this.persistent = value; return this; }
     public CUSTOM_Entity use_pdc(boolean value) { this.use_pdc = value; return this; }
+    public CUSTOM_Entity needs_save() { this.needs_save = true; return this; }
 
     public CUSTOM_Entity spawn(Location location) {
         this.location = location;

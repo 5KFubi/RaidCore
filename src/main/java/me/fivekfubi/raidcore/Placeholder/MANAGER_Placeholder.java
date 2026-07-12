@@ -422,62 +422,82 @@ public class MANAGER_Placeholder {
     //
     //
     //
-    public final Map<String, Object> resolved_scratch = new HashMap<>();
-    public final List<String> output_scratch = new ArrayList<>();
-    public final Map<String, String> condition_scratch = new HashMap<>();
-
     public String replace_placeholders_string(String text, HOLDER holder_data) {
         if (text == null) return null;
+        if (text.indexOf('%') == -1) return text;
 
-        resolved_scratch.clear();
-        for (String placeholder : PLACEHOLDER_HANDLERS.keySet()) {
-            if (!text.contains(placeholder)) continue;
-            HANDLER_Placeholder handler = PLACEHOLDER_HANDLERS.get(placeholder);
-            Object value = handler != null ? handler.handle(holder_data) : null;
-            if (value == null) value = "null";
-            resolved_scratch.put(placeholder, value);
-        }
+        java.util.regex.Matcher matcher = PLACEHOLDER_PATTERN.matcher(text);
+        if (!matcher.find()) return text;
 
-        if (resolved_scratch.isEmpty()) return text;
+        Map<String, Object> resolved = new HashMap<>();
+        StringBuilder result = new StringBuilder(text.length() + 32);
+        int last_end = 0;
 
-        for (Map.Entry<String, Object> entry : resolved_scratch.entrySet()) {
+        do {
+            String placeholder = "%" + matcher.group(1) + "%";
+            Object value = resolved.get(placeholder);
+            if (value == null) {
+                HANDLER_Placeholder handler = PLACEHOLDER_HANDLERS.get(placeholder);
+                value = handler != null ? handler.handle(holder_data) : null;
+                if (value == null) value = "null";
+                resolved.put(placeholder, value);
+            }
+
             String replacement;
-            if (entry.getValue() instanceof List<?> list) {
+            if (value instanceof List<?> list) {
                 replacement = list.stream().map(Object::toString).collect(Collectors.joining("\n"));
             } else {
-                replacement = entry.getValue().toString();
+                replacement = value.toString();
             }
             if (replacement.isEmpty()) replacement = "null";
-            text = text.replace(entry.getKey(), replacement);
-        }
-        return text;
+
+            result.append(text, last_end, matcher.start());
+            result.append(replacement);
+            last_end = matcher.end();
+        } while (matcher.find());
+
+        result.append(text, last_end, text.length());
+        return result.toString();
     }
 
     public List<String> replace_placeholders_list_string(List<String> text, HOLDER holder_data) {
         if (text == null) return null;
 
-        resolved_scratch.clear();
-        for (String placeholder : PLACEHOLDER_HANDLERS.keySet()) {
-            for (String line : text) {
-                if (!line.contains(placeholder)) continue;
+        Map<String, Object> resolved = new HashMap<>();
+        boolean any_found = false;
+
+        for (String line : text) {
+            if (line.indexOf('%') == -1) continue;
+            java.util.regex.Matcher matcher = PLACEHOLDER_PATTERN.matcher(line);
+            while (matcher.find()) {
+                String placeholder = "%" + matcher.group(1) + "%";
+                if (resolved.containsKey(placeholder)) continue;
                 HANDLER_Placeholder handler = PLACEHOLDER_HANDLERS.get(placeholder);
                 Object value = handler != null ? handler.handle(holder_data) : null;
                 if (value == null) value = "null";
-                resolved_scratch.put(placeholder, value);
-                break;
+                resolved.put(placeholder, value);
+                any_found = true;
             }
         }
 
-        if (resolved_scratch.isEmpty()) return text;
+        if (!any_found) return text;
 
-        output_scratch.clear();
+        List<String> output = new ArrayList<>(text.size());
+
         for (String line : text) {
+            if (line.indexOf('%') == -1) {
+                output.add(line);
+                continue;
+            }
 
+            java.util.regex.Matcher probe = PLACEHOLDER_PATTERN.matcher(line);
             String expand_key = null;
             List<String> expand_values = null;
-            for (Map.Entry<String, Object> entry : resolved_scratch.entrySet()) {
-                if (line.contains(entry.getKey()) && entry.getValue() instanceof List<?> list) {
-                    expand_key = entry.getKey();
+            while (probe.find()) {
+                String key = "%" + probe.group(1) + "%";
+                Object value = resolved.get(key);
+                if (value instanceof List<?> list) {
+                    expand_key = key;
                     expand_values = list.stream().map(Object::toString).toList();
                     break;
                 }
@@ -504,54 +524,75 @@ public class MANAGER_Placeholder {
                     }
                     if (skip_element) continue;
 
-                    String expanded = line.replace(expand_key, actual);
-
-                    // apply remaining (non-list) replacements to the expanded line
-                    for (Map.Entry<String, Object> other : resolved_scratch.entrySet()) {
-                        if (other.getKey().equals(expand_key)) continue;
-                        if (!expanded.contains(other.getKey())) continue;
-                        String str = other.getValue() instanceof List<?> lst
-                                ? lst.stream().map(Object::toString).collect(Collectors.joining("\n"))
-                                : other.getValue().toString();
-                        if (str.isEmpty()) str = "null";
-                        expanded = expanded.replace(other.getKey(), str);
-                    }
+                    String expanded = replace_resolved_single_pass(line, resolved, expand_key, actual);
 
                     if (remove_if_empty && (expanded.isEmpty() || expanded.equals("null"))) continue;
-                    output_scratch.add(expanded);
+                    output.add(expanded);
                 }
                 continue;
             }
 
-            boolean skip = false;
-            for (Map.Entry<String, Object> entry : resolved_scratch.entrySet()) {
-                if (!line.contains(entry.getKey())) continue;
+            String result_line = replace_resolved_single_pass(line, resolved, null, null);
+            if (result_line == null) continue; // whole-line removal triggered
+            output.add(result_line);
+        }
+        return output;
+    }
 
-                String placeholder_key = entry.getKey();
-                String replacement_value = entry.getValue().toString();
+    /**
+     * Replaces all resolved (non-list) placeholders in a single pass.
+     * If override_key/override_value is set, that key is substituted with override_value
+     * instead of its resolved value (used for list expansion).
+     * Returns null if a DATA_Replacement with remove_whole_line triggers.
+     */
+    private String replace_resolved_single_pass(String line, Map<String, Object> resolved, String override_key, String override_value) {
+        java.util.regex.Matcher matcher = PLACEHOLDER_PATTERN.matcher(line);
+        StringBuilder result = new StringBuilder(line.length() + 32);
+        int last_end = 0;
+        boolean any_empty_removal = false;
+
+        while (matcher.find()) {
+            String key = "%" + matcher.group(1) + "%";
+            String replacement_value;
+
+            if (key.equals(override_key)) {
+                replacement_value = override_value;
+            } else {
+                Object value = resolved.get(key);
+                if (value == null) {
+                    result.append(line, last_end, matcher.end());
+                    last_end = matcher.end();
+                    continue; // unresolved placeholder, leave as-is
+                }
+                if (value instanceof List<?> list) {
+                    replacement_value = list.stream().map(Object::toString).collect(Collectors.joining("\n"));
+                } else {
+                    replacement_value = value.toString();
+                }
                 if (replacement_value.isEmpty()) replacement_value = "null";
 
-                Map<String, DATA_Replacement> replacements = replacement_data_cache.get(placeholder_key);
-                boolean remove_empty = false;
+                Map<String, DATA_Replacement> replacements = replacement_data_cache.get(key);
                 if (replacements != null) {
-                    DATA_Replacement replacement_data = replacements.containsKey(replacement_value)
+                    DATA_Replacement rd = replacements.containsKey(replacement_value)
                             ? replacements.get(replacement_value)
                             : replacements.get("default-null-replacement");
-                    if (replacement_data != null) {
-                        replacement_value = replacement_data.text;
-                        if (replacement_data.remove_whole_line) { skip = true; break; }
-                        if (replacement_data.remove_empty_line) remove_empty = true;
+                    if (rd != null) {
+                        if (rd.remove_whole_line) return null;
+                        replacement_value = rd.text;
+                        if (rd.remove_empty_line) any_empty_removal = true;
                     }
                 }
-
-                line = line.replace(placeholder_key, replacement_value);
-                if (remove_empty && (line.isEmpty() || line.equals("null"))) { skip = true; break; }
             }
 
-            if (skip) continue;
-            output_scratch.add(line);
+            result.append(line, last_end, matcher.start());
+            result.append(replacement_value);
+            last_end = matcher.end();
         }
-        return new ArrayList<>(output_scratch);
+        result.append(line, last_end, line.length());
+
+        String final_line = result.toString();
+        if (any_empty_removal && (final_line.isEmpty() || final_line.equals("null"))) return null;
+        return final_line;
     }
 
     public String replace_placeholders_string(List<String> text, HOLDER holder_data) {
@@ -584,12 +625,13 @@ public class MANAGER_Placeholder {
 
     public String replace_condition_placeholders(String text, HOLDER holder) {
         if (text == null) return null;
+        if (text.indexOf('%') == -1) return text;
 
         Player player = holder != null ? holder.get(NKEY.player.getKey(), Player.class, null) : null;
 
-        condition_scratch.clear();
+        String result = text;
         for (String placeholder : CONDITION_PLACEHOLDERS) {
-            if (!text.contains(placeholder)) continue;
+            if (!result.contains(placeholder)) continue;
 
             String value = null;
             boolean number = false;
@@ -623,13 +665,8 @@ public class MANAGER_Placeholder {
             }
 
             if (value != null) {
-                condition_scratch.put(placeholder, format_condition(value, number));
+                result = result.replace(placeholder, format_condition(value, number));
             }
-        }
-
-        String result = text;
-        for (Map.Entry<String, String> entry : condition_scratch.entrySet()) {
-            result = result.replace(entry.getKey(), entry.getValue());
         }
 
         return result;

@@ -16,6 +16,7 @@ public class ENTITY_Part<T extends Entity> {
     public double[] offset = null; // x,y,z relative to the entity's anchor location
 
     public UUID uuid;
+    private transient T cached_entity;
 
     public ENTITY_Part(Class<T> entity_class, Consumer<T> configurator) {
         this.entity_class = entity_class;
@@ -25,7 +26,9 @@ public class ENTITY_Part<T extends Entity> {
     @SuppressWarnings("unchecked")
     public T get() {
         if (uuid == null) return null;
-        return (T) Bukkit.getEntity(uuid);
+        if (cached_entity != null && cached_entity.isValid()) return cached_entity;
+        cached_entity = (T) Bukkit.getEntity(uuid);
+        return cached_entity;
     }
 
     public boolean is_spawned() {

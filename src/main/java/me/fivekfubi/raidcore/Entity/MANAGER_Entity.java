@@ -387,11 +387,13 @@ public class MANAGER_Entity implements Listener {
         for (CUSTOM_Entity entity : instances.values()) {
             if (!entity.persistent || entity.parts.isEmpty()) continue;
             if (entity.use_pdc) {
+                if (!entity.needs_save) continue;
                 Entity first = entity.parts.getFirst().get();
                 if (first == null) continue;
                 JsonObject obj = build_instance_json(entity);
                 if (obj == null) continue;
                 first.getPersistentDataContainer().set(PDC_KEY, PersistentDataType.STRING, obj.toString());
+                entity.needs_save = false;
             } else {
                 any_json = true;
             }
