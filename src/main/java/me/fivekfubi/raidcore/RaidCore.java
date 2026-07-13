@@ -164,18 +164,19 @@ public final class RaidCore extends JavaPlugin {
 
     public boolean loaded = false;
     public void load(){
-        if (!loaded){
-            m_config.load_configs();
-        }else{
-            m_config.load_configs(CORE_NAME);
-        }
+        //
+        if (!loaded){ m_config.load_configs();
+        }else{ m_config.load_configs(CORE_NAME); }
         //
 
         if (!loaded) update_databases();
         t_inventory.load();
         m_placeholder.load();
         m_entity.load();
+        //
+        if (!loaded) m_command.register_default();
         m_command.load();
+        //
         m_item.load();
         m_discount.load();
         m_economy.load();
@@ -186,16 +187,6 @@ public final class RaidCore extends JavaPlugin {
         if (!loaded) m_executable.register_default();
         m_message.load_messages(CORE_NAME);
         m_input.load();
-
-        //
-        if (!loaded){
-            for (String command_string : m_command.command_list.keySet()) {
-                PluginCommand command = CORE.getCommand(command_string);
-                if (command != null) {
-                    command.setExecutor(CORE);
-                }
-            }
-        }
 
         loaded = true;
     }
@@ -208,18 +199,5 @@ public final class RaidCore extends JavaPlugin {
         m_scheduler.run_async_timer(0L, m_database.DATABASE_UPDATE_INTERVAL, () -> {
             m_database.update_databases();
         });
-    }
-
-    /// TODO: ----------------------------------------------------------------------------------------------------------
-    /// TODO: ----------------------------------------------------------------------------------------------------------
-    /// TODO: ----------------------------------------------------------------------------------------------------------
-
-    @Override
-    public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, String[] args) {
-        return m_command.handle_command(sender, command, args);
-    }
-    @Override
-    public List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String alias, String[] args) {
-        return m_command.handle_tab_complete(sender, command, args);
     }
 }

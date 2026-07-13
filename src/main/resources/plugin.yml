@@ -9,7 +9,7 @@ website: www.raidhub.net
 #depends: [Vault]
 #softdepend: [PlaceholderAPI, WorldGuard, WorldEdit, CMI, Dynmap, ItemsAdder, RaidCore]
 
-commands:
-  raidcore:
-    description: RaidCore main command
-    aliases: [rcore, rc]
+#commands:
+#  raidcore:
+#    description: RaidCore main command
+#    aliases: [rcore, rc]
