@@ -150,7 +150,7 @@ public class MANAGER_Config {
             for (List<String> path : plugin_configs.keySet()) {
                 if (!path.isEmpty()) {
 
-                    boolean starts_with_root = root_folder.equals(path.get(0));
+                    boolean starts_with_root = root_folder.equals(path.getFirst());
 
                     String last = path.get(path.size() - 1);
                     boolean ends_in_file = is_allowed_extension(last);
@@ -176,7 +176,7 @@ public class MANAGER_Config {
             if (plugin_configs == null) continue;
 
             for (List<String> path : plugin_configs.keySet()) {
-                if (!path.isEmpty() && root_folder.equals(path.get(0))) {
+                if (!path.isEmpty() && root_folder.equals(path.getFirst())) {
 
                     result
                             .computeIfAbsent(plugin_name, k -> new ArrayList<>())
@@ -188,12 +188,30 @@ public class MANAGER_Config {
         return result;
     }
 
+    public Map<String, List<DATA_Config>> get_all_from_root(String plugin_name, String root_folder) {
+        Map<String, List<DATA_Config>> result = new HashMap<>();
+
+        Map<List<String>, DATA_Config> plugin_configs = configs.get(plugin_name);
+        if (plugin_configs == null) return result;
+
+        for (List<String> path : plugin_configs.keySet()) {
+            if (!path.isEmpty() && root_folder.equals(path.getFirst())) {
+
+                result
+                        .computeIfAbsent(plugin_name, k -> new ArrayList<>())
+                        .add(plugin_configs.get(path));
+            }
+        }
+
+        return result;
+    }
+
     public List<DATA_Config> get_configs_inside_root(String plugin_name, String root_folder) {
         List<DATA_Config> root_configs = new ArrayList<>();
 
         for (List<String> path : configs.get(plugin_name).keySet()) {
             if (!path.isEmpty()) {
-                boolean starts_with_root = root_folder.equals(path.get(0));
+                boolean starts_with_root = root_folder.equals(path.getFirst());
 
                 String last = path.get(path.size() - 1);
                 boolean ends_in_file = is_allowed_extension(last);
@@ -328,7 +346,7 @@ public class MANAGER_Config {
             if (path.isEmpty()) {
                 root_folders.add(Collections.emptyList());
             } else {
-                root_folders.add(List.of(path.get(0)));
+                root_folders.add(List.of(path.getFirst()));
             }
         }
 

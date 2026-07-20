@@ -122,6 +122,30 @@ public class MANAGER_Item {
         }
     }
 
+    public void load(String plugin_name) {
+        register_default();
+
+        Map<String, List<DATA_Config>> all_configs = m_config.get_all_from_root(plugin_name, "Items");
+        for (String plugin : all_configs.keySet()){
+            List<DATA_Config> configs = all_configs.get(plugin);
+            if (configs == null || configs.isEmpty()) continue;
+
+            for (DATA_Config config_data : configs) {
+                FileConfiguration config = config_data.config;
+                if (config == null) continue;
+
+                ConfigurationSection section = config.getConfigurationSection("item");
+                if (section == null) continue;
+
+                String file_path = config_data.string_path();
+                DATA_Item item_data = section_to_var_item(plugin, section, file_path);
+                item_cache
+                        .computeIfAbsent(plugin, k -> new HashMap<>())
+                        .put(file_path, item_data);
+            }
+        }
+    }
+
     public DATA_Item get_item_data(String file_path) {
         try{
             String[] parts = file_path.split("/", 2);

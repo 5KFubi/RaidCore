@@ -617,6 +617,10 @@ public class MANAGER_Event implements Listener {
                 DATA_Action_Condition resolved = utils.resolve_condition(state.conditions, holder);
                 if (resolved == null) continue;
 
+                if (state.cancel_events != null && state.cancel_events.contains(action_string)) {
+                    was_cancelled = true;
+                }
+
                 // [COOLDOWN] ----------------------------------------------------------------------------------------------
                 boolean on_cooldown = m_cooldown.on_cooldown(plugin_name, player_uuid, resolved);
                 if (on_cooldown) {
