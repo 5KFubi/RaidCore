@@ -83,4 +83,16 @@ public class CUSTOM_Entity {
         if (this.instance_id == null) this.instance_id = UUID.randomUUID().toString();
         return m_entity.spawn(this);
     }
+
+    public CUSTOM_Entity teleport(Location new_location) {
+        this.location = new_location;
+        for (ENTITY_Part<?> part : parts) {
+            Entity live = part.get();
+            if (live == null) continue;
+            Location part_loc = new_location.clone();
+            if (part.offset != null) part_loc.add(part.offset[0], part.offset[1], part.offset[2]);
+            live.teleport(part_loc);
+        }
+        return this;
+    }
 }

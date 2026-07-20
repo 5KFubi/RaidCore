@@ -424,13 +424,30 @@ public class MANAGER_Command {
                             }
                         }
                         case 3 -> {
+                            String typed = args[2].toLowerCase();
                             Map<String, Map<String, DATA_Item>> item_cache = m_item.item_cache;
+                            List<String> starts_with = new ArrayList<>();
+                            List<String> contains = new ArrayList<>();
+
                             for (String plugin_name : item_cache.keySet()){
                                 Map<String, DATA_Item> map = item_cache.get(plugin_name);
                                 for (String path : map.keySet()){
-                                    completions.add(plugin_name + "/" + path);
+                                    String full = plugin_name + "/" + path;
+                                    String full_low = full.toLowerCase();
+                                    String file_part = full_low.contains("/") ? full_low.substring(full_low.lastIndexOf('/') + 1) : full_low;
+
+                                    if (typed.isEmpty() || full_low.startsWith(typed) || file_part.startsWith(typed)) {
+                                        starts_with.add(full);
+                                    } else if (full_low.contains(typed) || file_part.contains(typed)) {
+                                        contains.add(full);
+                                    }
                                 }
                             }
+
+                            starts_with.sort(String.CASE_INSENSITIVE_ORDER);
+                            contains.sort(String.CASE_INSENSITIVE_ORDER);
+                            completions.addAll(starts_with);
+                            completions.addAll(contains);
                         }
                         case 4 -> {
                             completions.add("1");

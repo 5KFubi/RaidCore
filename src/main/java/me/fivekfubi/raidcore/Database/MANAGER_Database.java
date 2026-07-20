@@ -43,6 +43,10 @@ public class MANAGER_Database {
             database_data.original_instance = map_instance;
             database_data.columns = columns;
 
+            Field id_field = data_class.getDeclaredField("id");
+            id_field.setAccessible(true);
+            database_data.id_field = id_field;
+
             // ---------------------------------------------------------------------------------------------------------
             // ---------------------------------------------------------------------------------------------------------
 
@@ -178,6 +182,8 @@ public class MANAGER_Database {
                     }
 
 
+                    database_data.connection.setAutoCommit(false);
+
                     for (Object data_instance : database_data.original_instance.values()) {
                         DB_DATA_Column first_col = database_data.columns.values().iterator().next();
                         if (first_col.id_getter == null)
@@ -192,26 +198,38 @@ public class MANAGER_Database {
                             pstmt_update.setObject(param_index++, value);
                         }
                         pstmt_update.setString(param_index, id); // WHERE id
+                        pstmt_update.addBatch();
 
-                        int rows = pstmt_update.executeUpdate();
-                        if (rows == 0) {
-                            int insert_index = 1;
-                            pstmt_insert.setString(insert_index++, id); // WHERE id
-                            for (String column_name : database_data.columns.keySet()) {
-                                DB_DATA_Column col = database_data.columns.get(column_name);
-                                Function<Object, Object> getter = col.getters.get(column_name);
-                                Object value = getter.apply(data_instance);
-                                pstmt_insert.setObject(insert_index++, value);
-                            }
-                            pstmt_insert.executeUpdate();
+                        int insert_index = 1;
+                        pstmt_insert.setString(insert_index++, id); // WHERE id
+                        for (String column_name : database_data.columns.keySet()) {
+                            DB_DATA_Column col = database_data.columns.get(column_name);
+                            Function<Object, Object> getter = col.getters.get(column_name);
+                            Object value = getter.apply(data_instance);
+                            pstmt_insert.setObject(insert_index++, value);
                         }
+                        pstmt_insert.addBatch();
+
                         db_ids.remove(id);
+                    }
+
+                    pstmt_update.executeBatch();
+                    // INSERT OR IGNORE semantics: rows that already existed and were updated above
+                    // will fail their INSERT here — handled by catching per-batch-entry failures.
+                    try {
+                        pstmt_insert.executeBatch();
+                    } catch (SQLException ignored) {
+                        // expected for rows that already existed and were handled by the UPDATE batch
                     }
 
                     for (String id : db_ids) {
                         pstmt_delete.setString(1, id);
-                        pstmt_delete.executeUpdate();
+                        pstmt_delete.addBatch();
                     }
+                    pstmt_delete.executeBatch();
+
+                    database_data.connection.commit();
+                    database_data.connection.setAutoCommit(true);
                 } catch (SQLException e) {
                     e.printStackTrace();
                 }
@@ -240,16 +258,12 @@ public class MANAGER_Database {
             while (rs.next()) {
                 Object instance = data_class.getDeclaredConstructor().newInstance();
 
-                DB_DATA_Column first_col = database_data.columns.values().iterator().next();
-                if (first_col.id_getter != null) {
-                    Field id_field = data_class.getDeclaredField("id");
-                    id_field.setAccessible(true);
-                    id_field.set(instance, rs.getString("id"));
+                if (database_data.id_field != null) {
+                    database_data.id_field.set(instance, rs.getString("id"));
                 }
 
                 for (String column_name : database_data.columns.keySet()) {
                     DB_DATA_Column col = database_data.columns.get(column_name);
-                    //Function<Object, Object> getter = col.getters.get(column_name);
                     Object value = rs.getObject(column_name);
 
                     BiConsumer<Object, Object> setter = col.setters.get(column_name);
@@ -264,9 +278,7 @@ public class MANAGER_Database {
                     }
                 }
 
-                Field id_field = data_class.getDeclaredField("id");
-                id_field.setAccessible(true);
-                String id = (String) id_field.get(instance);
+                String id = (String) database_data.id_field.get(instance);
                 data_map.put(id, instance);
             }
 

@@ -1,17 +1,13 @@
 package me.fivekfubi.raidcore.Placeholder;
 
-import me.fivekfubi.raidcore.Executable.MANAGER_Executable;
 import me.fivekfubi.raidcore.GUI.Data.GUI_Inventory;
 import me.fivekfubi.raidcore.Holder.HOLDER;
 import me.fivekfubi.raidcore.Config.Data.DATA_Config;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.TextDecoration;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
-import org.bukkit.block.Block;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
-import org.bukkit.entity.Entity;
-import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 
 import java.util.*;

@@ -16,6 +16,7 @@ public class DB_DATA {
 
     public Class<?> data_class = null;
     public Map<String, ?> original_instance = null;
+    public java.lang.reflect.Field id_field = null;
 
     public JavaPlugin plugin = null;
     public String database_name = null;

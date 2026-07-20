@@ -76,19 +76,36 @@ public class MANAGER_GUI_loader {
 
             List<String> path = config_data.path;
             String path_string = config_data.string_path();
-            // String file_name = path.get(path.size() - 1);
             FileConfiguration config = config_data.config;
-            if (config == null) continue;
+            if (config == null) {
+                utils.error_message("<red>Path: <yellow>" + path_string + "<white> | Failed to load GUI file: config is null.", null);
+                continue;
+            }
 
             ConfigurationSection gui_section = config.getConfigurationSection("gui");
-            if (gui_section == null) continue;
+            if (gui_section == null) {
+                utils.error_message("<red>Path: <yellow>" + path_string + "<white> | Missing required 'gui' section. Skipping file.", null);
+                continue;
+            }
 
             DATA_GUI gData = new DATA_GUI();
 
             String title = gui_section.getString("title");
             String placeholder_name = gui_section.getString("placeholder-name");
-            if (title == null || title.isEmpty()) title = " ";
-            int size = Math.max(1, Math.min(gui_section.getInt("size"), 6));
+            if (title == null || title.isEmpty()) {
+                utils.warn_message("<white>Path: <yellow>" + path_string + "<white> | Missing 'gui.title', defaulting to blank.", new Throwable().getStackTrace()[0]);
+                title = " ";
+            }
+            if (placeholder_name == null || placeholder_name.isEmpty()) {
+                utils.warn_message("<white>Path: <yellow>" + path_string + "<white> | Missing 'gui.placeholder-name'.", new Throwable().getStackTrace()[0]);
+            }
+
+            int raw_size = gui_section.getInt("size");
+            int size = Math.max(1, Math.min(raw_size, 6));
+            if (raw_size < 1 || raw_size > 6) {
+                utils.warn_message("<white>Path: <yellow>" + path_string + "<white> | 'gui.size' (" + raw_size + ") out of range 1-6, clamped to " + size + ".", new Throwable().getStackTrace()[0]);
+            }
+
             List<Integer> used_slots = new ArrayList<>();
             long refresh_rate = gui_section.getLong("refresh-rate");
             long inactivity_timer = gui_section.getLong("inactivity-timer");
@@ -96,23 +113,29 @@ public class MANAGER_GUI_loader {
             try{
                 String string = gui_section.getString("open-sound");
                 if (string != null && !string.isEmpty()){
-                    gData.sound_gui_open = utils.get_sound(string, path_string + " > gui.open-sound");
+                    gData.sound_gui_open = utils.get_sound(string, "<white>Path: <yellow>" + path_string + "<gray> | <white>At '<yellow>gui.open-sound<white>', invalid sound: <red>" + string);
                 }
-            }catch (Exception ignored) {}
+            }catch (Exception t){
+                utils.error_message("<red>Path: <yellow>" + path_string + "<white> | Failed to parse 'gui.open-sound'.", t);
+            }
 
             try{
                 String string = gui_section.getString("close-sound");
                 if (string != null && !string.isEmpty()){
-                    gData.sound_gui_close = utils.get_sound(string, path_string + " > gui.close-sound");
+                    gData.sound_gui_close = utils.get_sound(string, "<white>Path: <yellow>" + path_string + "<gray> | <white>At '<yellow>gui.close-sound<white>', invalid sound: <red>" + string);
                 }
-            }catch (Exception ignored) {}
+            }catch (Exception t){
+                utils.error_message("<red>Path: <yellow>" + path_string + "<white> | Failed to parse 'gui.close-sound'.", t);
+            }
 
             try{
                 String string = gui_section.getString("switch-sound");
                 if (string != null && !string.isEmpty()){
-                    gData.sound_gui_switch = utils.get_sound(string, path_string + " > gui.switch-sound");
+                    gData.sound_gui_switch = utils.get_sound(string, "<white>Path: <yellow>" + path_string + "<gray> | <white>At '<yellow>gui.switch-sound<white>', invalid sound: <red>" + string);
                 }
-            }catch (Exception ignored) {}
+            }catch (Exception t){
+                utils.error_message("<red>Path: <yellow>" + path_string + "<white> | Failed to parse 'gui.switch-sound'.", t);
+            }
 
             gData.path               = path;
             gData.path_string        = path_string;
@@ -146,7 +169,7 @@ public class MANAGER_GUI_loader {
                                 String[] material_string_split = material_string.split(":");
                                 material_string = material_string_split[0];
 
-                                material = utils.get_material(material_string, "File: " + path_string + " | Empty slot item");
+                                material = utils.get_material(material_string, "<white>Path: <yellow>" + path_string + "<gray> | <white>At '<yellow>empty-slots.material<white>', invalid material: <red>" + material_string);
 
                                 if (material == Material.PLAYER_HEAD){
                                     String extra = material_string_split[1];
@@ -154,12 +177,18 @@ public class MANAGER_GUI_loader {
                                         item = utils.get_head_url(extra);
                                     }
                                 }
-                            }catch (Exception ignored){}
+                            }catch (Exception t){
+                                utils.error_message("<red>Path: <yellow>" + path_string + "<white> | Malformed 'empty-slots.material' value: <yellow>" + material_string, t);
+                            }
                         }else{
-                            material = utils.get_material(material_string, "File: " + path_string + " | Empty slot item");
+                            material = utils.get_material(material_string, "<white>Path: <yellow>" + path_string + "<gray> | <white>At '<yellow>empty-slots.material<white>', invalid material: <red>" + material_string);
                         }
+                    } else {
+                        utils.warn_message("<white>Path: <yellow>" + path_string + "<white> | 'empty-slots' section present but missing 'material', defaulting to DIRT.", new Throwable().getStackTrace()[0]);
                     }
-                }catch (Exception e){ e.printStackTrace(); }
+                }catch (Exception e){
+                    utils.error_message("<red>Path: <yellow>" + path_string + "<white> | Failed to parse 'empty-slots.material'.", e);
+                }
 
                 if (material == null) material = Material.DIRT;
                 if (item == null) item = new ItemStack(material, 1);
@@ -183,10 +212,14 @@ public class MANAGER_GUI_loader {
                         try {
                             Method method = meta.getClass().getMethod("setHideTooltip", boolean.class);
                             method.invoke(meta, true);
-                        }catch (Throwable ignored){}
+                        }catch (Throwable t) {
+                            utils.error_message("<red>Path: <yellow>" + path_string + "<white> | Failed to apply 'empty-slots.hide-tooltip' (server version may not support hidden tooltips).", t);
+                        }
                     }
 
                     item.setItemMeta(meta);
+                } else {
+                    utils.warn_message("<white>Path: <yellow>" + path_string + "<white> | 'empty-slots' item has no ItemMeta, skipping name/model-data/tooltip.", new Throwable().getStackTrace()[0]);
                 }
                 gData.empty_slot_item = item;
             }
@@ -199,6 +232,10 @@ public class MANAGER_GUI_loader {
             if (groups_section != null){
                 Map<String, GUI_Group> groups = new HashMap<>();
 
+                if (groups_section.getKeys(false).isEmpty()) {
+                    utils.warn_message("<white>Path: <yellow>" + path_string + "<white> | 'groups' section is present but empty. GUI will have no items.", new Throwable().getStackTrace()[0]);
+                }
+
                 for (String group_id : groups_section.getKeys(false)) {
                     GUI_Group gGroup = new GUI_Group();
                     gGroup.group_id = group_id;
@@ -206,94 +243,127 @@ public class MANAGER_GUI_loader {
                     // group / paged group;
 
                     ConfigurationSection group_section = groups_section.getConfigurationSection(group_id);
-                    if (group_section != null){
-                        Map<Integer, GUI_Page> pages = new HashMap<>();
+                    if (group_section == null) {
+                        utils.warn_message("<white>Path: <yellow>" + path_string + "<white> | Group '<yellow>" + group_id + "<white>' has no valid section, skipping.", new Throwable().getStackTrace()[0]);
+                        continue;
+                    }
+                    Map<Integer, GUI_Page> pages = new HashMap<>();
 
-                        GUI_Group_settings group_settings = new GUI_Group_settings();
+                    GUI_Group_settings group_settings = new GUI_Group_settings();
 
-                        boolean is_paged = group_section.getKeys(false).stream()
-                                .anyMatch(key -> key.matches("\\d+"));
+                    boolean is_paged = group_section.getKeys(false).stream()
+                            .anyMatch(key -> key.matches("\\d+"));
 
-                        ConfigurationSection settings_section = group_section.getConfigurationSection("settings");
-                        if (settings_section != null) {
-                            boolean fill_empty = settings_section.getBoolean("fill-empty");
-                            group_settings.fill_empty = fill_empty;
+                    ConfigurationSection settings_section = group_section.getConfigurationSection("settings");
+                    if (settings_section != null) {
+                        boolean fill_empty = settings_section.getBoolean("fill-empty");
+                        group_settings.fill_empty = fill_empty;
 
-                            if (settings_section.isString("repeat-last-page")
-                                    && settings_section.getString("repeat-last-page", "").equalsIgnoreCase("auto")) {
-                                group_settings.repeat_last_page_auto = true;
-                                group_settings.repeat_last_page = 0;
-                            } else {
-                                group_settings.repeat_last_page = settings_section.getInt("repeat-last-page");
-                            }
-
-                            ConfigurationSection switch_section = settings_section.getConfigurationSection("switch");
-                            if (switch_section != null){
-                                boolean auto = switch_section.getBoolean("auto");
-                                List<String> order = new LinkedList<>(switch_section.getStringList("order"));
-                                long delay = switch_section.getLong("delay");
-                                boolean interact_stop = switch_section.getBoolean("interact.stop");
-                                long interact_timer = switch_section.getLong("interact.timer");
-
-                                group_settings.switch_enable              = auto;
-                                group_settings.switch_order               = order;
-                                group_settings.switch_delay               = delay;
-                                group_settings.switch_interact_stop       = interact_stop;
-                                group_settings.switch_interact_stop_timer = interact_timer;
-                            }
+                        if (settings_section.isString("repeat-last-page")
+                                && settings_section.getString("repeat-last-page", "").equalsIgnoreCase("auto")) {
+                            group_settings.repeat_last_page_auto = true;
+                            group_settings.repeat_last_page = 0;
+                        } else {
+                            group_settings.repeat_last_page = settings_section.getInt("repeat-last-page");
                         }
-                        gGroup.group_settings = group_settings;
 
-                        int page_number = 1;
-                        if (is_paged){
-                            for (String page_key : group_section.getKeys(false)){
-                                if (!page_key.matches("\\d+")) continue;
+                        ConfigurationSection switch_section = settings_section.getConfigurationSection("switch");
+                        if (switch_section != null){
+                            boolean auto = switch_section.getBoolean("auto");
+                            List<String> order = new LinkedList<>(switch_section.getStringList("order"));
+                            long delay = switch_section.getLong("delay");
+                            boolean interact_stop = switch_section.getBoolean("interact.stop");
+                            long interact_timer = switch_section.getLong("interact.timer");
 
-                                GUI_Page gPage = new GUI_Page();
-                                gPage.page_number = page_number;
-
-                                ConfigurationSection items_section = group_section.getConfigurationSection(page_key);
-                                if (items_section != null) {
-                                    Map<String, GUI_Item> page_items = new HashMap<>();
-
-                                    for (String item_id : items_section.getKeys(false)) {
-                                        ConfigurationSection item_section = items_section.getConfigurationSection(item_id);
-                                        if (item_section == null) continue;
-                                        //
-                                        GUI_Item gui_item = section_to_gui_item(plugin_name, item_section, path_string, group_id, page_number, item_id, "gui", null);
-                                        List<Integer> slots = gui_item.slots;
-                                        used_slots.addAll(slots);
-                                        group_slot.computeIfAbsent(plugin_name, k -> new HashMap<>());
-                                        group_slot.get(plugin_name).put(slots, group_id);
-                                        gui_item.item_id = item_id;
-                                        //
-                                        page_items.put(item_id, gui_item);
-                                    }
-                                    gPage.items = page_items;
-                                }
-                                pages.put(page_number, gPage);
-                                page_number++;
+                            if (auto && order.isEmpty()) {
+                                utils.warn_message("<white>Path: <yellow>" + path_string + "<white> | Group '<yellow>" + group_id + "<white>' has 'settings.switch.auto: true' but empty 'order' list.", new Throwable().getStackTrace()[0]);
                             }
-                        }else{
+
+                            group_settings.switch_enable              = auto;
+                            group_settings.switch_order               = order;
+                            group_settings.switch_delay               = delay;
+                            group_settings.switch_interact_stop       = interact_stop;
+                            group_settings.switch_interact_stop_timer = interact_timer;
+                        }
+                    }
+                    gGroup.group_settings = group_settings;
+
+                    int page_number = 1;
+                    if (is_paged){
+                        for (String page_key : group_section.getKeys(false)){
+                            if (!page_key.matches("\\d+")) continue;
+
                             GUI_Page gPage = new GUI_Page();
                             gPage.page_number = page_number;
 
-                            Map<String, GUI_Item> page_items = new HashMap<>();
-                            //
-                            GUI_Item gui_item = section_to_gui_item(plugin_name, group_section, path_string, group_id, page_number, group_id, "gui", null);
+                            ConfigurationSection items_section = group_section.getConfigurationSection(page_key);
+                            if (items_section != null) {
+                                if (items_section.getKeys(false).isEmpty()) {
+                                    utils.warn_message("<white>Path: <yellow>" + path_string + "<white> | Group '<yellow>" + group_id + "<white>' page '<yellow>" + page_key + "<white>' has no items.", new Throwable().getStackTrace()[0]);
+                                }
+
+                                Map<String, GUI_Item> page_items = new HashMap<>();
+
+                                for (String item_id : items_section.getKeys(false)) {
+                                    ConfigurationSection item_section = items_section.getConfigurationSection(item_id);
+                                    if (item_section == null) {
+                                        utils.warn_message("<white>Path: <yellow>" + path_string + "<white> | Group '<yellow>" + group_id + "<white>' page '<yellow>" + page_key + "<white>' item '<yellow>" + item_id + "<white>' has no valid section, skipping.", new Throwable().getStackTrace()[0]);
+                                        continue;
+                                    }
+                                    //
+                                    GUI_Item gui_item = section_to_gui_item(plugin_name, item_section, path_string, group_id, page_number, item_id, "gui", null);
+                                    if (gui_item == null) {
+                                        utils.warn_message("<white>Path: <yellow>" + path_string + "<white> | Group '<yellow>" + group_id + "<white>' page '<yellow>" + page_key + "<white>' item '<yellow>" + item_id + "<white>' failed to load, skipping.", new Throwable().getStackTrace()[0]);
+                                        continue;
+                                    }
+                                    List<Integer> slots = gui_item.slots;
+                                    if (slots == null || slots.isEmpty()) {
+                                        utils.warn_message("<white>Path: <yellow>" + path_string + "<white> | Group '<yellow>" + group_id + "<white>' page '<yellow>" + page_key + "<white>' item '<yellow>" + item_id + "<white>' has no valid slots.", new Throwable().getStackTrace()[0]);
+                                    }
+                                    used_slots.addAll(slots);
+                                    group_slot.computeIfAbsent(plugin_name, k -> new HashMap<>());
+                                    group_slot.get(plugin_name).put(slots, group_id);
+                                    gui_item.item_id = item_id;
+                                    //
+                                    page_items.put(item_id, gui_item);
+                                }
+                                gPage.items = page_items;
+                            } else {
+                                utils.warn_message("<white>Path: <yellow>" + path_string + "<white> | Group '<yellow>" + group_id + "<white>' page '<yellow>" + page_key + "<white>' has no valid section.", new Throwable().getStackTrace()[0]);
+                            }
+                            pages.put(page_number, gPage);
+                            page_number++;
+                        }
+                    }else{
+                        GUI_Page gPage = new GUI_Page();
+                        gPage.page_number = page_number;
+
+                        Map<String, GUI_Item> page_items = new HashMap<>();
+                        //
+                        GUI_Item gui_item = section_to_gui_item(plugin_name, group_section, path_string, group_id, page_number, group_id, "gui", null);
+                        if (gui_item == null) {
+                            utils.warn_message("<white>Path: <yellow>" + path_string + "<white> | Group '<yellow>" + group_id + "<white>' (non-paged) failed to load its item.", new Throwable().getStackTrace()[0]);
+                        } else {
                             List<Integer> slots = gui_item.slots;
+                            if (slots == null || slots.isEmpty()) {
+                                utils.warn_message("<white>Path: <yellow>" + path_string + "<white> | Group '<yellow>" + group_id + "<white>' has no valid slots.", new Throwable().getStackTrace()[0]);
+                            }
                             used_slots.addAll(slots);
                             group_slot.computeIfAbsent(plugin_name, k -> new HashMap<>());
                             group_slot.get(plugin_name).put(slots, group_id);
                             gui_item.item_id = group_id;
                             //
                             page_items.put(group_id, gui_item);
-                            gPage.items = page_items;
-                            pages.put(page_number, gPage);
                         }
+                        gPage.items = page_items;
+                        pages.put(page_number, gPage);
+                    }
 
-                        if (group_settings.repeat_last_page > 0 && !pages.isEmpty()) {
-                            GUI_Page last_page = pages.get(page_number - 1);
+                    if (group_settings.repeat_last_page > 0 && !pages.isEmpty()) {
+                        GUI_Page last_page = pages.get(page_number - 1);
+                        if (last_page == null || last_page.items == null || last_page.items.isEmpty()) {
+                            utils.warn_message("<white>Path: <yellow>" + path_string + "<white> | Group '<yellow>" + group_id + "<white>' has 'repeat-last-page' set but the last page has no items to repeat.", new Throwable().getStackTrace()[0]);
+                        } else {
                             for (int r = 0; r < group_settings.repeat_last_page; r++) {
                                 GUI_Page repeated = new GUI_Page();
                                 repeated.page_number = page_number;
@@ -302,7 +372,6 @@ public class MANAGER_GUI_loader {
                                 for (Map.Entry<String, GUI_Item> entry : last_page.items.entrySet()) {
                                     GUI_Item original_item = entry.getValue();
                                     GUI_Item copied_item = original_item.clone();
-                                    //copied_item.start_index = original_item.start_index + (original_item.slots.size() * (r + 1));
                                     copied_item.start_index = original_item.slots.size() * (r + 1);
                                     repeated_items.put(entry.getKey(), copied_item);
                                 }
@@ -312,15 +381,17 @@ public class MANAGER_GUI_loader {
                                 page_number++;
                             }
                         }
-                        //
-
-                        gGroup.pages = pages;
-
-                        //
                     }
+                    //
+
+                    gGroup.pages = pages;
+
+                    //
                     groups.put(group_id, gGroup);
                 }
                 gData.item_groups = groups;
+            } else {
+                utils.warn_message("<white>Path: <yellow>" + path_string + "<white> | No 'groups' section found. GUI will have no items.", new Throwable().getStackTrace()[0]);
             }
             gData.used_slots = used_slots;
             g_map.put(path_string, gData);
@@ -347,7 +418,7 @@ public class MANAGER_GUI_loader {
                 g_item.container_data.put(NKEY.item_variant_id, variation_id);
                 section = section.getConfigurationSection("variations." + variation_id);
                 if (section == null){
-                    utils.error_message("<red>Variation section is null / invalid configuration.", null);
+                    utils.error_message("<red>Path: <yellow>" + path_string + "<gray> | <white>Item: <yellow>" + item_id + "<white> | Variation '<yellow>" + variation_id + "<white>' section is null or invalid.", null);
                     return null;
                 }
             }
@@ -394,12 +465,14 @@ public class MANAGER_GUI_loader {
                         for (int i = start; i <= end; i++) {
                             g_item.slots.add(i);
                         }
-                    } catch (Throwable ignored) {
+                    } catch (Throwable t) {
+                        utils.error_message("<red>Gui error. ", t);
                     }
                 } else {
                     try {
                         g_item.slots.add(Integer.parseInt(s.trim()));
-                    } catch (Throwable ignored) {
+                    } catch (Throwable t) {
+                        utils.error_message("<red>Gui error. ", t);
                     }
                 }
             }
@@ -460,7 +533,7 @@ public class MANAGER_GUI_loader {
 
             return g_item;
         }catch (Throwable t){
-            utils.error_message("<red> Failed to load GUI item: " + path_string + " | " + group_id + " | " + page_number + " | " + item_id + " | " + variant, t);
+            utils.error_message("<red>Path: <yellow>" + path_string + "<gray> | <white>Group: <yellow>" + group_id + "<gray> | <white>Page: <yellow>" + page_number + "<gray> | <white>Item: <yellow>" + item_id + "<gray> | <white>Variant: <yellow>" + variant + "<white> | Failed to load GUI item.", t);
             return null;
         }
     }
