@@ -672,9 +672,6 @@ public class MANAGER_GUI implements Listener {
                     if (clicked_meta != null) {
                         clicked_container = clicked_meta.getPersistentDataContainer();
                         container_data = utils.get_container_data(clicked_container);
-                        if (container_data.containsKey(NKEY.gui_item)) {
-                            event.setCancelled(true);
-                        }
                     }
                 }
 
@@ -701,6 +698,12 @@ public class MANAGER_GUI implements Listener {
                 }
 
                 Inventory clicked_inventory = event.getClickedInventory();
+
+                if (clicked_inventory == top_inventory){
+                    if (!Boolean.FALSE.equals(container_data.get(NKEY.should_cancel))) {
+                        event.setCancelled(true);
+                    }
+                }
 
                 if (clicked_inventory != top_inventory){
                     return;

@@ -5,11 +5,16 @@ import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.persistence.PersistentDataType;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+
+import static me.fivekfubi.raidcore.RaidCore.NKEY;
 
 public class GUI_Inventory implements InventoryHolder {
     public final String plugin_name;
@@ -56,6 +61,15 @@ public class GUI_Inventory implements InventoryHolder {
     }
     public GUI_Item get_cached(int slot){ return placed_items.get(slot); }
     public Map<Integer, GUI_Item> get_all_cached(){ return Collections.unmodifiableMap(placed_items); }
+
+    public void set_should_cancel(int slot, boolean value) {
+        ItemStack item = this.inventory.getItem(slot);
+        if (item == null) return;
+        ItemMeta meta = item.getItemMeta();
+        if (meta == null) return;
+        meta.getPersistentDataContainer().set(NKEY.should_cancel, PersistentDataType.BOOLEAN, value);
+        item.setItemMeta(meta);
+    }
 
     @Override
     public @NotNull Inventory getInventory() {

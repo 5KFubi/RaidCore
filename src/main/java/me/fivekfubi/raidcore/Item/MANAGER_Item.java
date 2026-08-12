@@ -317,7 +317,9 @@ public class MANAGER_Item {
                     event_data.conditions.cooldown        = 0;
                     event_data.conditions.then            = a_sec.getStringList(action_type);
 
-                    data.action_event.computeIfAbsent(action_type, k -> new ArrayList<>()).add(event_data);
+                    for (String split_type : action_type.split(",")) {
+                        data.action_event.computeIfAbsent(split_type.trim(), k -> new ArrayList<>()).add(event_data);
+                    }
                     continue;
                 } // --------------------------------------------------------------------------------------------------------------
 
@@ -343,7 +345,9 @@ public class MANAGER_Item {
                             event_data.conditions.cooldown = 0;
                             event_data.conditions.then = action_section.getStringList(child);
 
-                            data.action_event.computeIfAbsent(action_type, k -> new ArrayList<>()).add(event_data);
+                            for (String split_type : action_type.split(",")) {
+                                data.action_event.computeIfAbsent(split_type.trim(), k -> new ArrayList<>()).add(event_data);
+                            }
                             continue;
                         }
 
@@ -364,7 +368,9 @@ public class MANAGER_Item {
 
                         event_data.conditions = get_condition_data(child_section, child_section.getConfigurationSection("conditions"));
 
-                        data.action_event.computeIfAbsent(action_type, k -> new ArrayList<>()).add(event_data);
+                        for (String split_type : action_type.split(",")) {
+                            data.action_event.computeIfAbsent(split_type.trim(), k -> new ArrayList<>()).add(event_data);
+                        }
                     }
                     continue;
                 }
@@ -383,7 +389,9 @@ public class MANAGER_Item {
 
                 event_data.conditions = get_condition_data(action_section, action_section.getConfigurationSection("conditions"));
 
-                data.action_event.computeIfAbsent(action_type, k -> new ArrayList<>()).add(event_data);
+                for (String split_type : action_type.split(",")) {
+                    data.action_event.computeIfAbsent(split_type.trim(), k -> new ArrayList<>()).add(event_data);
+                }
             }
         }
 
@@ -518,7 +526,7 @@ public class MANAGER_Item {
                     data.condition       = null;
                     data.self_use        = parent.getBoolean    ("self-use", true);
                     data.durability_cost = parent.getInt        ("durability-cost", 0);
-                    data.cooldown        = parent.getLong       ("cooldown", 20L);
+                    data.cooldown        = parent.getLong       ("cooldown", 0L);
                     data.then            = parent.getStringList ("then");
                 }else{
                     data.condition       = null;
@@ -537,7 +545,7 @@ public class MANAGER_Item {
             data.condition       = if_section.getString     ("condition", null);
             data.self_use        = if_section.getBoolean    ("self-use", true);
             data.durability_cost = if_section.getInt        ("durability-cost", 0);
-            data.cooldown        = if_section.getLong       ("cooldown", 20L);
+            data.cooldown        = if_section.getLong       ("cooldown", 0L);
             data.then            = if_section.getStringList ("then");
 
             ConfigurationSection on_cooldown_section = if_section.getConfigurationSection("on-cooldown");
@@ -558,7 +566,7 @@ public class MANAGER_Item {
             data.condition       = section.getString     ("condition", null);
             data.self_use        = section.getBoolean    ("self-use", true);
             data.durability_cost = section.getInt        ("durability-cost", 0);
-            data.cooldown        = section.getLong       ("cooldown", 20L);
+            data.cooldown        = section.getLong       ("cooldown", 0L);
             data.then            = section.getStringList ("then");
 
             ConfigurationSection on_cooldown_section = section.getConfigurationSection("on-cooldown");

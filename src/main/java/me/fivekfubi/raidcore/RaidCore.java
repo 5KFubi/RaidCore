@@ -22,6 +22,7 @@ import me.fivekfubi.raidcore.Migration.MANAGER_Migration;
 import me.fivekfubi.raidcore.Placeholder.MANAGER_Placeholder;
 import me.fivekfubi.raidcore.Scheduler.MANAGER_Scheduler;
 import me.fivekfubi.raidcore.Team.MANAGER_Team;
+import me.fivekfubi.raidcore.Web.MANAGER_Web;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.Bukkit;
@@ -68,6 +69,7 @@ public final class RaidCore extends JavaPlugin {
     public static MANAGER_Message m_message = new MANAGER_Message();
     public static MANAGER_Input m_input = new MANAGER_Input();
     public static MANAGER_Team m_team = new MANAGER_Team();
+    public static MANAGER_Web m_web = new MANAGER_Web();
     //
     public final Map<String, JavaPlugin> registered_plugins = new HashMap<>();
 
@@ -155,7 +157,7 @@ public final class RaidCore extends JavaPlugin {
 
     @Override
     public void onDisable() {
-
+        for (JavaPlugin plugin : m_web.registered_sites.keySet()) m_web.stop_all(plugin);
     }
 
     /// TODO: ----------------------------------------------------------------------------------------------------------

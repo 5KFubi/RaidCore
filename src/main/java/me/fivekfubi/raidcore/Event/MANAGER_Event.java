@@ -571,6 +571,7 @@ public class MANAGER_Event implements Listener {
     }
     public boolean handle_actions(Player player, String event_type, Set<String> actions, Set<Entity> targets, Set<Block> blocks, Event event, boolean was_cancelled, ItemStack used_item){
         if (player == null) return was_cancelled;
+        if (m_gui.open_guis.containsKey(player)) return was_cancelled;
         UUID player_uuid = player.getUniqueId();
 
         for (String action_string : actions) {
@@ -617,7 +618,8 @@ public class MANAGER_Event implements Listener {
                 DATA_Action_Condition resolved = utils.resolve_condition(state.conditions, holder);
                 if (resolved == null) continue;
 
-                if (state.cancel_events != null && state.cancel_events.contains(action_string)) {
+                if (state.cancel_events != null
+                        && (state.cancel_events.contains("*") || state.cancel_events.contains(action_string))) {
                     was_cancelled = true;
                 }
 

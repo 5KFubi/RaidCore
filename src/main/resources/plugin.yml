@@ -6,8 +6,9 @@ authors: [ 5KFubi ]
 description: RaidCore - Anything and everything
 website: www.raidhub.net
 
+loadbefore: [DungeonRaiders]
 #depends: [Vault]
-#softdepend: [PlaceholderAPI, WorldGuard, WorldEdit, CMI, Dynmap, ItemsAdder, RaidCore]
+#softdepend: [PlaceholderAPI, WorldGuard, WorldEdit, CMI, Dynmap, ItemsAdder]
 
 #commands:
 #  raidcore:

@@ -37,6 +37,7 @@ public class MANAGER_Key {
     public NamespacedKey price_items            = generate( "price_items"            );
 
     public NamespacedKey gui_item               = generate( "gui_item"               );
+    public NamespacedKey should_cancel          = generate( "should_cancel"          );
     public NamespacedKey gui_item_id            = generate( "gui_item_id"            );
     public NamespacedKey gui_item_group         = generate( "gui_item_group"         );
     public NamespacedKey gui_item_page          = generate( "gui_item_page"          );

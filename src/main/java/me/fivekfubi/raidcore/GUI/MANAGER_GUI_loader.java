@@ -1,6 +1,5 @@
 package me.fivekfubi.raidcore.GUI;
 
-import io.papermc.paper.datacomponent.DataComponentType;
 import me.fivekfubi.raidcore.Config.Data.DATA_Config;
 import me.fivekfubi.raidcore.GUI.Data.*;
 import net.kyori.adventure.text.Component;
@@ -154,6 +153,7 @@ public class MANAGER_GUI_loader {
             if (empty_slot_section != null){
                 Map<NamespacedKey, Object> container_data = new HashMap<>();
                 container_data.put(NKEY.gui_item, "yes");
+                container_data.put(NKEY.should_cancel, true);
                 container_data.put(NKEY.item_variant, "gui");
                 container_data.put(NKEY.file_plugin, plugin_name);
                 container_data.put(NKEY.file_path, path_string);
@@ -408,6 +408,7 @@ public class MANAGER_GUI_loader {
             g_item.container_data = new HashMap<>();
 
             g_item.container_data.put(NKEY.gui_item, "yes");
+            g_item.container_data.put(NKEY.should_cancel, true);
             g_item.container_data.put(NKEY.item_variant, variant);
             g_item.container_data.put(NKEY.file_plugin, plugin_name);
             g_item.container_data.put(NKEY.file_path, path_string);

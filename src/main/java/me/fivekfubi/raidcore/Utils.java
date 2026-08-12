@@ -541,6 +541,8 @@ public class Utils {
                 data_map.put(namespaced_key, container.get(namespaced_key, PersistentDataType.FLOAT));
             } else if (container.has(namespaced_key, PersistentDataType.BYTE)) {
                 data_map.put(namespaced_key, container.get(namespaced_key, PersistentDataType.BYTE));
+            } else if (container.has(namespaced_key, PersistentDataType.BOOLEAN)) {
+                data_map.put(namespaced_key, container.get(namespaced_key, PersistentDataType.BOOLEAN));
             } else if (container.has(namespaced_key, PersistentDataType.SHORT)) {
                 data_map.put(namespaced_key, container.get(namespaced_key, PersistentDataType.SHORT));
             } else if (container.has(namespaced_key, PersistentDataType.BYTE_ARRAY)) {
@@ -590,6 +592,8 @@ public class Utils {
                 data_map.put(namespaced_key, container.get(namespaced_key, PersistentDataType.FLOAT));
             } else if (container.has(namespaced_key, PersistentDataType.BYTE)) {
                 data_map.put(namespaced_key, container.get(namespaced_key, PersistentDataType.BYTE));
+            } else if (container.has(namespaced_key, PersistentDataType.BOOLEAN)) {
+                data_map.put(namespaced_key, container.get(namespaced_key, PersistentDataType.BOOLEAN));
             } else if (container.has(namespaced_key, PersistentDataType.SHORT)) {
                 data_map.put(namespaced_key, container.get(namespaced_key, PersistentDataType.SHORT));
             } else if (container.has(namespaced_key, PersistentDataType.BYTE_ARRAY)) {
@@ -624,6 +628,8 @@ public class Utils {
                 container.set(namespace, PersistentDataType.FLOAT, f);
             } else if (value instanceof Byte b) {
                 container.set(namespace, PersistentDataType.BYTE, b);
+            } else if (value instanceof Boolean bool) {
+                container.set(namespace, PersistentDataType.BOOLEAN, bool);
             } else if (value instanceof Short s) {
                 container.set(namespace, PersistentDataType.SHORT, s);
             } else if (value instanceof byte[] arr) {
