@@ -7,6 +7,7 @@ description: RaidCore - Anything and everything
 website: www.raidhub.net
 
 loadbefore: [DungeonRaiders]
+softdepend: [Vault]
 #depends: [Vault]
 #softdepend: [PlaceholderAPI, WorldGuard, WorldEdit, CMI, Dynmap, ItemsAdder]
 

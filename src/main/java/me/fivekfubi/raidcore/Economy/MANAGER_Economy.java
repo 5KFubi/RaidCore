@@ -32,8 +32,7 @@ public class MANAGER_Economy {
     public void load() {
         if (vault_economy == null){
             if (Bukkit.getPluginManager().getPlugin("Vault") == null) {
-                utils.error_message("<white>Vault not found! <dark_gray>Vault is required for the plugin to run.", null);
-                Bukkit.getPluginManager().disablePlugin(CORE);
+                utils.error_message("<white>Vault not found! <dark_gray>Vault is required for the plugin's economy features to run.", null);
                 return;
             }
 
@@ -47,10 +46,10 @@ public class MANAGER_Economy {
     }
 
     public void deposit(Player player, double amount) {
-        vault_economy.depositPlayer(player, amount);
+        if (vault_economy != null) vault_economy.depositPlayer(player, amount);
     }
     public void withdraw(Player player, double amount) {
-        vault_economy.withdrawPlayer(player, amount);
+        if (vault_economy != null) vault_economy.withdrawPlayer(player, amount);
     }
     public void withdraw_items(Player player, Map<String, Integer> item_price) {
         Inventory inv = player.getInventory();
@@ -89,8 +88,10 @@ public class MANAGER_Economy {
 
     public double get_balance(Player player) {
         if (player == null) return 0;
+        if (vault_economy == null) return 0;
         return vault_economy.getBalance(player);
     }
+
     public int get_items_balance(Player player, String file_path) {
         Inventory inv = player.getInventory();
         int total = 0;

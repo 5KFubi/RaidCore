@@ -17,6 +17,8 @@
 # !!!!! WARNING !!!!!
 # Deleting this file (config.yml) will re-create EVERY default file [NON-REVERSIBLE]
 
+web:
+  port: 8642
 
 database:
   update-interval: 80 # Ticks | How often to update the databases | LOW PERFORMANCE IMPACT

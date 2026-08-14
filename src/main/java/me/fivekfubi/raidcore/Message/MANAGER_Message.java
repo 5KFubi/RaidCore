@@ -2,7 +2,7 @@ package me.fivekfubi.raidcore.Message;
 
 import me.fivekfubi.raidcore.Config.Data.DATA_Config;
 import me.fivekfubi.raidcore.Holder.HOLDER;
-import net.kyori.adventure.text.Component;
+import net.kyori.adventure.bossbar.BossBar;
 import net.kyori.adventure.title.Title;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -78,6 +78,16 @@ public class MANAGER_Message {
                 }
             }
         }
+    }
+
+    public void show_bossbar(Player player, String text, float progress, BossBar.Color color, BossBar.Overlay overlay, HOLDER holder){
+        BossBar bossbar = BossBar.bossBar(
+                m_placeholder.replace_placeholders_component(text, holder),
+                progress,
+                color,
+                overlay
+        );
+        player.showBossBar(bossbar);
     }
 
     public void show_title(Player player, String title, String subtitle, long fade_in, long stay, long fade_out, HOLDER holder){

@@ -53,7 +53,7 @@ public class MANAGER_Web {
     /// Use register_rest_site below unless you specifically need raw control.
 
     public DATA_Site register_site(JavaPlugin plugin, String site_name, HttpHandler handler) {
-        if (plugin == null || site_name == null || handler == null) return null;
+        if (plugin == null || site_name == null) return null;
 
         DATA_Site site = new DATA_Site();
         site.plugin = plugin;
