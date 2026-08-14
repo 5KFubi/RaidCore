@@ -80,7 +80,7 @@ public class MANAGER_Message {
         }
     }
 
-    public void show_bossbar(Player player, String text, float progress, BossBar.Color color, BossBar.Overlay overlay, HOLDER holder){
+    public BossBar show_bossbar(Player player, String text, float progress, BossBar.Color color, BossBar.Overlay overlay, HOLDER holder){
         BossBar bossbar = BossBar.bossBar(
                 m_placeholder.replace_placeholders_component(text, holder),
                 progress,
@@ -88,6 +88,7 @@ public class MANAGER_Message {
                 overlay
         );
         player.showBossBar(bossbar);
+        return bossbar;
     }
 
     public void show_title(Player player, String title, String subtitle, long fade_in, long stay, long fade_out, HOLDER holder){
