@@ -158,6 +158,12 @@ public class MANAGER_Entity implements Listener {
     }
 
     @SuppressWarnings("unchecked")
+    public <T extends Entity> void run_post_restore(ENTITY_Part<T> part, CUSTOM_Entity entity) {
+        T live = (T) part.get();
+        if (live != null) part.post_restore.accept(live, entity);
+    }
+
+    @SuppressWarnings("unchecked")
     public <T extends Entity> void run_deserializer(ENTITY_Part<T> part, CUSTOM_Entity entity, JsonObject data) {
         T live = (T) part.get();
         if (live != null && part.deserializer != null) part.deserializer.deserialize(live, entity, data);
@@ -380,7 +386,14 @@ public class MANAGER_Entity implements Listener {
                     run_deserializer(part, entity, parts_data.getAsJsonObject(part_key));
             }
         }
+
+        for (ENTITY_Part<?> part : entity.parts) {
+            if (part.post_restore == null) continue;
+            run_post_restore(part, entity);
+        }
     }
+
+
 
     public void save() {
         boolean any_json = false;

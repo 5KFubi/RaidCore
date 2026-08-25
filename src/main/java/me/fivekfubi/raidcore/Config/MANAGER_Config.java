@@ -261,13 +261,14 @@ public class MANAGER_Config {
         }
 
         boolean first_time = first_times.contains(plugin.getName());
-        if (file.exists() && !first_time) {
-            return;
-        }
 
-        if (file_name.equalsIgnoreCase("config.yml")){
+        if (file_name.equalsIgnoreCase("config.yml") && !file.exists()){
             first_time = true;
             first_times.add(plugin.getName());
+        }
+
+        if (file.exists() && !first_time) {
+            return;
         }
 
         if (!first_time && !always) {
@@ -280,7 +281,7 @@ public class MANAGER_Config {
 
             if (default_config_stream != null) {
                 Files.copy(default_config_stream, file.toPath());
-            } else {
+            } else if (always) {
                 if (!file.createNewFile()) {
                     utils.error_message("<white> Failed to create <yellow>`" + path_string + "`", null);
                 }

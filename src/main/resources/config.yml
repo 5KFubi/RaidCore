@@ -36,3 +36,8 @@ chat-input:
     fade-in: 0 # Ticks
     stay: 20 # Ticks
     fade-out: 0 # Ticks
+
+
+# DO NOT TOUCH THIS
+current-version: 0
+

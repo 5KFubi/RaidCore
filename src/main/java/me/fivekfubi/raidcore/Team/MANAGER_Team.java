@@ -48,8 +48,9 @@ public class MANAGER_Team {
         Team team = board.getTeam(key);
         if (team == null) {
             team = board.registerNewTeam(key);
-            configurator.accept(team);
         }
+
+        configurator.accept(team);
 
         resolved.put(key, team);
         return team;

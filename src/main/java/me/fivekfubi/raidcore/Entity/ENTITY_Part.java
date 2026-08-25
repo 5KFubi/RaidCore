@@ -11,6 +11,7 @@ public class ENTITY_Part<T extends Entity> {
     public final Class<T> entity_class;
     public Consumer<T> configurator;
     public BiConsumer<T, CUSTOM_Entity> post_spawn;
+    public BiConsumer<T, CUSTOM_Entity> post_restore;
     public PART_Serializer<T>   serializer;
     public PART_Deserializer<T> deserializer;
     public double[] offset = null; // x,y,z relative to the entity's anchor location

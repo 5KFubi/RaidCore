@@ -38,6 +38,11 @@ public class CUSTOM_Entity {
         return part;
     }
 
+    public <T extends Entity> ENTITY_Part<T> post_restore(ENTITY_Part<T> part, BiConsumer<T, CUSTOM_Entity> handler) {
+        part.post_restore = handler;
+        return part;
+    }
+
     public <T extends Entity> ENTITY_Part<T> persist(
             ENTITY_Part<T> part,
             ENTITY_Part.PART_Serializer<T> serializer,
