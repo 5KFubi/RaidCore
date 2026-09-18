@@ -16,8 +16,8 @@
 #
 
 gui:
-  title: "<dark_grey>Test menu" # GUI title
-  placeholder-name: "<dark_gray>[<gray>Test Menu<dark_gray>]" # Display name for the `%previous-gui-name%` placeholder
+  title: "<dark_grey>Showcase menu" # GUI title
+  placeholder-name: "<dark_gray>[<gray>Showcase Menu<dark_gray>]" # Display name for the `%previous-gui-name%` placeholder
   size: 6 # How many rows the GUI should have
   refresh-rate: 1 # Refresh the GUI every X ticks
   inactivity-timer: 2400 # Ticks | Amount it takes to close the inventory due to inactivity | Set to 0 to disable
@@ -34,10 +34,10 @@ empty-slots:
 
 
 groups:
-  test-group-1: # Group ID
+  showcase-group-1: # Group ID
     settings: # Group settings
       fill-empty: false # Automatically fill slots left unused (from changing page items) to the "empty-slots" item
-      switch:
+      switch: # Start switching automatically
         auto: true
         order: [ "1", "2", "3" ] # ["1", "2", "3", "RANDOM"] < Page numbers
         delay: 10 # Ticks | Delay between each switch
@@ -45,7 +45,7 @@ groups:
           stop: true # Stop switching when interacted with
           timer: 40 # Ticks | Stop for X amount of ticks, then resume | Set to 0 to stop indefinitely
     1: # Page number
-      test_id: # Item ID
+      showcase-id: # Item ID
         item-type: "NONE"
         slots: [ "0" ]
         amount: 1
@@ -60,10 +60,10 @@ groups:
         material: "DIAMOND"
         name: "<dark_gray>1"
         lore:
-          - "<gray>Test lore"
+          - "<gray>Showcase lore"
 
     2: # Page number
-      test_id: # Item ID
+      showcase-id: # Item ID
         item-type: "NONE"
         slots: [ "0-1" ]
         amount: 1
@@ -76,14 +76,14 @@ groups:
         material: "DIRT"
         name: "<dark_gray>2"
         lore:
-          - "<gray>Test lore"
+          - "<gray>Showcase lore"
         actions:
           LEFT_CLICK:
-            - "[MESSAGE] test-group-1 1" # <SOUND NAME> <VOLUME> <PITCH>
+            - "[MESSAGE] showcase-group-1 1" # <SOUND NAME> <VOLUME> <PITCH>
           right-click:
-            - "[MESSAGE] test-group-1 1" # <SOUND NAME> <VOLUME> <PITCH>
+            - "[MESSAGE] showcase-group-1 1" # <SOUND NAME> <VOLUME> <PITCH>
     3: # Page number
-      test_id: # Item ID
+      showcase-id: # Item ID
         item-type: "NONE"
         slots: [ "0-2" ]
         amount: 1
@@ -96,19 +96,12 @@ groups:
         material: "STONE"
         name: "<dark_gray>3"
         lore:
-          - "<gray>Test lore"
+          - "<gray>Showcase lore"
         actions:
           LEFT_CLICK:
-            - "[MESSAGE] test-group-1 2" # <SOUND NAME> <VOLUME> <PITCH>
+            - "[MESSAGE] showcase-group-1 2" # <SOUND NAME> <VOLUME> <PITCH>
           right-click:
-            - "[MESSAGE] test-group-1 2" # <SOUND NAME> <VOLUME> <PITCH>
-
-  # ------------------------------------------------------------------------------------------------------------------------
-  # ------------------------------------------------------------------------------------------------------------------------
-  # ------------------------------------------------------------------------------------------------------------------------
-  # ------------------------------------------------------------------------------------------------------------------------
-  # ------------------------------------------------------------------------------------------------------------------------
-  # ------------------------------------------------------------------------------------------------------------------------
+            - "[MESSAGE] showcase-group-1 2" # <SOUND NAME> <VOLUME> <PITCH>
 
   showcase-item:
     item-type: "NONE"
@@ -121,21 +114,21 @@ groups:
       - "HIDE_ENCHANTS"
     gradual-model-data: false
     material: "DIAMOND"
-    name: "<gray>Test item 999"
+    name: "<gray>Showcase item"
     lore:
-      - "<gray>Random: <yellow>%random-value%"
+      - "<gray>Random value: <yellow>%random-value%"
     actions:
       event:
         LEFT_CLICK:
-          test-event-action-1:
+          showcase-event-action-1:
             weight: 0 # Set to -1 to always execute | Set ALL to 0 to execute all of them | Set to anything else to execute ONE of them.
             chance:
               amount: 100.0 # Chance to execute
               reroll-weight: false # Re-roll for the other groups in this click-type, if there are none -> run 'fail'
               reroll-fail:
-                - "[MESSAGE] <red>Failed chance!"
+                - "[MESSAGE] <dark_gray>[<red><b>ITEM ACTION</b><dark_gray>] <red>Failed `left click` chance!"
             cancel-event:
-              - "*" # Cancel the event no matter the source it came from (block_dig, attack, etc.)
+              - "*" # Cancel the event no matter the source it came from (block_dig, attack, etc.), use `*` for any
             price: # The cost to execute - charged if the conditions are met
               money:
                 amount: 100.0
@@ -144,45 +137,38 @@ groups:
                   1:
                     currency: "Items/Currency/scrap.yml"
                     amount: 1
-            conditions: # Conditions & actions, don't use "if:" to skip the condition check (always run)
+            conditions: # Conditions & actions, don't use "if:" to skip the condition check entirely (always run)
               if:
                 condition: "true"
                 self-use: true # Use on self or on another target (if applicable)
                 durability-cost: 1 # Durability cost to execute
                 cooldown: 100 # Ticks - Cooldowns are applied per-condition, so you can still use the rest
                 then:
-                  - "[MESSAGE] <gold>[] <dark_gray>[<blue><b>GUI</b><dark_gray>] <green>- 1"
+                  - "[MESSAGE] <dark_gray>[<red><b>ITEM ACTION</b><dark_gray>] <gray>Left click!"
                 on-cooldown:
                   self-use: true # Use on self or on another target (if applicable)
                   durability-cost: 1 # Durability cost to execute
                   cooldown: 10 # Ticks - Cooldowns are applied per-condition, so you can still use the rest
                   then:
-                    - "[MESSAGE] <gold>[] <dark_gray>[<red><b>COOLDOWN</b> <gray>| <blue><b>GUI</b><dark_gray>] <red>| 1"
+                    - "[MESSAGE] <dark_gray>[<red><b>ITEM ACTION</b><dark_gray>] <red>Cooldown for `left click`!"
                 else:
                   self-use: true # Use on self or on another target (if applicable)
                   durability-cost: 1 # Durability cost to execute
                   cooldown: 10 # Ticks - Cooldowns are applied per-condition, so you can still use the rest
                   then:
-                    - "[MESSAGE] <gold>[] <dark_gray>[<blue><b>GUI</b><dark_gray>] <green>-- 2"
+                    - "[MESSAGE] <dark_gray>[<red><b>ITEM ACTION</b><dark_gray>] <gray>Left click? You should not see this!"
                   on-cooldown:
                     self-use: true # Use on self or on another target (if applicable)
                     durability-cost: 1 # Durability cost to execute
                     cooldown: 10 # Ticks - Cooldowns are applied per-condition, so you can still use the rest
                     then:
-                      - "[MESSAGE] <gold>[] <dark_gray>[<red><b>COOLDOWN</b> <gray>| <blue><b>GUI</b><dark_gray>] <red>|| 2"
+                      - "[MESSAGE] <dark_gray>[<red><b>ITEM ACTION</b><dark_gray>] <red>Cooldown for `left click`? You should not see this!"
 
-  # ------------------------------------------------------------------------------------------------------------------------
-  # ------------------------------------------------------------------------------------------------------------------------
-  # ------------------------------------------------------------------------------------------------------------------------
-  # ------------------------------------------------------------------------------------------------------------------------
-  # ------------------------------------------------------------------------------------------------------------------------
-  # ------------------------------------------------------------------------------------------------------------------------
-
-  test-group-2: # Group ID
+  showcase-group-2: # Group ID
     settings: # Group settings
       fill-empty: true # Automatically fill slots left unused (from changing page items) to the "empty-slots" item
       switch:
-        auto: true
+        auto: true # Start switching automatically
         order: [ "1", "2" ] # ["1", "2", "3", "RANDOM"] < Page numbers
         delay: 20 # Ticks | Delay between each switch
         interact:
@@ -200,8 +186,7 @@ groups:
         name: "<dark_gray>GUI_OPEN"
         actions:
           LEFT_CLICK:
-            - "[MESSAGE] permission-toggle GUI_OPEN"
-            - "[MESSAGE] test-group-2 1"
+            - "[MESSAGE] showcase-group-2 1"
       GUI_OPEN_2:
         slots: [ "21" ]
         amount: 1
@@ -213,8 +198,7 @@ groups:
         name: "<dark_gray>GUI_OPEN 2"
         actions:
           LEFT_CLICK:
-            - "[MESSAGE] permission-toggle GUI_OPEN"
-            - "[MESSAGE] test-group-2 2"
+            - "[MESSAGE] showcase-group-2 2"
     2: # Page number
       BLOCK_BREAK: # Item ID
         slots: [ "20" ]
@@ -227,8 +211,7 @@ groups:
         name: "<dark_gray>BLOCK_BREAK"
         actions:
           LEFT_CLICK:
-            - "[MESSAGE] permission-toggle BLOCK_BREAK"
-            - "[MESSAGE] test-group-2 3" # <SOUND NAME> <VOLUME> <PITCH>
+            - "[MESSAGE] showcase-group-2 3" # <SOUND NAME> <VOLUME> <PITCH>
 
   page-change: # Group ID
     1: # Page number
@@ -244,13 +227,13 @@ groups:
         actions:
           LEFT_CLICK:
             - "[MESSAGE] page-change back"
-            - "[SPECIAL] change-page test-group-2 backward"
+            - "[SPECIAL] change-page showcase-group-2 backward"
           right-click:
             - "[MESSAGE] page-change back"
-            - "[SPECIAL] change-page test-group-2 backward"
+            - "[SPECIAL] change-page showcase-group-2 backward"
           drop:
             - "[MESSAGE] page-change back reset"
-            - "[SPECIAL] change-page test-group-2 1"
+            - "[SPECIAL] change-page showcase-group-2 1"
       next: # Item ID
         item-type: "NONE"
         slots: [ "33" ]
@@ -263,10 +246,10 @@ groups:
         actions:
           LEFT_CLICK:
             - "[MESSAGE] page-change front"
-            - "[SPECIAL] change-page test-group-2 forward"
+            - "[SPECIAL] change-page showcase-group-2 forward"
           right-click:
             - "[MESSAGE] page-change front"
-            - "[SPECIAL] change-page test-group-2 forward"
+            - "[SPECIAL] change-page showcase-group-2 forward"
           drop:
             - "[MESSAGE] page-change reset"
-            - "[SPECIAL] change-page test-group-2 1"
+            - "[SPECIAL] change-page showcase-group-2 1"

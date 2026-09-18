@@ -35,6 +35,15 @@ public class EVENT_TYPE {
     public static final String SNEAK_BLOCK_PLACE           = "SNEAK_BLOCK_PLACE";
     public static final String SPRINT_BLOCK_PLACE          = "SPRINT_BLOCK_PLACE";
 
+    public static final String PHYSICAL                    = "PHYSICAL";
+    public static final String STEP_PRESSURE_PLATE         = "STEP_PRESSURE_PLATE";
+    public static final String SNEAK_STEP_PRESSURE_PLATE   = "SNEAK_STEP_PRESSURE_PLATE";
+    public static final String SPRINT_STEP_PRESSURE_PLATE  = "SPRINT_STEP_PRESSURE_PLATE";
+    public static final String STEP_TRIPWIRE               = "STEP_TRIPWIRE";
+    public static final String SNEAK_STEP_TRIPWIRE         = "SNEAK_STEP_TRIPWIRE";
+    public static final String SPRINT_STEP_TRIPWIRE        = "SPRINT_STEP_TRIPWIRE";
+    public static final String TRAMPLE_FARMLAND            = "TRAMPLE_FARMLAND";
+
     public static final String WALK                        = "WALK";
     public static final String SNEAK_WALK                  = "SNEAK_WALK";
     public static final String SPRINT_WALK                 = "SPRINT_WALK";

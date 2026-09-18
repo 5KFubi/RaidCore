@@ -6,9 +6,7 @@ import me.fivekfubi.raidcore.Item.Data.Action.DATA_Action;
 import me.fivekfubi.raidcore.Item.Data.Action.DATA_Action_Condition;
 import me.fivekfubi.raidcore.Item.Data.Action.DATA_Action_State;
 import me.fivekfubi.raidcore.Item.Data.DATA_Item;
-import org.bukkit.Bukkit;
-import org.bukkit.Location;
-import org.bukkit.NamespacedKey;
+import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
@@ -109,19 +107,21 @@ public class MANAGER_Event implements Listener {
             return;
         }
 
+        // [PHANTOM-DROP GUARD] ---------------------------------------------------------------
+        // dropping an item while not aiming at a block makes the client send an arm-swing packet
+        // the server also reads it as a LEFT_CLICK_AIR/RIGHT_CLICK_AIR interact for some ungodly reason
+        // (unfixed vanilla/CraftBukkit garbage, see SPIGOT-5974). no synchronous check can
+        // tell them apart, so we resume to voodoo and hold _AIR actions for 1 tick and re-check drop_events after
+        // This is the stupidest thing ever and I'm never touching it again
+        //   (and no, using event priority does NOT work because of course it doesn't)
+        if (event.getAction() == org.bukkit.event.block.Action.LEFT_CLICK_AIR
+                || event.getAction() == org.bukkit.event.block.Action.RIGHT_CLICK_AIR){
+            event.setUseItemInHand(Event.Result.DENY);
+            Bukkit.getScheduler().runTask(CORE, () -> on_interact_delayed(event, player, player_uuid, sneak, sprint));
+            return;
+        }
+
         switch (event.getAction()){
-            case LEFT_CLICK_AIR -> {
-                event_actions.add(LEFT_CLICK);
-                event_actions.add(LEFT_CLICK_AIR);
-                if (sneak){
-                    event_actions.add(SNEAK_LEFT_CLICK);
-                    event_actions.add(SNEAK_LEFT_CLICK_AIR);
-                }
-                if (sprint){
-                    event_actions.add(SPRINT_LEFT_CLICK);
-                    event_actions.add(SPRINT_LEFT_CLICK_AIR);
-                }
-            }
             case LEFT_CLICK_BLOCK -> {
                 event_actions.add(LEFT_CLICK);
                 event_actions.add(LEFT_CLICK_BLOCK);
@@ -132,18 +132,6 @@ public class MANAGER_Event implements Listener {
                 if (sprint){
                     event_actions.add(SPRINT_LEFT_CLICK);
                     event_actions.add(SPRINT_LEFT_CLICK_BLOCK);
-                }
-            }
-            case RIGHT_CLICK_AIR -> {
-                event_actions.add(RIGHT_CLICK);
-                event_actions.add(RIGHT_CLICK_AIR);
-                if (sneak){
-                    event_actions.add(SNEAK_RIGHT_CLICK);
-                    event_actions.add(SNEAK_RIGHT_CLICK_AIR);
-                }
-                if (sprint){
-                    event_actions.add(SPRINT_RIGHT_CLICK);
-                    event_actions.add(SPRINT_RIGHT_CLICK_AIR);
                 }
             }
             case RIGHT_CLICK_BLOCK -> {
@@ -159,7 +147,23 @@ public class MANAGER_Event implements Listener {
                 }
             }
             case PHYSICAL -> {
-                // todo: later
+                Block clicked = event.getClickedBlock();
+                if (clicked == null) break;
+
+                Material type = clicked.getType();
+                if (Tag.PRESSURE_PLATES.isTagged(type)) {
+                    event_actions.add(STEP_PRESSURE_PLATE);
+                    if (sneak) event_actions.add(SNEAK_STEP_PRESSURE_PLATE);
+                    if (sprint) event_actions.add(SPRINT_STEP_PRESSURE_PLATE);
+                } else if (type == Material.TRIPWIRE) {
+                    event_actions.add(STEP_TRIPWIRE);
+                    if (sneak) event_actions.add(SNEAK_STEP_TRIPWIRE);
+                    if (sprint) event_actions.add(SPRINT_STEP_TRIPWIRE);
+                } else if (type == Material.FARMLAND) {
+                    event_actions.add(TRAMPLE_FARMLAND);
+                } else {
+                    event_actions.add(PHYSICAL);
+                }
             }
             default -> {
                 // todo: later
@@ -169,6 +173,51 @@ public class MANAGER_Event implements Listener {
         if (event.getClickedBlock() != null) event_blocks.add(event.getClickedBlock());
 
         event.setCancelled(handle_actions(player, event.getEventName(), event_actions, event_targets, event_blocks, event, event.useItemInHand() == Event.Result.DENY));
+    }
+
+    public void on_interact_delayed(PlayerInteractEvent event, Player player, UUID player_uuid, boolean sneak, boolean sprint){
+        Set<String> event_actions = new HashSet<>();
+        Set<Entity> event_targets = new HashSet<>();
+        Set<Block> event_blocks = new HashSet<>();
+
+        if (drop_events.containsKey(player_uuid)) {
+            PlayerDropItemEvent drop_event = drop_events.remove(player_uuid);
+            Entity dropped = drop_event.getItemDrop();
+            event_targets.add(dropped);
+
+            event_actions.add(DROP_ITEM);
+            if (sneak) event_actions.add(SNEAK_DROP_ITEM);
+            if (sprint) event_actions.add(SPRINT_DROP_ITEM);
+
+            handle_actions(player, event.getEventName(), event_actions, event_targets, event_blocks, event, event.useItemInHand() == Event.Result.DENY, drop_event.getItemDrop().getItemStack());
+            return;
+        }
+
+        if (event.getAction() == org.bukkit.event.block.Action.LEFT_CLICK_AIR){
+            event_actions.add(LEFT_CLICK);
+            event_actions.add(LEFT_CLICK_AIR);
+            if (sneak){
+                event_actions.add(SNEAK_LEFT_CLICK);
+                event_actions.add(SNEAK_LEFT_CLICK_AIR);
+            }
+            if (sprint){
+                event_actions.add(SPRINT_LEFT_CLICK);
+                event_actions.add(SPRINT_LEFT_CLICK_AIR);
+            }
+        } else {
+            event_actions.add(RIGHT_CLICK);
+            event_actions.add(RIGHT_CLICK_AIR);
+            if (sneak){
+                event_actions.add(SNEAK_RIGHT_CLICK);
+                event_actions.add(SNEAK_RIGHT_CLICK_AIR);
+            }
+            if (sprint){
+                event_actions.add(SPRINT_RIGHT_CLICK);
+                event_actions.add(SPRINT_RIGHT_CLICK_AIR);
+            }
+        }
+
+        handle_actions(player, event.getEventName(), event_actions, event_targets, event_blocks, event, event.useItemInHand() == Event.Result.DENY);
     }
     // precision use
     //@EventHandler

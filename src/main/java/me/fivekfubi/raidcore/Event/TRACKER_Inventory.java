@@ -46,17 +46,17 @@ public class TRACKER_Inventory implements Listener {
     public final Map<UUID, Map<String, Map<DATA_Action_Condition, Long>>> cooldowns_map = new ConcurrentHashMap<>();
 
 
-    public void track(Player player, UUID uuid, int slot, Map<NamespacedKey, Object> container_data) {
-        if (slot < 0) return;
+    public boolean track(Player player, UUID uuid, int slot, Map<NamespacedKey, Object> container_data) {
+        if (slot < 0) return false;
 
         String plugin_name = (String) container_data.get(NKEY.file_plugin);
         String file_path   = (String) container_data.get(NKEY.file_path);
         DATA_Item item_data = m_item.get_item_data(plugin_name, file_path);
-        if (item_data == null) return;
+        if (item_data == null) return false;
         DATA_Action action_data = item_data.action_data;
-        if (action_data == null) return;
+        if (action_data == null) return false;
         Map<String, List<DATA_Action_State>> passive_data = action_data.action_passive;
-        if (passive_data == null || passive_data.isEmpty()) return;
+        if (passive_data == null || passive_data.isEmpty()) return false;
 
         HOLDER holder = new HOLDER(Map.of(
                 NKEY.item_slot.getKey(),          String.valueOf(slot),
@@ -70,7 +70,8 @@ public class TRACKER_Inventory implements Listener {
         current_file_paths.computeIfAbsent(uuid, k -> new ConcurrentHashMap<>())
                 .put(slot, file_path);
 
-        utils.broadcast("<green>[ACTIVATED]<white> | Slot: <gold>" + slot);
+        //utils.broadcast("<green>[ACTIVATED]<white> | Slot: <gold>" + slot);
+        return true;
     }
     //public void track(Player player, UUID uuid, int slot, Map<NamespacedKey, Object> container_data) {
     //    if (slot < 0) return;
@@ -176,7 +177,7 @@ public class TRACKER_Inventory implements Listener {
         if (slot_map != null) slot_map.remove(slot);
         Map<Integer, String> path_map = current_file_paths.get(uuid);
         if (path_map != null) path_map.remove(slot);
-        utils.broadcast("<red>[DEACTIVATED]<white> | Slot: <gold>" + slot);
+        //utils.broadcast("<red>[DEACTIVATED]<white> | Slot: <gold>" + slot);
     }
     //public void untrack_slot(UUID uuid, int slot) {
     //    Map<Integer, Map<String, List<BukkitTask>>> tasks_map = tracked_items.get(uuid);
@@ -201,7 +202,7 @@ public class TRACKER_Inventory implements Listener {
         tracked_items.remove(uuid);
         current_file_paths.remove(uuid);
         cooldowns_map.remove(uuid); // also fixes a memory leak — original never cleaned this up
-        utils.broadcast("<red>[DEACTIVATED]<white> | all.");
+        //utils.broadcast("<red>[DEACTIVATED]<white> | all.");
     }
     //public void untrack_player(UUID uuid) {
     //    Map<Integer, Map<String, List<BukkitTask>>> tasks_map = tracked_items.get(uuid);
@@ -357,7 +358,8 @@ public class TRACKER_Inventory implements Listener {
         String tracked = is_tracked ? path_map.get(slot) : null;
         if (file_path.equals(tracked)) return;
 
-        track(player, uuid, slot, data);
+        boolean tracked_now = track(player, uuid, slot, data);
+        if (!tracked_now && is_tracked) untrack_slot(uuid, slot);
     }
     //public void process_slot(Player player, UUID uuid, int slot, ItemStack item) {
     //    if (item == null || item.getType() == Material.AIR) {

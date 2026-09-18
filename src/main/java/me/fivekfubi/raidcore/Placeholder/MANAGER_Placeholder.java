@@ -8,6 +8,7 @@ import net.kyori.adventure.text.format.TextDecoration;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 
 import java.util.*;
@@ -111,10 +112,10 @@ public class MANAGER_Placeholder {
             StringBuilder result = new StringBuilder();
             for (Map.Entry<?, ?> entry : map.entrySet()) {
                 String key = (String) entry.getKey();
-                Integer value = (Integer) entry.getValue();
+                String value = String.valueOf(entry.getValue());
 
                 String line = format_map_prefix + key + format_map_suffix;
-                line = line.replace("%map-value-amount%", String.valueOf(value));
+                line = line.replace("%map-value-amount%", value);
 
                 result.append(line).append("\n");
             }
@@ -254,20 +255,41 @@ public class MANAGER_Placeholder {
         });
 
         register_placeholder("%target-name%", (holder) -> {
-            Player target = holder.get(NKEY.target.getKey(), Player.class, null);
-            return target != null ? target.getName() : "null";
+            Entity target = holder.get(NKEY.target.getKey(), Entity.class, null);
+            if (target == null){
+                List<Entity> targets = holder.get(NKEY.targets.getKey(), List.class, null);
+                if (targets != null && !targets.isEmpty()){
+                    target = targets.getFirst();
+                }
+            }
+            return target != null ? target.getName() : holder.get(NKEY.target_name.getKey(), String.class, "null");
         });
 
         register_placeholder("%target-uuid%", (holder) -> {
-            Player target = holder.get(NKEY.target.getKey(), Player.class, null);
-            return target != null ? target.getUniqueId().toString() : "null";
+            Entity target = holder.get(NKEY.target.getKey(), Entity.class, null);
+            if (target == null){
+                List<Entity> targets = holder.get(NKEY.targets.getKey(), List.class, null);
+                if (targets != null && !targets.isEmpty()){
+                    target = targets.getFirst();
+                }
+            }
+            return target != null ? target.getUniqueId().toString() : holder.get(NKEY.target_uuid.getKey(), String.class, "null");
         });
 
         register_placeholder("%target-balance-money%", (holder) -> {
-            Player target = holder.get(NKEY.target.getKey(), Player.class, null);
-            return target != null
-                    ? m_placeholder.format_money(m_economy.get_balance(target))
-                    : m_placeholder.format_money(0);
+            Entity target = holder.get(NKEY.target.getKey(), Entity.class, null);
+            if (target == null){
+                List<Entity> targets = holder.get(NKEY.targets.getKey(), List.class, null);
+                if (targets != null && !targets.isEmpty()){
+                    target = targets.getFirst();
+                }
+            }
+
+            if (target instanceof Player player){
+                return m_placeholder.format_money(m_economy.get_balance(player));
+            }else{
+                return null;
+            }
         });
 
         register_placeholder("%item-slot%", (holder) -> {

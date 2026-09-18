@@ -53,7 +53,7 @@ buttons:
     tooltip: "<gray>Opens a GUI."
     width: 150
     then:
-      - "[SPECIAL] gui-open GUIs/test.yml"
+      - "[SPECIAL] gui-open GUIs/showcase-gui.yml"
 
 exit-button:
   label: "<dark_gray>Close"

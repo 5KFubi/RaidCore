@@ -29,11 +29,10 @@ public class MANAGER_Config {
             Map.of(List.of("config.yml"), true),
             Map.of(List.of("commands.yml"), true),
             Map.of(List.of("placeholders.yml"), true),
-            Map.of(List.of("Items", "test-item.yml"), false),
-            Map.of(List.of("Items", "test-item-2.yml"), false),
+            Map.of(List.of("Items", "showcase-item.yml"), false),
 
-            Map.of(List.of("GUIs", "test.yml"), false),
-            Map.of(List.of("Dialogues", "test.yml"), false),
+            Map.of(List.of("GUIs", "showcase-gui.yml"), false),
+            Map.of(List.of("Dialogues", "showcase-dialogue.yml"), false),
             Map.of(List.of("Dialogues", "input-text.yml"), false)
     )));
 

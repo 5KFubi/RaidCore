@@ -48,16 +48,28 @@ public class GUI_Inventory implements InventoryHolder {
     }
 
     public final Map<Integer, GUI_Item> placed_items = new HashMap<>();
+    //public void cache_item(int slot, String group_id, int page_id, GUI_Item gui_item, HOLDER holder_data){
+    //    GUI_Item previous = this.placed_items.get(slot);
+    //    if (previous != gui_item) {
+    //        this.placed_items.put(slot, gui_item);
+
+    //        this.present_item_types.put(slot, gui_item.item_type);
+    //        this.present_groups.put(slot, group_id);
+    //        this.present_group_pages.put(group_id, page_id);
+    //        this.present_holder_data.put(slot, holder_data);
+    //    }
+    //}
     public void cache_item(int slot, String group_id, int page_id, GUI_Item gui_item, HOLDER holder_data){
         GUI_Item previous = this.placed_items.get(slot);
+
         if (previous != gui_item) {
             this.placed_items.put(slot, gui_item);
-
-            this.present_item_types.put(slot, gui_item.item_type);
-            this.present_groups.put(slot, group_id);
-            this.present_group_pages.put(group_id, page_id);
-            this.present_holder_data.put(slot, holder_data);
         }
+
+        this.present_item_types.put(slot, gui_item.item_type);
+        this.present_groups.put(slot, group_id);
+        this.present_group_pages.put(group_id, page_id);
+        this.present_holder_data.put(slot, holder_data);
     }
     public GUI_Item get_cached(int slot){ return placed_items.get(slot); }
     public Map<Integer, GUI_Item> get_all_cached(){ return Collections.unmodifiableMap(placed_items); }

@@ -28,6 +28,7 @@ public class MANAGER_Key {
     public NamespacedKey player_name            = generate( "player_name"            );
     public NamespacedKey player_uuid            = generate( "player_uuid"            );
 
+    public NamespacedKey targets                = generate( "targets"                );
     public NamespacedKey target                 = generate( "target"                 );
     public NamespacedKey target_name            = generate( "target_name"            );
     public NamespacedKey target_uuid            = generate( "target_uuid"            );
