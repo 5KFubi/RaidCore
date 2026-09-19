@@ -19,6 +19,7 @@ import me.fivekfubi.raidcore.Item.MANAGER_Item;
 import me.fivekfubi.raidcore.Message.MANAGER_Message;
 import me.fivekfubi.raidcore.NKey.MANAGER_Key;
 import me.fivekfubi.raidcore.Migration.MANAGER_Migration;
+import me.fivekfubi.raidcore.Particle.MANAGER_Particle;
 import me.fivekfubi.raidcore.Placeholder.MANAGER_Placeholder;
 import me.fivekfubi.raidcore.Scheduler.MANAGER_Scheduler;
 import me.fivekfubi.raidcore.Team.MANAGER_Team;
@@ -70,6 +71,7 @@ public final class RaidCore extends JavaPlugin {
     public static MANAGER_Input m_input = new MANAGER_Input();
     public static MANAGER_Team m_team = new MANAGER_Team();
     public static MANAGER_Web m_web = new MANAGER_Web();
+    public static MANAGER_Particle m_particle = new MANAGER_Particle();
     //
     public final Map<String, JavaPlugin> registered_plugins = new HashMap<>();
 
@@ -189,6 +191,7 @@ public final class RaidCore extends JavaPlugin {
         if (!loaded) m_executable.register_default();
         m_message.load_messages(CORE_NAME);
         m_input.load();
+        m_particle.load();
 
         loaded = true;
     }

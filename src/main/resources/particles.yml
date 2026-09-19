@@ -1,0 +1,29 @@
+# Every top level key is a preset. Play one with: m_particle.play("showcase-ring", location)
+#
+# Formulas use EvalEx math. Available variables:
+#   t      goes from 0 to 2π across the points
+#   i      index of the current point (0 to n-1)
+#   n      total points
+#   frame  animation step, counts up from 0
+#   time   ticks since the animation started
+# Any extra number in the preset is also a variable, e.g. r below.
+
+showcase-ring:
+  particle: "SOUL_FIRE_FLAME"
+  points: 24
+  x: "cos(t) * r"
+  y: "0"
+  z: "sin(t) * r"
+  r: 3
+  duration: 40
+  interval: 2
+
+showcase-helix:
+  particle: "END_ROD"
+  points: 32
+  x: "cos(t * 2) * r"
+  y: "t * 0.01"
+  z: "sin(t * 2) * r"
+  r: 1.5
+  duration: 40
+  interval: 2

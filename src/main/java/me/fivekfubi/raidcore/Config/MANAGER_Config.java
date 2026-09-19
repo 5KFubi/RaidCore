@@ -29,6 +29,7 @@ public class MANAGER_Config {
             Map.of(List.of("config.yml"), true),
             Map.of(List.of("commands.yml"), true),
             Map.of(List.of("placeholders.yml"), true),
+            Map.of(List.of("particles.yml"), true),
             Map.of(List.of("Items", "showcase-item.yml"), false),
 
             Map.of(List.of("GUIs", "showcase-gui.yml"), false),

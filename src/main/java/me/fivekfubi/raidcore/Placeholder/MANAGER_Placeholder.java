@@ -5,6 +5,8 @@ import me.fivekfubi.raidcore.Holder.HOLDER;
 import me.fivekfubi.raidcore.Config.Data.DATA_Config;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.TextDecoration;
+import net.kyori.adventure.text.minimessage.MiniMessage;
+import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -257,20 +259,24 @@ public class MANAGER_Placeholder {
         register_placeholder("%target-name%", (holder) -> {
             Entity target = holder.get(NKEY.target.getKey(), Entity.class, null);
             if (target == null){
-                List<Entity> targets = holder.get(NKEY.targets.getKey(), List.class, null);
+                Set<Entity> targets = holder.get(NKEY.targets.getKey(), Set.class, null);
                 if (targets != null && !targets.isEmpty()){
-                    target = targets.getFirst();
+                    target = targets.iterator().next();
                 }
             }
-            return target != null ? target.getName() : holder.get(NKEY.target_name.getKey(), String.class, "null");
+
+            // This is some moronic shit but I'm too lazy to fix it
+            String raw = target != null ? target.getName() : holder.get(NKEY.target_name.getKey(), String.class, "null");
+            return MiniMessage.miniMessage().serialize(LegacyComponentSerializer.legacySection().deserialize(raw));
+            //return target != null ? target.getName() : holder.get(NKEY.target_name.getKey(), String.class, "null");
         });
 
         register_placeholder("%target-uuid%", (holder) -> {
             Entity target = holder.get(NKEY.target.getKey(), Entity.class, null);
             if (target == null){
-                List<Entity> targets = holder.get(NKEY.targets.getKey(), List.class, null);
+                Set<Entity> targets = holder.get(NKEY.targets.getKey(), Set.class, null);
                 if (targets != null && !targets.isEmpty()){
-                    target = targets.getFirst();
+                    target = targets.iterator().next();
                 }
             }
             return target != null ? target.getUniqueId().toString() : holder.get(NKEY.target_uuid.getKey(), String.class, "null");
@@ -279,9 +285,9 @@ public class MANAGER_Placeholder {
         register_placeholder("%target-balance-money%", (holder) -> {
             Entity target = holder.get(NKEY.target.getKey(), Entity.class, null);
             if (target == null){
-                List<Entity> targets = holder.get(NKEY.targets.getKey(), List.class, null);
+                Set<Entity> targets = holder.get(NKEY.targets.getKey(), Set.class, null);
                 if (targets != null && !targets.isEmpty()){
-                    target = targets.getFirst();
+                    target = targets.iterator().next();
                 }
             }
 

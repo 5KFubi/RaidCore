@@ -365,22 +365,25 @@ public class MANAGER_Command {
                 }).and()
 
                 .sub_command("test").logic((sender, args, holder) -> {
-                    String lines =
-                            "# ╔══════════════════════════════════════════════════════════════════════════════════════════════════════════════════╗\n" +
-                                    "# ║                                                PROTECTION SETTINGS                                               ║\n" +
-                                    "# ╚══════════════════════════════════════════════════════════════════════════════════════════════════════════════════╝\n" +
-                                    "\n" +
-                                    "    # Other protection related settings can be customized per-protection (inside the protection item file)\n" +
-                                    "\n" +
-                                    "protection:\n" +
-                                    "  invite:\n" +
-                                    "    timer: 1200 # Ticks | Base invites will expire after X ticks\n" +
-                                    "  offsets:\n" +
-                                    "    gap-buffer: 2 # Blocks | Makes it so there must be at least an X block gap between the edges of protected zones\n" +
-                                    "    border-display: 5 # Blocks | Display the border when the player is 5 blocks away from the edge of a protected zone"
-                            ;
-                    m_config.append_to_config(CORE_NAME, List.of("config.yml"), lines);
-                    send_message(sender, get_command_data("raidcore").sub_commands.get("test").messages.get("success"), holder);
+                    if (sender instanceof Player player) {
+                        m_particle.play("showcase-ring", player.getLocation());
+                    }
+                    //String lines =
+                    //        "# ╔══════════════════════════════════════════════════════════════════════════════════════════════════════════════════╗\n" +
+                    //                "# ║                                                PROTECTION SETTINGS                                               ║\n" +
+                    //                "# ╚══════════════════════════════════════════════════════════════════════════════════════════════════════════════════╝\n" +
+                    //                "\n" +
+                    //                "    # Other protection related settings can be customized per-protection (inside the protection item file)\n" +
+                    //                "\n" +
+                    //                "protection:\n" +
+                    //                "  invite:\n" +
+                    //                "    timer: 1200 # Ticks | Base invites will expire after X ticks\n" +
+                    //                "  offsets:\n" +
+                    //                "    gap-buffer: 2 # Blocks | Makes it so there must be at least an X block gap between the edges of protected zones\n" +
+                    //                "    border-display: 5 # Blocks | Display the border when the player is 5 blocks away from the edge of a protected zone"
+                    //        ;
+                    //m_config.append_to_config(CORE_NAME, List.of("config.yml"), lines);
+                    //send_message(sender, get_command_data("raidcore").sub_commands.get("test").messages.get("success"), holder);
                 }).and()
 
                 .sub_command("give").logic((sender, args, holder) -> {
