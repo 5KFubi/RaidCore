@@ -1,5 +1,6 @@
 package me.fivekfubi.raidcore.Event;
 
+import com.destroystokyo.paper.event.player.PlayerElytraBoostEvent;
 import com.destroystokyo.paper.event.player.PlayerJumpEvent;
 import me.fivekfubi.raidcore.Holder.HOLDER;
 import me.fivekfubi.raidcore.Item.Data.Action.DATA_Action;
@@ -8,8 +9,11 @@ import me.fivekfubi.raidcore.Item.Data.Action.DATA_Action_State;
 import me.fivekfubi.raidcore.Item.Data.DATA_Item;
 import org.bukkit.*;
 import org.bukkit.block.Block;
+import org.bukkit.block.BrewingStand;
 import org.bukkit.entity.Entity;
+import org.bukkit.entity.HumanEntity;
 import org.bukkit.entity.Player;
+import org.bukkit.entity.Projectile;
 import org.bukkit.event.Event;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -17,8 +21,13 @@ import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockDamageEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.*;
+import org.bukkit.event.inventory.BrewEvent;
+import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.inventory.InventoryDragEvent;
 import org.bukkit.event.player.*;
+import org.bukkit.inventory.BrewerInventory;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.persistence.PersistentDataType;
 
 import java.util.*;
 
@@ -332,11 +341,11 @@ public class MANAGER_Event implements Listener {
     @EventHandler
     public void onEntityDamage(EntityDamageEvent event) {
         boolean sneak, sprint;
-        Set<String> event_actions = new HashSet<>();
-        Set<Entity> event_targets = new HashSet<>();
 
         if (event instanceof EntityDamageByEntityEvent edbe) {
-            // player is damager
+            Set<String> event_actions = new HashSet<>();
+            Set<Entity> event_targets = new HashSet<>();
+
             if (edbe.getDamager() instanceof Player player) {
                 sneak = player.isSneaking();
                 sprint = player.isSprinting();
@@ -354,42 +363,48 @@ public class MANAGER_Event implements Listener {
                 }
 
                 edbe.setCancelled(handle_actions(player, event.getEventName(), event_actions, event_targets, null, event, event.isCancelled()));
-                return;
             }
-
-            // player is victim, attacker is entity
-            if (edbe.getEntity() instanceof Player player) {
+            else if (edbe.getDamager() instanceof Projectile projectile && projectile.getShooter() instanceof Player player) {
                 sneak = player.isSneaking();
                 sprint = player.isSprinting();
-                event_targets.add(edbe.getDamager());
+                event_targets.add(edbe.getEntity());
 
-                event_actions.add(TAKE_DAMAGE);
-                if (sneak){
-                    event_actions.add(SNEAK_TAKE_DAMAGE);
+                event_actions.add(PROJECTILE_DAMAGE_ENTITY);
+                if (sneak) {
+                    event_actions.add(SNEAK_PROJECTILE_DAMAGE_ENTITY);
                 }
-                if (sprint){
-                    event_actions.add(SPRINT_TAKE_DAMAGE);
+                if (sprint) {
+                    event_actions.add(SPRINT_PROJECTILE_DAMAGE_ENTITY);
                 }
 
                 edbe.setCancelled(handle_actions(player, event.getEventName(), event_actions, event_targets, null, event, event.isCancelled()));
-                return;
             }
         }
 
-        // player is victim, no entity attacker
         if (!(event.getEntity() instanceof Player player)) return;
         sneak = player.isSneaking();
         sprint = player.isSprinting();
 
-        event_actions.add(TAKE_DAMAGE);
-        if (sneak){
-            event_actions.add(SNEAK_TAKE_DAMAGE);
-        }
-        if (sprint){
-            event_actions.add(SPRINT_TAKE_DAMAGE);
+        Set<String> victim_actions = new HashSet<>();
+        Set<Entity> victim_targets = new HashSet<>();
+
+        if (event instanceof EntityDamageByEntityEvent victim_event) {
+            Entity attacker = victim_event.getDamager();
+            if (attacker instanceof Projectile projectile && projectile.getShooter() instanceof Entity shooter) {
+                attacker = shooter;
+            }
+            victim_targets.add(attacker);
         }
 
-        event.setCancelled(handle_actions(player, event.getEventName(), event_actions, null, null, event, event.isCancelled()));
+        victim_actions.add(TAKE_DAMAGE);
+        if (sneak){
+            victim_actions.add(SNEAK_TAKE_DAMAGE);
+        }
+        if (sprint){
+            victim_actions.add(SPRINT_TAKE_DAMAGE);
+        }
+
+        event.setCancelled(handle_actions(player, event.getEventName(), victim_actions, victim_targets.isEmpty() ? null : victim_targets, null, event, event.isCancelled()));
     }
 
     @EventHandler
@@ -605,6 +620,194 @@ public class MANAGER_Event implements Listener {
         }else{
             event_actions.add(SPRINT_TOGGLE_OFF);
         }
+
+        event.setCancelled(handle_actions(player, event.getEventName(), event_actions, event_targets, event_blocks, event, event.isCancelled()));
+    }
+
+    @EventHandler
+    public void onFish(PlayerFishEvent event) {
+        Player player = event.getPlayer();
+
+        Set<String> event_actions = new HashSet<>();
+        Set<Entity> event_targets = new HashSet<>();
+        Set<Block> event_blocks = new HashSet<>();
+
+        switch (event.getState()){
+            case FISHING -> event_actions.add(FISH_CAST);
+            case BITE -> event_actions.add(FISH_BITE);
+            case CAUGHT_FISH -> {
+                event_actions.add(FISH_CATCH);
+                if (event.getCaught() != null) event_targets.add(event.getCaught());
+            }
+            case CAUGHT_ENTITY -> {
+                event_actions.add(FISH_CATCH_ENTITY);
+                if (event.getCaught() != null) event_targets.add(event.getCaught());
+            }
+            case REEL_IN -> event_actions.add(FISH_REEL_IN);
+            case FAILED_ATTEMPT -> event_actions.add(FISH_FAIL);
+            case IN_GROUND -> event_actions.add(FISH_GROUND);
+            default -> {
+                // todo: later
+            }
+        }
+
+        if (event_actions.isEmpty()) return;
+
+        event.setCancelled(handle_actions(player, event.getEventName(), event_actions, event_targets, event_blocks, event, event.isCancelled()));
+    }
+
+    @EventHandler
+    public void onToggleGlide(EntityToggleGlideEvent event) {
+        if (!(event.getEntity() instanceof Player player)) return;
+        boolean glide = event.isGliding();
+
+        Set<String> event_actions = new HashSet<>();
+        Set<Entity> event_targets = new HashSet<>();
+        Set<Block> event_blocks = new HashSet<>();
+
+        event_actions.add(GLIDE);
+        if (glide){
+            event_actions.add(GLIDE_TOGGLE_ON);
+        }else{
+            event_actions.add(GLIDE_TOGGLE_OFF);
+        }
+
+        event.setCancelled(handle_actions(player, event.getEventName(), event_actions, event_targets, event_blocks, event, event.isCancelled()));
+    }
+
+    @EventHandler
+    public void onElytraBoost(PlayerElytraBoostEvent event) {
+        Player player = event.getPlayer();
+
+        Set<String> event_actions = new HashSet<>();
+        Set<Entity> event_targets = new HashSet<>();
+        Set<Block> event_blocks = new HashSet<>();
+
+        event_actions.add(ELYTRA_BOOST);
+
+        event.setCancelled(handle_actions(player, event.getEventName(), event_actions, event_targets, event_blocks, event, event.isCancelled()));
+    }
+
+    @EventHandler
+    public void onItemDamage(PlayerItemDamageEvent event) {
+        Player player = event.getPlayer();
+
+        Set<String> event_actions = new HashSet<>();
+        Set<Entity> event_targets = new HashSet<>();
+        Set<Block> event_blocks = new HashSet<>();
+
+        event_actions.add(ITEM_DAMAGE);
+
+        event.setCancelled(handle_actions(player, event.getEventName(), event_actions, event_targets, event_blocks, event, event.isCancelled(), event.getItem()));
+    }
+
+    @EventHandler
+    public void onFoodLevelChange(FoodLevelChangeEvent event) {
+        if (!(event.getEntity() instanceof Player player)) return;
+
+        Set<String> event_actions = new HashSet<>();
+        Set<Entity> event_targets = new HashSet<>();
+        Set<Block> event_blocks = new HashSet<>();
+
+        event_actions.add(FOOD_LEVEL_CHANGE);
+        if (event.getFoodLevel() > player.getFoodLevel()){
+            event_actions.add(FOOD_LEVEL_INCREASE);
+        }else if (event.getFoodLevel() < player.getFoodLevel()){
+            event_actions.add(FOOD_LEVEL_DECREASE);
+        }
+
+        event.setCancelled(handle_actions(player, event.getEventName(), event_actions, event_targets, event_blocks, event, event.isCancelled()));
+    }
+
+    @EventHandler
+    public void onConsumeItem(PlayerItemConsumeEvent event) {
+        Player player = event.getPlayer();
+        boolean sneak = player.isSneaking();
+        boolean sprint = player.isSprinting();
+
+        Set<String> event_actions = new HashSet<>();
+        Set<Entity> event_targets = new HashSet<>();
+        Set<Block> event_blocks = new HashSet<>();
+
+        event_actions.add(CONSUME_ITEM);
+        if (sneak){
+            event_actions.add(SNEAK_CONSUME_ITEM);
+        }
+        if (sprint){
+            event_actions.add(SPRINT_CONSUME_ITEM);
+        }
+
+        event.setCancelled(handle_actions(player, event.getEventName(), event_actions, event_targets, event_blocks, event, event.isCancelled(), event.getItem()));
+    }
+
+    @EventHandler
+    public void onPotionSplash(PotionSplashEvent event) {
+        if (!(event.getEntity().getShooter() instanceof Player player)) return;
+        boolean sneak = player.isSneaking();
+        boolean sprint = player.isSprinting();
+
+        Set<String> event_actions = new HashSet<>();
+        Set<Entity> event_targets = new HashSet<>();
+        Set<Block> event_blocks = new HashSet<>();
+
+        event_targets.addAll(event.getAffectedEntities());
+
+        event_actions.add(POTION_SPLASH);
+        if (sneak){
+            event_actions.add(SNEAK_POTION_SPLASH);
+        }
+        if (sprint){
+            event_actions.add(SPRINT_POTION_SPLASH);
+        }
+
+        event.setCancelled(handle_actions(player, event.getEventName(), event_actions, event_targets, event_blocks, event, event.isCancelled()));
+    }
+
+    @EventHandler
+    public void onBrewInventoryClick(InventoryClickEvent event) {
+        if (!(event.getWhoClicked() instanceof Player player)) return;
+        if (!(event.getView().getTopInventory() instanceof BrewerInventory brewer)) return;
+        Location loc = brewer.getLocation();
+        if (loc == null) return;
+
+        Bukkit.getScheduler().runTask(CORE, () -> {
+            if (!(loc.getBlock().getState() instanceof BrewingStand stand)) return;
+            stand.getPersistentDataContainer().set(new NamespacedKey(CORE, "brew_owner"), PersistentDataType.STRING, player.getUniqueId().toString());
+            stand.update();
+        });
+    }
+
+    @EventHandler
+    public void onBrewInventoryDrag(InventoryDragEvent event) {
+        if (!(event.getWhoClicked() instanceof Player player)) return;
+        if (!(event.getView().getTopInventory() instanceof BrewerInventory brewer)) return;
+        Location loc = brewer.getLocation();
+        if (loc == null) return;
+
+        Bukkit.getScheduler().runTask(CORE, () -> {
+            if (!(loc.getBlock().getState() instanceof BrewingStand stand)) return;
+            stand.getPersistentDataContainer().set(new NamespacedKey(CORE, "brew_owner"), PersistentDataType.STRING, player.getUniqueId().toString());
+            stand.update();
+        });
+    }
+
+    @EventHandler
+    public void onBrew(BrewEvent event) {
+        if (!(event.getBlock().getState() instanceof BrewingStand stand)) return;
+
+        String owner = stand.getPersistentDataContainer().get(new NamespacedKey(CORE, "brew_owner"), PersistentDataType.STRING);
+        if (owner == null) return;
+
+        Player player = Bukkit.getPlayer(UUID.fromString(owner));
+        if (player == null) return;
+
+        Set<String> event_actions = new HashSet<>();
+        Set<Entity> event_targets = new HashSet<>();
+        Set<Block> event_blocks = new HashSet<>();
+
+        event_blocks.add(event.getBlock());
+
+        event_actions.add(BREW);
 
         event.setCancelled(handle_actions(player, event.getEventName(), event_actions, event_targets, event_blocks, event, event.isCancelled()));
     }

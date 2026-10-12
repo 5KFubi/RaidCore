@@ -209,15 +209,18 @@ public class MANAGER_Config {
     public List<DATA_Config> get_configs_inside_root(String plugin_name, String root_folder) {
         List<DATA_Config> root_configs = new ArrayList<>();
 
-        for (List<String> path : configs.get(plugin_name).keySet()) {
+        Map<List<String>, DATA_Config> plugin_configs = configs.get(plugin_name);
+        if (plugin_configs == null) return root_configs;
+
+        for (List<String> path : plugin_configs.keySet()) {
             if (!path.isEmpty()) {
                 boolean starts_with_root = root_folder.equals(path.getFirst());
 
-                String last = path.get(path.size() - 1);
+                String last = path.getLast();
                 boolean ends_in_file = is_allowed_extension(last);
 
                 if (starts_with_root && ends_in_file) {
-                    root_configs.add(configs.get(plugin_name).get(path));
+                    root_configs.add(plugin_configs.get(path));
                 }
             }
         }
@@ -226,9 +229,12 @@ public class MANAGER_Config {
     public List<DATA_Config> get_configs_from_root(String plugin_name, String root_folder) {
         List<DATA_Config> root_configs = new ArrayList<>();
 
-        for (List<String> path : configs.get(plugin_name).keySet()) {
+        Map<List<String>, DATA_Config> plugin_configs = configs.get(plugin_name);
+        if (plugin_configs == null) return root_configs;
+
+        for (List<String> path : plugin_configs.keySet()) {
             if (!path.isEmpty() && root_folder.equals(path.getFirst())) {
-                root_configs.add(configs.get(plugin_name).get(path));
+                root_configs.add(plugin_configs.get(path));
             }
         }
 

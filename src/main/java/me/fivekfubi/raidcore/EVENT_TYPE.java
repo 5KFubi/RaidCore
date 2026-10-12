@@ -27,6 +27,9 @@ public class EVENT_TYPE {
     public static final String PROJECTILE_HIT              = "PROJECTILE_HIT";
     public static final String PROJECTILE_HIT_ENTITY       = "PROJECTILE_HIT_ENTITY";
     public static final String PROJECTILE_HIT_BLOCK        = "PROJECTILE_HIT_BLOCK";
+    public static final String PROJECTILE_DAMAGE_ENTITY        = "PROJECTILE_DAMAGE_ENTITY";
+    public static final String SNEAK_PROJECTILE_DAMAGE_ENTITY  = "SNEAK_PROJECTILE_DAMAGE_ENTITY";
+    public static final String SPRINT_PROJECTILE_DAMAGE_ENTITY = "SPRINT_PROJECTILE_DAMAGE_ENTITY";
 
     public static final String BLOCK_BREAK                 = "BLOCK_BREAK";
     public static final String SNEAK_BLOCK_BREAK           = "SNEAK_BLOCK_BREAK";
@@ -117,6 +120,36 @@ public class EVENT_TYPE {
     public static final String PICKUP_ITEM                 = "PICKUP_ITEM";
     public static final String SNEAK_PICKUP_ITEM           = "SNEAK_PICKUP_ITEM";
     public static final String SPRINT_PICKUP_ITEM          = "SPRINT_PICKUP_ITEM";
+
+    public static final String FISH_CAST                   = "FISH_CAST";
+    public static final String FISH_BITE                   = "FISH_BITE";
+    public static final String FISH_CATCH                  = "FISH_CATCH";
+    public static final String FISH_CATCH_ENTITY           = "FISH_CATCH_ENTITY";
+    public static final String FISH_REEL_IN                = "FISH_REEL_IN";
+    public static final String FISH_FAIL                   = "FISH_FAIL";
+    public static final String FISH_GROUND                 = "FISH_GROUND";
+
+    public static final String GLIDE                       = "GLIDE";
+    public static final String GLIDE_TOGGLE_ON             = "GLIDE_TOGGLE_ON";
+    public static final String GLIDE_TOGGLE_OFF            = "GLIDE_TOGGLE_OFF";
+
+    public static final String ELYTRA_BOOST                = "ELYTRA_BOOST";
+
+    public static final String ITEM_DAMAGE                 = "ITEM_DAMAGE";
+
+    public static final String FOOD_LEVEL_CHANGE           = "FOOD_LEVEL_CHANGE";
+    public static final String FOOD_LEVEL_INCREASE         = "FOOD_LEVEL_INCREASE";
+    public static final String FOOD_LEVEL_DECREASE         = "FOOD_LEVEL_DECREASE";
+
+    public static final String CONSUME_ITEM                = "CONSUME_ITEM";
+    public static final String SNEAK_CONSUME_ITEM          = "SNEAK_CONSUME_ITEM";
+    public static final String SPRINT_CONSUME_ITEM         = "SPRINT_CONSUME_ITEM";
+
+    public static final String POTION_SPLASH               = "POTION_SPLASH";
+    public static final String SNEAK_POTION_SPLASH         = "SNEAK_POTION_SPLASH";
+    public static final String SPRINT_POTION_SPLASH        = "SPRINT_POTION_SPLASH";
+
+    public static final String BREW                        = "BREW";
 
     public static final String UNKNOWN                     = "UNKNOWN";
 }

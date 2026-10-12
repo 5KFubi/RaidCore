@@ -502,8 +502,6 @@ public class MANAGER_GUI implements Listener {
                 GUI_Inventory previous = open_guis.get(player);
                 Deque<GUI_Inventory> history = gui_history.computeIfAbsent(player, k -> new ArrayDeque<>());
 
-                history.removeIf(entry -> entry.file_path.equals(path_string));
-
                 if (history.size() >= MAX_HISTORY) {
                     history.pollLast();
                 }

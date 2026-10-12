@@ -175,3 +175,9 @@ item:
                     cooldown: 100 # Ticks - Cooldowns are applied per-condition, so you can still use the rest
                     then:
                       - "[MESSAGE] <dark_gray>[<red><b>PASSIVE</b><dark_gray>] <red>Cooldown for `passive` from slots 6+!"
+
+
+actions:
+  BLOCK_BREAK:
+    type: ["stone", "diamond_ore"]
+    xp: 10

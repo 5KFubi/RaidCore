@@ -8,15 +8,16 @@
 #   time   ticks since the animation started
 # Any extra number in the preset is also a variable, e.g. r below.
 
-showcase-ring:
-  particle: "SOUL_FIRE_FLAME"
-  points: 24
-  x: "cos(t) * r"
-  y: "0"
-  z: "sin(t) * r"
-  r: 3
-  duration: 40
-  interval: 2
+showcase-soul:
+  particle: "SOUL"
+  points: 20
+  count: 1
+  speed: 0.02
+  duration: 1
+  interval: 1
+  y: "0.5"
+  x: "(RANDOM() - 0.5) * 0.2"
+  z: "(RANDOM() - 0.5) * 0.2"
 
 showcase-helix:
   particle: "END_ROD"

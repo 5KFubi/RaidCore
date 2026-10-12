@@ -56,7 +56,6 @@ public class MANAGER_Particle {
         data.count    = Math.max(0, section.getInt("count", 1));
         data.speed    = section.getDouble("speed", 0.0);
 
-        // formulas, validated once here so a typo is reported at load and not every tick
         data.x = section.getString("x", "0");
         data.y = section.getString("y", "0");
         data.z = section.getString("z", "0");
@@ -69,7 +68,6 @@ public class MANAGER_Particle {
             return null;
         }
 
-        // any other numeric key is a variable
         Set<String> reserved = Set.of("particle", "points", "duration", "interval", "count", "speed", "x", "y", "z");
         for (String key : section.getKeys(false)) {
             if (reserved.contains(key)) continue;
@@ -92,13 +90,11 @@ public class MANAGER_Particle {
             return null;
         }
         if (location == null || location.getWorld() == null) return null;
-        utils.console_message("<dark_gray>[<green>PARTICLE<dark_gray>] <white>Playing <yellow>" + id + "<white> at " + location.getBlockX() + "," + location.getBlockY() + "," + location.getBlockZ());
         if (active_tasks.size() >= MAX_ACTIVE) return null;
 
         Map<String, Object> variables = new HashMap<>(data.variables);
         if (overrides != null) variables.putAll(overrides);
 
-        // one expression per formula for this playback, parsed on first evaluate then reused
         Expression x = new Expression(data.x);
         Expression y = new Expression(data.y);
         Expression z = new Expression(data.z);
@@ -144,8 +140,6 @@ public class MANAGER_Particle {
                 double px = x.evaluate().getNumberValue().doubleValue();
                 double py = y.evaluate().getNumberValue().doubleValue();
                 double pz = z.evaluate().getNumberValue().doubleValue();
-
-                if (i < 4) utils.console_message("i=" + i + " t=" + values.get("t") + " r=" + values.get("r") + " -> " + px + ", " + py + ", " + pz);
 
                 world.spawnParticle(
                         data.particle,
