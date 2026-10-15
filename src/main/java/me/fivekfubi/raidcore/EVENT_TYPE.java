@@ -151,5 +151,31 @@ public class EVENT_TYPE {
 
     public static final String BREW                        = "BREW";
 
+    public static final String PORTAL_ENTER                = "PORTAL_ENTER";
+    public static final String SNEAK_PORTAL_ENTER          = "SNEAK_PORTAL_ENTER";
+    public static final String SPRINT_PORTAL_ENTER         = "SPRINT_PORTAL_ENTER";
+    public static final String NETHER_PORTAL_ENTER         = "NETHER_PORTAL_ENTER";
+    public static final String SNEAK_NETHER_PORTAL_ENTER   = "SNEAK_NETHER_PORTAL_ENTER";
+    public static final String SPRINT_NETHER_PORTAL_ENTER  = "SPRINT_NETHER_PORTAL_ENTER";
+    public static final String END_PORTAL_ENTER            = "END_PORTAL_ENTER";
+    public static final String SNEAK_END_PORTAL_ENTER      = "SNEAK_END_PORTAL_ENTER";
+    public static final String SPRINT_END_PORTAL_ENTER     = "SPRINT_END_PORTAL_ENTER";
+    public static final String END_GATEWAY_ENTER           = "END_GATEWAY_ENTER";
+    public static final String SNEAK_END_GATEWAY_ENTER     = "SNEAK_END_GATEWAY_ENTER";
+    public static final String SPRINT_END_GATEWAY_ENTER    = "SPRINT_END_GATEWAY_ENTER";
+
+    public static final String PORTAL_LEAVE                = "PORTAL_LEAVE";
+    public static final String SNEAK_PORTAL_LEAVE          = "SNEAK_PORTAL_LEAVE";
+    public static final String SPRINT_PORTAL_LEAVE         = "SPRINT_PORTAL_LEAVE";
+    public static final String NETHER_PORTAL_LEAVE         = "NETHER_PORTAL_LEAVE";
+    public static final String SNEAK_NETHER_PORTAL_LEAVE   = "SNEAK_NETHER_PORTAL_LEAVE";
+    public static final String SPRINT_NETHER_PORTAL_LEAVE  = "SPRINT_NETHER_PORTAL_LEAVE";
+    public static final String END_PORTAL_LEAVE            = "END_PORTAL_LEAVE";
+    public static final String SNEAK_END_PORTAL_LEAVE      = "SNEAK_END_PORTAL_LEAVE";
+    public static final String SPRINT_END_PORTAL_LEAVE     = "SPRINT_END_PORTAL_LEAVE";
+    public static final String END_GATEWAY_LEAVE           = "END_GATEWAY_LEAVE";
+    public static final String SNEAK_END_GATEWAY_LEAVE     = "SNEAK_END_GATEWAY_LEAVE";
+    public static final String SPRINT_END_GATEWAY_LEAVE    = "SPRINT_END_GATEWAY_LEAVE";
+
     public static final String UNKNOWN                     = "UNKNOWN";
 }

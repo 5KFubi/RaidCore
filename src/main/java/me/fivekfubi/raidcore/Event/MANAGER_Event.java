@@ -539,6 +539,83 @@ public class MANAGER_Event implements Listener {
     }
 
     @EventHandler
+    public void onPortalEnter(EntityPortalEnterEvent event) {
+        if (!(event.getEntity() instanceof Player player)) return;
+
+        boolean sneak = player.isSneaking();
+        boolean sprint = player.isSprinting();
+
+        Set<String> event_actions = new HashSet<>();
+        Set<Entity> event_targets = new HashSet<>();
+        Set<Block> event_blocks = new HashSet<>();
+
+        Block portal = event.getLocation().getBlock();
+        event_blocks.add(portal);
+
+        event_actions.add(PORTAL_ENTER);
+        if (sneak) event_actions.add(SNEAK_PORTAL_ENTER);
+        if (sprint) event_actions.add(SPRINT_PORTAL_ENTER);
+        switch (portal.getType()) {
+            case NETHER_PORTAL -> {
+                event_actions.add(NETHER_PORTAL_ENTER);
+                if (sneak) event_actions.add(SNEAK_NETHER_PORTAL_ENTER);
+                if (sprint) event_actions.add(SPRINT_NETHER_PORTAL_ENTER);
+            }
+            case END_PORTAL -> {
+                event_actions.add(END_PORTAL_ENTER);
+                if (sneak) event_actions.add(SNEAK_END_PORTAL_ENTER);
+                if (sprint) event_actions.add(SPRINT_END_PORTAL_ENTER);
+            }
+            case END_GATEWAY -> {
+                event_actions.add(END_GATEWAY_ENTER);
+                if (sneak) event_actions.add(SNEAK_END_GATEWAY_ENTER);
+                if (sprint) event_actions.add(SPRINT_END_GATEWAY_ENTER);
+            }
+            default -> {
+            }
+        }
+
+        event.setCancelled(handle_actions(player, event.getEventName(), event_actions, event_targets, event_blocks, event, event.isCancelled()));
+    }
+
+    @EventHandler
+    public void onPortalLeave(PlayerPortalEvent event) {
+        Player player = event.getPlayer();
+
+        Set<String> event_actions = new HashSet<>();
+        Set<Entity> event_targets = new HashSet<>();
+        Set<Block> event_blocks = new HashSet<>();
+
+        boolean sneak = player.isSneaking();
+        boolean sprint = player.isSprinting();
+
+        event_actions.add(PORTAL_LEAVE);
+        if (sneak) event_actions.add(SNEAK_PORTAL_LEAVE);
+        if (sprint) event_actions.add(SPRINT_PORTAL_LEAVE);
+        switch (event.getCause()) {
+            case NETHER_PORTAL -> {
+                event_actions.add(NETHER_PORTAL_LEAVE);
+                if (sneak) event_actions.add(SNEAK_NETHER_PORTAL_LEAVE);
+                if (sprint) event_actions.add(SPRINT_NETHER_PORTAL_LEAVE);
+            }
+            case END_PORTAL -> {
+                event_actions.add(END_PORTAL_LEAVE);
+                if (sneak) event_actions.add(SNEAK_END_PORTAL_LEAVE);
+                if (sprint) event_actions.add(SPRINT_END_PORTAL_LEAVE);
+            }
+            case END_GATEWAY -> {
+                event_actions.add(END_GATEWAY_LEAVE);
+                if (sneak) event_actions.add(SNEAK_END_GATEWAY_LEAVE);
+                if (sprint) event_actions.add(SPRINT_END_GATEWAY_LEAVE);
+            }
+            default -> {
+            }
+        }
+
+        event.setCancelled(handle_actions(player, event.getEventName(), event_actions, event_targets, event_blocks, event, event.isCancelled()));
+    }
+
+    @EventHandler
     public void onBlockPlace(BlockPlaceEvent event) {
         Player player = event.getPlayer();
         Block block = event.getBlockPlaced();
