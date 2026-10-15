@@ -1,7 +1,7 @@
 package me.fivekfubi.raidcore.Particle;
 
-import com.ezylang.evalex.Expression;
 import me.fivekfubi.raidcore.Config.Data.DATA_Config;
+import me.fivekfubi.raidcore.Eval.Data.Formula;
 import me.fivekfubi.raidcore.Particle.Data.DATA_Particle;
 import org.bukkit.Location;
 import org.bukkit.Particle;
@@ -21,8 +21,13 @@ public class MANAGER_Particle {
     public final Map<String, DATA_Particle> presets = new HashMap<>();
     private final Set<Object> active_tasks = Collections.synchronizedSet(new HashSet<>());
 
+    // compiled formulas per preset. names = variable order for the double[] (n, frame, time, i, t, then the yml variables)
+    public record Compiled(Formula x, Formula y, Formula z, List<String> names) {}
+    private final Map<String, Compiled> compiled = Collections.synchronizedMap(new HashMap<>());
+
     public void load() {
         presets.clear();
+        compiled.clear();
 
         DATA_Config config_data = m_config.get_config_data(CORE_NAME, List.of("particles.yml"));
         if (config_data == null || config_data.config == null) return;
@@ -59,14 +64,6 @@ public class MANAGER_Particle {
         data.x = section.getString("x", "0");
         data.y = section.getString("y", "0");
         data.z = section.getString("z", "0");
-        try {
-            new Expression(data.x).validate();
-            new Expression(data.y).validate();
-            new Expression(data.z).validate();
-        } catch (Throwable t) {
-            utils.error_message("<white>Invalid formula in <yellow>" + info, t);
-            return null;
-        }
 
         Set<String> reserved = Set.of("particle", "points", "duration", "interval", "count", "speed", "x", "y", "z");
         for (String key : section.getKeys(false)) {
@@ -74,6 +71,20 @@ public class MANAGER_Particle {
             if (section.isDouble(key) || section.isInt(key)) {
                 data.variables.put(key, section.getDouble(key));
             }
+        }
+
+        List<String> names = new ArrayList<>(List.of("n", "frame", "time", "i", "t"));
+        names.addAll(data.variables.keySet());
+        try {
+            compiled.put(id, new Compiled(
+                    m_eval.compile_math(data.x, names),
+                    m_eval.compile_math(data.y, names),
+                    m_eval.compile_math(data.z, names),
+                    names
+            ));
+        } catch (Throwable t) {
+            utils.error_message("<white>Invalid formula in <yellow>" + info, t);
+            return null;
         }
 
         return data;
@@ -95,9 +106,17 @@ public class MANAGER_Particle {
         Map<String, Object> variables = new HashMap<>(data.variables);
         if (overrides != null) variables.putAll(overrides);
 
-        Expression x = new Expression(data.x);
-        Expression y = new Expression(data.y);
-        Expression z = new Expression(data.z);
+        Compiled compiled_data = compiled.get(id);
+        if (compiled_data == null) return null;
+
+        double[] values = new double[compiled_data.names().size()];
+        for (int k = 5; k < values.length; k++) {
+            Object value = variables.get(compiled_data.names().get(k));
+            values[k] = value instanceof Number number ? number.doubleValue() : 0.0;
+        }
+        Formula x = compiled_data.x();
+        Formula y = compiled_data.y();
+        Formula z = compiled_data.z();
 
         World world = location.getWorld();
         Location origin = location.clone();
@@ -110,7 +129,7 @@ public class MANAGER_Particle {
                 stop(handle[0]);
                 return;
             }
-            if (!draw(data, x, y, z, world, origin, variables, frame[0], elapsed)) {
+            if (!draw(data, x, y, z, world, origin, values, frame[0], elapsed)) {
                 stop(handle[0]);
                 return;
             }
@@ -121,25 +140,20 @@ public class MANAGER_Particle {
         return handle[0];
     }
 
-    private boolean draw(DATA_Particle data, Expression x, Expression y, Expression z, World world, Location origin,
-                         Map<String, Object> variables, int frame, int elapsed) {
-        Map<String, Object> values = new HashMap<>(variables);
-        values.put("n", data.points);
-        values.put("frame", frame);
-        values.put("time", elapsed);
+    private boolean draw(DATA_Particle data, Formula x, Formula y, Formula z, World world, Location origin,
+                         double[] values, int frame, int elapsed) {
+        values[0] = data.points;
+        values[1] = frame;
+        values[2] = elapsed;
 
         try {
             for (int i = 0; i < data.points; i++) {
-                values.put("i", i);
-                values.put("t", 360.0 * i / data.points);
+                values[3] = i;
+                values[4] = 360.0 * i / data.points;
 
-                x.withValues(values);
-                y.withValues(values);
-                z.withValues(values);
-
-                double px = x.evaluate().getNumberValue().doubleValue();
-                double py = y.evaluate().getNumberValue().doubleValue();
-                double pz = z.evaluate().getNumberValue().doubleValue();
+                double px = x.eval(values);
+                double py = y.eval(values);
+                double pz = z.eval(values);
 
                 world.spawnParticle(
                         data.particle,

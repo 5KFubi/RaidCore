@@ -14,6 +14,7 @@ import org.bukkit.entity.Entity;
 import org.bukkit.entity.HumanEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Projectile;
+import org.bukkit.event.Cancellable;
 import org.bukkit.event.Event;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -125,7 +126,9 @@ public class MANAGER_Event implements Listener {
         //   (and no, using event priority does NOT work because of course it doesn't)
         if (event.getAction() == org.bukkit.event.block.Action.LEFT_CLICK_AIR
                 || event.getAction() == org.bukkit.event.block.Action.RIGHT_CLICK_AIR){
-            event.setUseItemInHand(Event.Result.DENY);
+            if (drop_events.containsKey(player_uuid)) {
+                event.setUseItemInHand(Event.Result.DENY);
+            }
             Bukkit.getScheduler().runTask(CORE, () -> on_interact_delayed(event, player, player_uuid, sneak, sprint));
             return;
         }
@@ -834,6 +837,8 @@ public class MANAGER_Event implements Listener {
             m_cooldown.add_cooldown(null, player_uuid, NKEY.CLUMP_KEY_EVENT + ":" + action_string, 1);
             notify_listeners(player, event_type, action_string, targets, blocks, event);
         }
+
+        if (event instanceof Cancellable cancellable && cancellable.isCancelled()) was_cancelled = true;
 
         ItemStack item = used_item != null ? used_item : player.getInventory().getItemInMainHand();
         if (item.getItemMeta() == null) return was_cancelled;

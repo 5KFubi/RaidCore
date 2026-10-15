@@ -1,7 +1,6 @@
 package me.fivekfubi.raidcore;
 
 import com.destroystokyo.paper.profile.PlayerProfile;
-import com.ezylang.evalex.Expression;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import me.fivekfubi.raidcore.Holder.HOLDER;
@@ -749,24 +748,11 @@ public class Utils {
         return null;
     }
 
-    public final Map<String, Boolean> condition_cache = new ConcurrentHashMap<>();
-
     public boolean evaluate_condition(String condition, HOLDER holder_data) {
-        String resolved = m_placeholder.replace_condition_placeholders(condition, holder_data);
-
-        Boolean cached = condition_cache.get(resolved);
-        if (cached != null) return cached;
-
-        try {
-            Expression expression = new Expression(resolved);
-            boolean result = expression.evaluate().getBooleanValue();
-
-            condition_cache.put(resolved, result);
-            return result;
-        } catch (Throwable t) {
-            utils.error_message("<red>Invalid expression: <yellow>" + resolved, t);
-            return false;
-        }
+        HOLDER holder = holder_data != null ? holder_data : new HOLDER();
+        Map<String, Collection<String>> memo = new HashMap<>();
+        return m_eval.evaluate(condition, name ->
+                memo.computeIfAbsent(name, n -> m_placeholder.resolve_values(n, holder)));
     }
 
 }

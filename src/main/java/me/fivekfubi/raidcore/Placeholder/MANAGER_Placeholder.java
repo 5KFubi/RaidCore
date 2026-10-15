@@ -638,6 +638,21 @@ public class MANAGER_Placeholder {
         return colorize_list(replace_placeholders_list_string(text, holder_data));
     }
 
+    public Collection<String> resolve_values(String name, HOLDER holder) {
+        HANDLER_Placeholder handler = PLACEHOLDER_HANDLERS.get("%" + name.toLowerCase(Locale.ROOT) + "%");
+        if (handler == null) return List.of();
+
+        Object value = handler.handle(holder);
+        if (value == null) return List.of();
+
+        if (value instanceof Collection<?> collection) {
+            List<String> out = new ArrayList<>();
+            for (Object o : collection) out.add(String.valueOf(o));
+            return out;
+        }
+        return List.of(value.toString());
+    }
+
     public final Set<String> CONDITION_PLACEHOLDERS = new HashSet<>(List.of(
             "%random-value%",
             "%player-name%",

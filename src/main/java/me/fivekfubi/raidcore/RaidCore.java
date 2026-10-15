@@ -9,6 +9,7 @@ import me.fivekfubi.raidcore.Dialogue.MANAGER_Dialogue_loader;
 import me.fivekfubi.raidcore.Economy.MANAGER_Discount;
 import me.fivekfubi.raidcore.Economy.MANAGER_Economy;
 import me.fivekfubi.raidcore.Entity.MANAGER_Entity;
+import me.fivekfubi.raidcore.Eval.MANAGER_Eval;
 import me.fivekfubi.raidcore.Event.MANAGER_Event;
 import me.fivekfubi.raidcore.Event.TRACKER_Inventory;
 import me.fivekfubi.raidcore.Executable.MANAGER_Executable;
@@ -72,6 +73,7 @@ public final class RaidCore extends JavaPlugin {
     public static MANAGER_Team m_team = new MANAGER_Team();
     public static MANAGER_Web m_web = new MANAGER_Web();
     public static MANAGER_Particle m_particle = new MANAGER_Particle();
+    public static MANAGER_Eval m_eval = new MANAGER_Eval();
     //
     public final Map<String, JavaPlugin> registered_plugins = new HashMap<>();
 
