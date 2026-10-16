@@ -24,6 +24,13 @@ public class MANAGER_Cooldown {
     }
 
 
+    public void clear_cooldowns(UUID uuid) {
+        for (Map<UUID, Map<Object, DATA_Cooldown>> plugin_map : cooldown_map.values()) {
+            plugin_map.remove(uuid);
+        }
+    }
+
+
     public Map<Object, DATA_Cooldown> get_cooldowns(String plugin_name, UUID uuid){
         Map<UUID, Map<Object, DATA_Cooldown>> plugin_map = cooldown_map.get(plugin_name);
         if (plugin_map == null) return null;

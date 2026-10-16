@@ -10,10 +10,7 @@ import me.fivekfubi.raidcore.Item.Data.DATA_Item;
 import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.block.BrewingStand;
-import org.bukkit.entity.Entity;
-import org.bukkit.entity.HumanEntity;
-import org.bukkit.entity.Player;
-import org.bukkit.entity.Projectile;
+import org.bukkit.entity.*;
 import org.bukkit.event.Cancellable;
 import org.bukkit.event.Event;
 import org.bukkit.event.EventHandler;
@@ -27,6 +24,7 @@ import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryDragEvent;
 import org.bukkit.event.player.*;
 import org.bukkit.inventory.BrewerInventory;
+import org.bukkit.inventory.EntityEquipment;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.persistence.PersistentDataType;
 
@@ -39,6 +37,13 @@ public class MANAGER_Event implements Listener {
 
     public final Set<UUID> gui_drop_events = new HashSet<>();
     public final Map<UUID, PlayerDropItemEvent> drop_events = new HashMap<>();
+
+    public boolean sneaking(Entity entity) {
+        return entity instanceof Player p ? p.isSneaking() : entity.getPose() == Pose.SNEAKING;
+    }
+    public boolean sprinting(Entity entity) {
+        return entity instanceof Player p && p.isSprinting();
+    }
 
     @EventHandler
     public void onDrop(PlayerDropItemEvent event){
@@ -71,9 +76,9 @@ public class MANAGER_Event implements Listener {
 
     @EventHandler
     public void onPickupItem(EntityPickupItemEvent event) {
-        if (!(event.getEntity() instanceof Player player)) return;
-        boolean sneak = player.isSneaking();
-        boolean sprint = player.isSprinting();
+        LivingEntity entity = event.getEntity();
+        boolean sneak = sneaking(entity);
+        boolean sprint = sprinting(entity);
 
         Set<String> event_actions = new HashSet<>();
 
@@ -85,7 +90,7 @@ public class MANAGER_Event implements Listener {
             event_actions.add(SPRINT_PICKUP_ITEM);
         }
 
-        event.setCancelled(handle_actions(player, event.getEventName(), event_actions, null, null, event, event.isCancelled()));
+        event.setCancelled(handle_actions(entity, event.getEventName(), event_actions, null, null, event, event.isCancelled()));
     }
 
     @EventHandler
@@ -268,10 +273,34 @@ public class MANAGER_Event implements Listener {
     }
 
     @EventHandler
-    public void onProjectileLaunch(ProjectileLaunchEvent event) {
-        if (!(event.getEntity().getShooter() instanceof Player player)) return;
+    public void onArmorStandManipulate(PlayerArmorStandManipulateEvent event){
+        Player player = event.getPlayer();
+        Entity target = event.getRightClicked();
         boolean sneak = player.isSneaking();
         boolean sprint = player.isSprinting();
+
+        Set<String> event_actions = new HashSet<>();
+        Set<Entity> event_targets = new HashSet<>();
+        Set<Block> event_blocks = new HashSet<>();
+
+        event_targets.add(target);
+
+        event_actions.add(ARMOR_STAND_MANIPULATE);
+        if (sneak){
+            event_actions.add(SNEAK_ARMOR_STAND_MANIPULATE);
+        }
+        if (sprint){
+            event_actions.add(SPRINT_ARMOR_STAND_MANIPULATE);
+        }
+
+        event.setCancelled(handle_actions(player, event.getEventName(), event_actions, event_targets, event_blocks, event, event.isCancelled()));
+    }
+
+    @EventHandler
+    public void onProjectileLaunch(ProjectileLaunchEvent event) {
+        if (!(event.getEntity().getShooter() instanceof LivingEntity player)) return;
+        boolean sneak = sneaking(player);
+        boolean sprint = sprinting(player);
 
         Set<String> event_actions = new HashSet<>();
         Set<Entity> event_targets = new HashSet<>();
@@ -290,7 +319,7 @@ public class MANAGER_Event implements Listener {
 
     @EventHandler
     public void onProjectileHit(ProjectileHitEvent event) {
-        if (!(event.getEntity().getShooter() instanceof Player player)) return;
+        if (!(event.getEntity().getShooter() instanceof LivingEntity player)) return;
         //boolean sneak = player.isSneaking();
         //boolean sprint = player.isSprinting();
 
@@ -317,12 +346,17 @@ public class MANAGER_Event implements Listener {
 
     @EventHandler
     public void onEntityDeath(EntityDeathEvent event) {
-        Player player = event.getEntity().getKiller();
+        LivingEntity player = event.getEntity().getKiller();
+        if (player == null && event.getEntity().getLastDamageCause() instanceof EntityDamageByEntityEvent last) {
+            Entity damager = last.getDamager();
+            if (damager instanceof Projectile projectile && projectile.getShooter() instanceof LivingEntity shooter) damager = shooter;
+            if (damager instanceof LivingEntity living) player = living;
+        }
         if (player == null) return;
 
         Entity target = event.getEntity();
-        boolean sneak = player.isSneaking();
-        boolean sprint = player.isSprinting();
+        boolean sneak = sneaking(player);
+        boolean sprint = sprinting(player);
 
         Set<String> event_actions = new HashSet<>();
         Set<Entity> event_targets = new HashSet<>();
@@ -349,9 +383,9 @@ public class MANAGER_Event implements Listener {
             Set<String> event_actions = new HashSet<>();
             Set<Entity> event_targets = new HashSet<>();
 
-            if (edbe.getDamager() instanceof Player player) {
-                sneak = player.isSneaking();
-                sprint = player.isSprinting();
+            if (edbe.getDamager() instanceof LivingEntity player) {
+                sneak = sneaking(player);
+                sprint = sprinting(player);
                 event_targets.add(edbe.getEntity());
 
                 event_actions.add(LEFT_CLICK);
@@ -367,9 +401,9 @@ public class MANAGER_Event implements Listener {
 
                 edbe.setCancelled(handle_actions(player, event.getEventName(), event_actions, event_targets, null, event, event.isCancelled()));
             }
-            else if (edbe.getDamager() instanceof Projectile projectile && projectile.getShooter() instanceof Player player) {
-                sneak = player.isSneaking();
-                sprint = player.isSprinting();
+            else if (edbe.getDamager() instanceof Projectile projectile && projectile.getShooter() instanceof LivingEntity player) {
+                sneak = sneaking(player);
+                sprint = sprinting(player);
                 event_targets.add(edbe.getEntity());
 
                 event_actions.add(PROJECTILE_DAMAGE_ENTITY);
@@ -384,9 +418,9 @@ public class MANAGER_Event implements Listener {
             }
         }
 
-        if (!(event.getEntity() instanceof Player player)) return;
-        sneak = player.isSneaking();
-        sprint = player.isSprinting();
+        if (!(event.getEntity() instanceof LivingEntity player)) return;
+        sneak = sneaking(player);
+        sprint = sprinting(player);
 
         Set<String> victim_actions = new HashSet<>();
         Set<Entity> victim_targets = new HashSet<>();
@@ -485,6 +519,12 @@ public class MANAGER_Event implements Listener {
         event.setCancelled(handle_actions(player, event.getEventName(), event_actions, event_targets, event_blocks, event, event.isCancelled()));
     }
 
+    @EventHandler
+    public void onEntityRemove(EntityRemoveEvent event) {
+        if (event.getEntity() instanceof Player) return;
+        m_cooldown.clear_cooldowns(event.getEntity().getUniqueId());
+    }
+
     public final Map<UUID, double[]> move_last_position = new HashMap<>(); // x, y, z
     public final Map<UUID, float[]> move_last_look = new HashMap<>();      // yaw, pitch
 
@@ -533,17 +573,52 @@ public class MANAGER_Event implements Listener {
 
     @EventHandler
     public void onQuit(PlayerQuitEvent event) {
-        UUID uuid = event.getPlayer().getUniqueId();
+        Player player = event.getPlayer();
+        UUID uuid = player.getUniqueId();
         move_last_position.remove(uuid);
         move_last_look.remove(uuid);
+
+        Set<String> event_actions = new HashSet<>();
+        Set<Entity> event_targets = new HashSet<>();
+        Set<Block> event_blocks = new HashSet<>();
+
+        event_actions.add(QUIT);
+
+        handle_actions(player, event.getEventName(), event_actions, event_targets, event_blocks, event, false);
+    }
+
+    @EventHandler
+    public void onPlayerJoin(PlayerJoinEvent event) {
+        Player player = event.getPlayer();
+
+        Set<String> event_actions = new HashSet<>();
+        Set<Entity> event_targets = new HashSet<>();
+        Set<Block> event_blocks = new HashSet<>();
+
+        event_actions.add(JOIN);
+
+        handle_actions(player, event.getEventName(), event_actions, event_targets, event_blocks, event, false);
+    }
+
+    @EventHandler
+    public void onPlayerRespawn(PlayerRespawnEvent event) {
+        Player player = event.getPlayer();
+
+        Set<String> event_actions = new HashSet<>();
+        Set<Entity> event_targets = new HashSet<>();
+        Set<Block> event_blocks = new HashSet<>();
+
+        event_actions.add(RESPAWN);
+
+        handle_actions(player, event.getEventName(), event_actions, event_targets, event_blocks, event, false);
     }
 
     @EventHandler
     public void onPortalEnter(EntityPortalEnterEvent event) {
-        if (!(event.getEntity() instanceof Player player)) return;
+        if (!(event.getEntity() instanceof LivingEntity player)) return;
 
-        boolean sneak = player.isSneaking();
-        boolean sprint = player.isSprinting();
+        boolean sneak = sneaking(player);
+        boolean sprint = sprinting(player);
 
         Set<String> event_actions = new HashSet<>();
         Set<Entity> event_targets = new HashSet<>();
@@ -738,7 +813,7 @@ public class MANAGER_Event implements Listener {
 
     @EventHandler
     public void onToggleGlide(EntityToggleGlideEvent event) {
-        if (!(event.getEntity() instanceof Player player)) return;
+        if (!(event.getEntity() instanceof LivingEntity player)) return;
         boolean glide = event.isGliding();
 
         Set<String> event_actions = new HashSet<>();
@@ -822,9 +897,9 @@ public class MANAGER_Event implements Listener {
 
     @EventHandler
     public void onPotionSplash(PotionSplashEvent event) {
-        if (!(event.getEntity().getShooter() instanceof Player player)) return;
-        boolean sneak = player.isSneaking();
-        boolean sprint = player.isSprinting();
+        if (!(event.getEntity().getShooter() instanceof LivingEntity player)) return;
+        boolean sneak = sneaking(player);
+        boolean sprint = sprinting(player);
 
         Set<String> event_actions = new HashSet<>();
         Set<Entity> event_targets = new HashSet<>();
@@ -892,16 +967,16 @@ public class MANAGER_Event implements Listener {
         event.setCancelled(handle_actions(player, event.getEventName(), event_actions, event_targets, event_blocks, event, event.isCancelled()));
     }
 
-    public boolean handle_actions(Player player, String event_type, Set<String> actions, Event event, boolean was_cancelled){
+    public boolean handle_actions(LivingEntity player, String event_type, Set<String> actions, Event event, boolean was_cancelled){
         return handle_actions(player, event_type, actions, null, null, event, was_cancelled);
     }
-    public boolean handle_actions(Player player, String event_type, Set<String> actions, Set<Entity> targets, Event event, boolean was_cancelled){
+    public boolean handle_actions(LivingEntity player, String event_type, Set<String> actions, Set<Entity> targets, Event event, boolean was_cancelled){
         return handle_actions(player, event_type, actions, targets, null, event, was_cancelled);
     }
-    public boolean handle_actions(Player player, String event_type, Set<String> actions, Set<Entity> targets, Set<Block> blocks, Event event, boolean was_cancelled){
+    public boolean handle_actions(LivingEntity player, String event_type, Set<String> actions, Set<Entity> targets, Set<Block> blocks, Event event, boolean was_cancelled){
         return handle_actions(player, event_type, actions, targets, blocks, event, was_cancelled, null);
     }
-    public boolean handle_actions(Player player, String event_type, Set<String> actions, Set<Entity> targets, Set<Block> blocks, Event event, boolean was_cancelled, ItemStack used_item){
+    public boolean handle_actions(LivingEntity player, String event_type, Set<String> actions, Set<Entity> targets, Set<Block> blocks, Event event, boolean was_cancelled, ItemStack used_item){
         if (player == null) return was_cancelled;
         if (m_gui.open_guis.containsKey(player)) return was_cancelled;
         UUID player_uuid = player.getUniqueId();
@@ -917,7 +992,12 @@ public class MANAGER_Event implements Listener {
 
         if (event instanceof Cancellable cancellable && cancellable.isCancelled()) was_cancelled = true;
 
-        ItemStack item = used_item != null ? used_item : player.getInventory().getItemInMainHand();
+        ItemStack item = used_item;
+        if (item == null) {
+            EntityEquipment equipment = player.getEquipment();
+            if (equipment == null) return was_cancelled;
+            item = equipment.getItemInMainHand();
+        }
         if (item.getItemMeta() == null) return was_cancelled;
 
         Map<NamespacedKey, Object> container_data = utils.get_container_data(item.getItemMeta().getPersistentDataContainer());
@@ -941,13 +1021,16 @@ public class MANAGER_Event implements Listener {
 
             for (DATA_Action_State state : item_actions.action_event.get(action_string)){
 
-                int slot = player.getInventory().getHeldItemSlot();
+                int slot = 0;
+                Map<String, Object> holder_data = new HashMap<>();
+                if (player instanceof Player held_player) {
+                    slot = held_player.getInventory().getHeldItemSlot();
+                    holder_data.put(NKEY.player.getKey(), held_player);
+                }
                 String slot_name = t_inventory.get_slot_name(slot);
-                HOLDER holder = new HOLDER(Map.of(
-                        NKEY.item_slot.getKey(), String.valueOf(slot),
-                        NKEY.item_slot_category.getKey(), slot_name,
-                        NKEY.player.getKey(), player
-                ));
+                holder_data.put(NKEY.item_slot.getKey(), String.valueOf(slot));
+                holder_data.put(NKEY.item_slot_category.getKey(), slot_name);
+                HOLDER holder = new HOLDER(holder_data);
 
                 DATA_Action_Condition resolved = utils.resolve_condition(state.conditions, holder);
                 if (resolved == null) continue;
@@ -1012,7 +1095,7 @@ public class MANAGER_Event implements Listener {
          * @param targets     Entities involved, may be null.
          * @param blocks      Blocks involved, may be null.
          */
-        void on_action_triggered(Player player, Event event, String event_type, String action, Set<Entity> targets, Set<Block> blocks);
+        void on_action_triggered(LivingEntity player, Event event, String event_type, String action, Set<Entity> targets, Set<Block> blocks);
     }
     public final Map<String, List<LISTENER_Action>> registered_listeners = new HashMap<>();
 
@@ -1023,7 +1106,7 @@ public class MANAGER_Event implements Listener {
         List<LISTENER_Action> listeners = registered_listeners.get(action);
         if (listeners != null) listeners.remove(listener);
     }
-    public void notify_listeners(Player player, String event_type, String action, Set<Entity> targets, Set<Block> blocks, Event event) {
+    public void notify_listeners(LivingEntity player, String event_type, String action, Set<Entity> targets, Set<Block> blocks, Event event) {
         List<LISTENER_Action> specific = registered_listeners.getOrDefault(action, Collections.emptyList());
         List<LISTENER_Action> wildcard = registered_listeners.getOrDefault("*", Collections.emptyList());
 
