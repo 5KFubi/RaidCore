@@ -6,6 +6,7 @@ import me.fivekfubi.raidcore.Config.Data.DATA_Config;
 import me.fivekfubi.raidcore.Holder.HOLDER;
 import me.fivekfubi.raidcore.Input.Data.REQUEST_Input;
 import me.fivekfubi.raidcore.Item.Data.DATA_Item;
+import me.fivekfubi.raidcore.Recipe.Data.DATA_Recipe;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.ConfigurationSection;
@@ -396,10 +397,13 @@ public class MANAGER_Command {
                     String value_3 = args.length > 3 ? args[3] : "";
 
                     Player target = get_target(value_1);
+                    holder.set(NKEY.target.getKey(), target);
                     if (target == null){
                         send_message(sender, messages.get("target-not-found"), holder);
                         return;
                     }
+
+                    holder.set(NKEY.item_name.getKey(), value_2);
 
                     DATA_Item item_data = m_item.get_item_data(value_2);
                     if (item_data == null){
@@ -407,11 +411,14 @@ public class MANAGER_Command {
                         return;
                     }
 
+                    holder.set(NKEY.item_name.getKey(), item_data.name);
+
                     int amount = 1;
                     try{
                         amount = Integer.parseInt(value_3);
                     }catch (Throwable ignored){}
 
+                    holder.set(NKEY.item_amount.getKey(), amount);
                     m_item.give_items(target, item_data, holder, amount);
                     if (target == sender){
                         send_message(sender, messages.get("sender-success"), holder);
@@ -459,6 +466,43 @@ public class MANAGER_Command {
                             completions.add("16");
                             completions.add("32");
                             completions.add("64");
+                        }
+                    }
+                    return completions;
+                }).and()
+
+                .sub_command("recipe").logic((sender, args, holder) -> {
+                    DATA_Command command_data = get_command_data("raidcore");
+                    DATA_Sub_command sub_command_data = command_data.sub_commands.get("recipe");
+                    Map<String, List<String>> messages = sub_command_data.messages;
+
+                    String value_1 = args.length > 1 ? args[1] : "";
+                    String value_2 = args.length > 2 ? args[2] : "";
+
+                    Player target = get_target(value_1);
+                    holder.set(NKEY.target.getKey(), target);
+                    if (target == null){
+                        send_message(sender, messages.get("target-not-found"), holder);
+                        return;
+                    }
+
+                    m_recipe.discover_recipe(target, value_2);
+                    send_message(sender, messages.get("success"), holder);
+                }).tab_logic((player, args) -> {
+                    List<String> completions = new ArrayList<>();
+                    switch (args.length) {
+                        case 2 -> {
+                            for (Player online_player : Bukkit.getServer().getOnlinePlayers()) {
+                                completions.add(online_player.getName());
+                            }
+                        }
+                        case 3 -> {
+                            String typed = args[2].toLowerCase();
+                            if ("all".startsWith(typed)) completions.add("all");
+
+                            for (DATA_Recipe recipe : m_recipe.recipes) {
+                                if (recipe.file_path.toLowerCase().contains(typed)) completions.add(recipe.file_path);
+                            }
                         }
                     }
                     return completions;

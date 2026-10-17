@@ -31,10 +31,13 @@ public class MANAGER_Config {
             Map.of(List.of("placeholders.yml"), true),
             Map.of(List.of("particles.yml"), true),
             Map.of(List.of("Items", "showcase-item.yml"), false),
+            Map.of(List.of("Blocks", "showcase-block.yml"), false),
+            Map.of(List.of("Pack", "gems","ruby.png"), false),
 
             Map.of(List.of("GUIs", "showcase-gui.yml"), false),
             Map.of(List.of("Dialogues", "showcase-dialogue.yml"), false),
-            Map.of(List.of("Dialogues", "input-text.yml"), false)
+            Map.of(List.of("Dialogues", "input-text.yml"), false),
+            Map.of(List.of("Recipes", "test-recipe.yml"), false)
     )));
 
     public void register_configs(String plugin_name, List<Map<List<String>, Boolean>> file_paths){

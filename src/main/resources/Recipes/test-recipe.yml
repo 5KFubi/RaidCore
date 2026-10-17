@@ -1,0 +1,61 @@
+recipe:
+  permission: "raidcore.recipe.showcase"
+  multi-table-allow: true # Allow recipes from 1 type of inventory into another, example: crafting-table to player-craft if the recipe is small enough
+  unlock-on-obtain: true # Obtain the recipe when picking up the required items to craft it
+  player-craft:
+    1:
+      - "A"
+      - "B"
+  crafting-table:
+    1:
+      - "A"
+      - "B"
+  furnace:
+    1:
+      ingredient: "A"
+      cook-time: 200
+      experience: 0.7
+  smoking:
+    1:
+      ingredient: "A"
+      cook-time: 100
+  stonecutter:
+    1:
+      ingredient: "A"
+  smithing:
+    1:
+      template: "A"
+      base: "B"
+      addition: "C"
+  brewing:
+    1:
+      input: "A"
+      ingredient: "B"
+  anvil:
+    1:
+      left: "A"
+      right: "B"
+  ingredients:
+    X:
+      item: "AIR"
+    A:
+      item: "IRON_INGOT"
+      return: "raidcore:Items/showcase-item.yml"
+    B:
+      item: "raidcore:Items/showcase-item.yml" # Custom item
+      amount: 1
+  placeholder-item: "raidcore:Items/showcase-item.yml"
+  result:
+    pool:
+      common:
+        item: "DIRT"
+        amount: 1
+        chance: 50
+        execute:
+          - "[MESSAGE] <gray>You crafted a dirt!"
+      rare:
+        item: "GRASS_BLOCK"
+        amount: 1
+        chance: 50
+        execute:
+          - "[MESSAGE] <gold>You crafted a grass block!"

@@ -884,7 +884,6 @@ public class MANAGER_GUI implements Listener {
 
     public void register_item_type(String type, HANDLER_Gui handler) {
         String formatted = type.toLowerCase(Locale.ROOT);
-        utils.console_message(true, " <White>Registered GUI item type `<gold>" + formatted + "<white>`.");
         ITEM_TYPE_HANDLERS.put(formatted, handler);
     }
     public HANDLER_Gui get_item_type_handler(String type) {

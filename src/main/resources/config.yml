@@ -17,6 +17,12 @@
 # !!!!! WARNING !!!!!
 # Deleting this file (config.yml) will re-create EVERY default file [NON-REVERSIBLE]
 
+resource-pack:
+  enabled: false # false = RaidCore won't build, host or send a resource pack (use this if another plugin handles it)
+  force: false # Players that decline the resource pack get kicked
+  host: "" # Address players download the pack from, e.g. "localhost:8642" or "mydomain.com:8642" | Empty = auto-detect the public IP
+  pack-format: 46 # Pack format of your server version | Ignored if you put your own pack.mcmeta in the Pack folder
+
 web:
   port: 8642
 

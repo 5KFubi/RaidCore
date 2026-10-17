@@ -68,3 +68,17 @@ commands:
             - " "
             - "<dark_gray>[<gold><b>BR</b><dark_gray>] - <gray>You have received <yellow>%item-name% <dark_gray>(x%item-amount%)"
             - " "
+      recipe:
+        permission: "raidcore.admin.use.recipe"
+        description:
+          - "Unlocks a recipe in the recipe book."
+        messages:
+          missing-permission:
+            - "You don't have permission to use /raidcore recipe"
+          target-not-found:
+            - " "
+            - "<dark_gray>[<gold><b>RC</b><dark_gray>] - <red>Player not found"
+            - "<dark_gray>・<gray>The player <yellow>%target-name%<gray> was not found."
+            - " "
+          success:
+            - "<dark_gray>[<gold><b>RC</b><dark_gray>] - <gray>Recipe unlocked"

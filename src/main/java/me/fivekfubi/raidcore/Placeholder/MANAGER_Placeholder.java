@@ -211,7 +211,6 @@ public class MANAGER_Placeholder {
 
     public void register_placeholder(String type, HANDLER_Placeholder handler) {
         String formatted = type.toLowerCase(Locale.ROOT);
-        utils.console_message(true, " <White>Registered placeholder `<gold>" + formatted + "<white>`.");
         PLACEHOLDER_HANDLERS.put(formatted, handler);
     }
     public HANDLER_Placeholder get_placeholder_handler(String type) {
@@ -296,6 +295,14 @@ public class MANAGER_Placeholder {
             }else{
                 return null;
             }
+        });
+
+        register_placeholder("%item-name%", (holder) -> {
+            return String.valueOf(holder.get(NKEY.item_name.getKey(), Object.class, "null"));
+        });
+
+        register_placeholder("%item-amount%", (holder) -> {
+            return String.valueOf(holder.get(NKEY.item_amount.getKey(), Object.class, "null"));
         });
 
         register_placeholder("%item-slot%", (holder) -> {

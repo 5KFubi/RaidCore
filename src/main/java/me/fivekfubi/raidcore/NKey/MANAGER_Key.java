@@ -8,8 +8,8 @@ import java.util.*;
 import static me.fivekfubi.raidcore.RaidCore.*;
 
 public class MANAGER_Key {
-    public final String CLUMP_KEY_EVENT         =           "clump_key_event"        ;
-    public final String CLUMP_KEY_GUI           =           "clump_key_gui"          ;
+    public final String  CLUMP_KEY_EVENT        =           "clump_key_event"        ;
+    public final String  CLUMP_KEY_GUI          =           "clump_key_gui"          ;
 
     public NamespacedKey file_plugin            = generate( "file_plugin"            );
     public NamespacedKey file_path              = generate( "file_path"              );
@@ -17,6 +17,8 @@ public class MANAGER_Key {
     public NamespacedKey session_value          = generate( SESSION_VALUE            );
 
     public NamespacedKey item_key               = generate( "item_key"               );
+    public NamespacedKey item_name              = generate( "item_name"              );
+    public NamespacedKey item_amount            = generate( "item_amount"            );
     public NamespacedKey item_slot              = generate( "item_slot"              );
     public NamespacedKey item_slot_category     = generate( "item_slot_category"     );
     public NamespacedKey item_variant           = generate( "item_variant"           );

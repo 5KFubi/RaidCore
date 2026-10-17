@@ -1,5 +1,6 @@
 package me.fivekfubi.raidcore.Holder;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -10,9 +11,11 @@ public class HOLDER implements Cloneable {
         if (initial_data != null) data.putAll(initial_data);
     }
 
-    public final Map<String, Object> data = new HashMap<>();
+    public final Map<String, Object> data = Collections.synchronizedMap(new HashMap<>());
     public Map<String, Object> get_data() { return this.data; }
     public void set(String key, Object object) { this.data.put(key, object); }
+
+    public void remove(String key) { this.data.remove(key); }
 
     @SuppressWarnings("unchecked")
     public <T> T get(String key, Class<T> type, T default_value) {
@@ -24,10 +27,14 @@ public class HOLDER implements Cloneable {
         return (T) value;
     }
 
-    @SuppressWarnings("unchecked")
     public boolean contains(String key) {
         return this.data.containsKey(key);
     }
+
+    public record Key<T>(String id, Class<T> type) {}
+
+    public <T> void set(Key<T> key, T value) { set(key.id(), value); }
+    public <T> T get(Key<T> key, T default_value) { return get(key.id(), key.type(), default_value); }
 
     public HOLDER clone() {
         HOLDER copy = new HOLDER();

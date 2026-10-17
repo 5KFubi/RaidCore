@@ -415,7 +415,6 @@ public class MANAGER_Executable {
 
     public void register_special_tag(String type, HANDLER_Executable handler) {
         String formatted = type.toLowerCase(Locale.ROOT);
-        utils.console_message(true, " <White>Registered SPECIAL tag `<gold>" + formatted + "<white>`.");
         SPECIAL_TAG_HANDLERS.put(formatted, handler);
     }
     public HANDLER_Executable get_special_tag_handler(String type) {

@@ -1,0 +1,55 @@
+block:
+  permission: "raidcore.block.ruby" # Needed to place and break | Remove for no permission
+  sounds: # .ogg files inside Pack/
+    place: "gems/place.ogg"
+    break: "gems/break.ogg"
+    hit: "gems/hit.ogg"
+    step: "gems/step.ogg"
+  actions:
+    BLOCK_PLACE:
+      - "[MESSAGE] <white>You placed a ruby!"
+    BLOCK_BREAK:
+      - "[MESSAGE] <white>You broke a ruby!"
+    RIGHT_CLICK_BLOCK:
+      ruby-click:
+        settings:
+          cancel-event:
+            - "*"
+        conditions:
+          if:
+            condition: "%item-slot% == 0"
+            cooldown: 40
+            then:
+              - "[MESSAGE] <white>Slot 0 click!"
+            on-cooldown:
+              then:
+                - "[MESSAGE] <red>Cooldown!"
+            else:
+              then:
+                - "[MESSAGE] <white>Other slot click!"
+  texture: # Missing faces use 'all'
+    all: "gems/ruby.png"
+    #top: "gems/emerald_top.png"
+    #side: "gems/emerald_side.png"
+    #bottom: "gems/emerald_bottom.png"
+    #model: "gems/ruby.json" # Wins over everything above
+  attributes:
+    hardness: 3.0 # Default hardness | 1 = 1.5 seconds without modifiers, -1 = unbreakable, 0 = instant
+    tools: # [HARDNESS]:[ITEM] | First match wins | Wildcards (*) work for vanilla items | Add |499 for model data (|-1 = any)
+      - "1:STONE_PICKAXE"
+      - "1.5:IRON_PICKAXE"
+      - "2:*_PICKAXE"
+      - "3:raidcore:Items/showcase-item.yml"
+    drops-require-tool: true # false = drops even with an item that isn't on the list
+  placement:
+    item: "raidcore:Items/showcase-item.yml" # Vanilla or custom, e.g. "PAPER|500"
+    instrument:
+      type: "BASS_DRUM"
+      note: 3 # 0-24
+      powered: false
+  drops:
+    pool:
+      common:
+        item: "raidcore:Items/showcase-item.yml"
+        amount: 1
+        chance: 100

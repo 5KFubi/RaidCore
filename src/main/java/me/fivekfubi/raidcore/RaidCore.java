@@ -1,9 +1,11 @@
 package me.fivekfubi.raidcore;
 
+import me.fivekfubi.raidcore.Block.MANAGER_Block;
 import me.fivekfubi.raidcore.Command.MANAGER_Command;
 import me.fivekfubi.raidcore.Config.MANAGER_Config;
 import me.fivekfubi.raidcore.Cooldown.MANAGER_Cooldown;
 import me.fivekfubi.raidcore.Database.MANAGER_Database;
+import me.fivekfubi.raidcore.Dependencies.Optional.ItemsAdder.MANAGER_Itemsadder;
 import me.fivekfubi.raidcore.Dialogue.MANAGER_Dialogue;
 import me.fivekfubi.raidcore.Dialogue.MANAGER_Dialogue_loader;
 import me.fivekfubi.raidcore.Economy.MANAGER_Discount;
@@ -20,8 +22,10 @@ import me.fivekfubi.raidcore.Item.MANAGER_Item;
 import me.fivekfubi.raidcore.Message.MANAGER_Message;
 import me.fivekfubi.raidcore.NKey.MANAGER_Key;
 import me.fivekfubi.raidcore.Migration.MANAGER_Migration;
+import me.fivekfubi.raidcore.Pack.MANAGER_Pack;
 import me.fivekfubi.raidcore.Particle.MANAGER_Particle;
 import me.fivekfubi.raidcore.Placeholder.MANAGER_Placeholder;
+import me.fivekfubi.raidcore.Recipe.MANAGER_Recipe;
 import me.fivekfubi.raidcore.Scheduler.MANAGER_Scheduler;
 import me.fivekfubi.raidcore.Team.MANAGER_Team;
 import me.fivekfubi.raidcore.Web.MANAGER_Web;
@@ -31,6 +35,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.PluginCommand;
+import org.bukkit.event.Listener;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 
@@ -74,8 +79,23 @@ public final class RaidCore extends JavaPlugin {
     public static MANAGER_Web m_web = new MANAGER_Web();
     public static MANAGER_Particle m_particle = new MANAGER_Particle();
     public static MANAGER_Eval m_eval = new MANAGER_Eval();
+    public static MANAGER_Recipe m_recipe = new MANAGER_Recipe();
+    public static MANAGER_Block m_block = new MANAGER_Block();
+    public static MANAGER_Pack m_pack = new MANAGER_Pack();
+    public static MANAGER_Itemsadder m_itemsadder = null;
     //
     public final Map<String, JavaPlugin> registered_plugins = new HashMap<>();
+    public final List<Listener> to_register = new ArrayList<>(List.of(
+            m_event,
+            m_recipe,
+            m_block,
+            m_pack,
+            m_gui,
+            m_dialogue,
+            t_inventory,
+            m_input,
+            m_entity
+    ));
 
     /// TODO: ----------------------------------------------------------------------------------------------------------
     /// TODO: ----------------------------------------------------------------------------------------------------------
@@ -112,18 +132,23 @@ public final class RaidCore extends JavaPlugin {
         utils.console_message(" ");
         utils.console_message("<dark_gray>Loading...");
 
+        try{
+            if (Bukkit.getPluginManager().getPlugin("ItemsAdder") != null) {
+                if (m_itemsadder == null){
+                    m_itemsadder = new MANAGER_Itemsadder();
+                }
+            }
+        }catch (Throwable ignored){}
+
         try {
             NKEY = new MANAGER_Key();
             m_config.create_configs();
             load();
 
             t_inventory.functionate();
-            getServer().getPluginManager().registerEvents(m_event, CORE);
-            getServer().getPluginManager().registerEvents(m_gui, CORE);
-            getServer().getPluginManager().registerEvents(m_dialogue, CORE);
-            getServer().getPluginManager().registerEvents(t_inventory, CORE);
-            getServer().getPluginManager().registerEvents(m_input, CORE);
-            getServer().getPluginManager().registerEvents(m_entity, CORE);
+            for (Listener to_reg : to_register){
+                getServer().getPluginManager().registerEvents(to_reg, CORE);
+            }
 
             //test_LISTENERPacket = new LISTENER_Packet(this);
             //test_LISTENERPacket.listAllPackets();
@@ -194,6 +219,9 @@ public final class RaidCore extends JavaPlugin {
         m_message.load_messages(CORE_NAME);
         m_input.load();
         m_particle.load();
+        m_recipe.load();
+        m_block.load();
+        m_pack.load();
 
         loaded = true;
     }
