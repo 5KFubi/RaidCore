@@ -10,6 +10,8 @@ import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.entity.Player;
+import org.bukkit.event.Cancellable;
+import org.bukkit.event.Event;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.*;
@@ -18,10 +20,13 @@ import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataContainer;
+import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import static me.fivekfubi.raidcore.EVENT_TYPE.*;
 import static me.fivekfubi.raidcore.GUI.MANAGER_GUI_loader.MAX_HISTORY;
@@ -31,6 +36,68 @@ public class MANAGER_GUI implements Listener {
 
     public final Map<Player, GUI_Inventory> open_guis = new HashMap<>();
     public final Set<Player> suppress_history_clear = new HashSet<>();
+
+    public static class GUI_Hook_Context {
+        public final String hook;
+        public final Player player;
+        public final GUI_Inventory g_inventory;
+        public final Event event;
+        public final Map<String, Object> data;
+        public boolean cancelled = false;
+
+        public GUI_Hook_Context(String hook, Player player, GUI_Inventory g_inventory, Event event, Map<String, Object> data) {
+            this.hook = hook;
+            this.player = player;
+            this.g_inventory = g_inventory;
+            this.event = event;
+            this.data = data;
+        }
+    }
+
+    @FunctionalInterface
+    public interface HANDLER_Gui_Hook {
+        void handle(GUI_Hook_Context context);
+    }
+
+    public final Map<String, Map<String, List<HANDLER_Gui_Hook>>> GUI_HOOKS = new ConcurrentHashMap<>();
+
+    public void register_hook(String plugin_name, String hook, HANDLER_Gui_Hook handler) {
+        GUI_HOOKS.computeIfAbsent(hook.toLowerCase(Locale.ROOT), k -> new ConcurrentHashMap<>())
+                .computeIfAbsent(plugin_name, k -> new CopyOnWriteArrayList<>())
+                .add(handler);
+    }
+
+    public void unregister_hooks(String plugin_name) {
+        for (Map<String, List<HANDLER_Gui_Hook>> by_plugin : GUI_HOOKS.values()) {
+            by_plugin.remove(plugin_name);
+        }
+    }
+
+    public GUI_Hook_Context fire_hook(String hook, Player player, GUI_Inventory g_inventory, Event event, Map<String, Object> data) {
+        GUI_Hook_Context context = new GUI_Hook_Context(hook, player, g_inventory, event, data == null ? new HashMap<>() : data);
+        Map<String, List<HANDLER_Gui_Hook>> by_plugin = GUI_HOOKS.get(hook.toLowerCase(Locale.ROOT));
+        if (by_plugin == null) return context;
+
+        for (Map.Entry<String, List<HANDLER_Gui_Hook>> entry : by_plugin.entrySet()) {
+            JavaPlugin plugin = CORE.registered_plugins.get(entry.getKey());
+            if (plugin == null || !plugin.isEnabled()) {
+                by_plugin.remove(entry.getKey());
+                continue;
+            }
+            for (HANDLER_Gui_Hook handler : entry.getValue()) {
+                try {
+                    handler.handle(context);
+                } catch (Throwable t) {
+                    utils.error_message("<white>Error in GUI hook <yellow>`" + hook + "`<white> from plugin <yellow>`" + entry.getKey() + "`<red>> " + t, t);
+                }
+            }
+        }
+
+        if (context.cancelled && event instanceof Cancellable cancellable) {
+            cancellable.setCancelled(true);
+        }
+        return context;
+    }
 
     public void register_default(){
         register_item_type("storage",
@@ -288,6 +355,13 @@ public class MANAGER_GUI implements Listener {
         }
 
         player_pages.put(group_id, new_page);
+
+        Map<String, Object> hook_data = new HashMap<>();
+        hook_data.put("group_id", group_id);
+        hook_data.put("old_page", page_number);
+        hook_data.put("new_page", new_page);
+        hook_data.put("by_player", by_player);
+        fire_hook("gui-page-change", player, g_inventory, null, hook_data);
     }
     public void interrupt_group(GUI_Group group, GUI_Inventory g_inventory, String group_id){
         if (group != null && g_inventory != null && group_id != null){
@@ -716,6 +790,7 @@ public class MANAGER_GUI implements Listener {
                 g_inventory.gui_data.play_open_sound(player);
             }
             open_guis.put(player, g_inventory);
+            fire_hook("gui-open", player, g_inventory, event, null);
         }
     }
     @EventHandler
@@ -723,11 +798,10 @@ public class MANAGER_GUI implements Listener {
         if (!(event.getWhoClicked() instanceof Player)) return;
         Inventory top_inventory = event.getView().getTopInventory();
         if (!(top_inventory.getHolder() instanceof GUI_Inventory g_inventory)) return;
-        for (Map.Entry<String, HANDLER_Gui_Drag> drag_entry : DRAG_HANDLERS.entrySet()) {
-            if (g_inventory.present_item_types.containsValue(drag_entry.getKey())) {
-                drag_entry.getValue().handle((Player) event.getWhoClicked(), g_inventory, event);
-            }
-        }
+        Player drag_player = (Player) event.getWhoClicked();
+        Map<String, Object> drag_data = new HashMap<>();
+        drag_data.put("raw_slots", event.getRawSlots());
+        if (fire_hook("gui-drag", drag_player, g_inventory, event, drag_data).cancelled) return;
         if (!g_inventory.present_item_types.containsValue("storage")) return;
         if (m_storage.touches_storage(event, g_inventory)
                 && !m_storage.allow(event.getWhoClicked().getUniqueId(), g_inventory)) {
@@ -744,6 +818,8 @@ public class MANAGER_GUI implements Listener {
         Inventory inventory = event.getInventory();
         InventoryHolder holder = inventory.getHolder();
         if (!(holder instanceof GUI_Inventory g_inventory)) return;
+
+        fire_hook("gui-close", player, g_inventory, event, null);
 
         m_storage.sync_gui(g_inventory);
 
@@ -773,16 +849,16 @@ public class MANAGER_GUI implements Listener {
             Inventory top_inventory = event.getView().getTopInventory();
             if (top_inventory.getHolder() instanceof GUI_Inventory g_inventory) {
 
+                Map<String, Object> click_data = new HashMap<>();
+                click_data.put("clicked_top", event.getClickedInventory() == top_inventory);
+                click_data.put("slot", event.getSlot());
+                click_data.put("click_type", click_type);
+                if (fire_hook("gui-click", player, g_inventory, event, click_data).cancelled) return;
+
                 if (m_storage.touches_storage(event, g_inventory)
                         && !m_storage.allow(player.getUniqueId(), g_inventory)) {
                     event.setCancelled(true);
                     return;
-                }
-
-                for (Map.Entry<String, HANDLER_Gui_Slot> slot_entry : SLOT_HANDLERS.entrySet()) {
-                    if (g_inventory.present_item_types.containsValue(slot_entry.getKey())) {
-                        slot_entry.getValue().handle(player, g_inventory, event);
-                    }
                 }
 
                 String plugin_name = g_inventory.plugin_name;
@@ -1048,33 +1124,5 @@ public class MANAGER_GUI implements Listener {
 
     public HANDLER_Gui_Click get_click_type_handler(String type) {
         return CLICK_TYPE_HANDLERS.get(type.toLowerCase(Locale.ROOT));
-    }
-
-    public interface HANDLER_Gui_Slot {
-        void handle(
-                Player player,
-                GUI_Inventory g_inventory,
-                InventoryClickEvent event
-        );
-    }
-
-    public final Map<String, HANDLER_Gui_Slot> SLOT_HANDLERS = new HashMap<>();
-
-    public void register_slot_type(String type, HANDLER_Gui_Slot handler) {
-        SLOT_HANDLERS.put(type.toLowerCase(Locale.ROOT), handler);
-    }
-
-    public interface HANDLER_Gui_Drag {
-        void handle(
-                Player player,
-                GUI_Inventory g_inventory,
-                InventoryDragEvent event
-        );
-    }
-
-    public final Map<String, HANDLER_Gui_Drag> DRAG_HANDLERS = new HashMap<>();
-
-    public void register_drag_type(String type, HANDLER_Gui_Drag handler) {
-        DRAG_HANDLERS.put(type.toLowerCase(Locale.ROOT), handler);
     }
 }

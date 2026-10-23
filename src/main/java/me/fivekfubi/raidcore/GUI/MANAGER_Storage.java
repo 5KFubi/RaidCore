@@ -209,6 +209,14 @@ public class MANAGER_Storage {
             storage.set_item(index, current);
             g_inventory.storage_snapshot.put(slot, copy(current));
             propagate(g_inventory, uid, index, current);
+
+            Object viewer_obj = g_inventory.holder_data.get_data().get(NKEY.player.getKey());
+            Player viewer = viewer_obj instanceof Player p ? p : null;
+            Map<String, Object> change_data = new HashMap<>();
+            change_data.put("uid", uid);
+            change_data.put("index", index);
+            change_data.put("item", current);
+            m_gui.fire_hook("storage-change", viewer, g_inventory, null, change_data);
         }
     }
 
