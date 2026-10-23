@@ -209,9 +209,19 @@ public class MANAGER_Placeholder {
     }
     public final Map<String, HANDLER_Placeholder> PLACEHOLDER_HANDLERS = new HashMap<>();
 
+    public final Set<String> HOLDER_BOUND_PLACEHOLDERS = new HashSet<>();
+
     public void register_placeholder(String type, HANDLER_Placeholder handler) {
+        register_placeholder(type, handler, false);
+    }
+    public void register_placeholder(String type, HANDLER_Placeholder handler, boolean holder_bound) {
         String formatted = type.toLowerCase(Locale.ROOT);
         PLACEHOLDER_HANDLERS.put(formatted, handler);
+        if (holder_bound) HOLDER_BOUND_PLACEHOLDERS.add(formatted);
+        else HOLDER_BOUND_PLACEHOLDERS.remove(formatted);
+    }
+    public boolean is_holder_bound(String name) {
+        return HOLDER_BOUND_PLACEHOLDERS.contains("%" + name.toLowerCase(Locale.ROOT) + "%");
     }
     public HANDLER_Placeholder get_placeholder_handler(String type) {
         return PLACEHOLDER_HANDLERS.get(type.toLowerCase(Locale.ROOT));
@@ -317,7 +327,7 @@ public class MANAGER_Placeholder {
             }
 
             return "0";
-        });
+        }, true);
 
         register_placeholder("%item-slot-category%", (holder) -> {
             Player player = holder.get(NKEY.player.getKey(), Player.class, null);
@@ -331,7 +341,7 @@ public class MANAGER_Placeholder {
             }
 
             return "null";
-        });
+        }, true);
 
         register_placeholder("%previous-gui-name%", (holder) -> {
             Player player = holder.get(NKEY.player.getKey(), Player.class, null);

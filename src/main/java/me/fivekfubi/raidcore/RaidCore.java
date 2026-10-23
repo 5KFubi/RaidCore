@@ -17,6 +17,7 @@ import me.fivekfubi.raidcore.Event.TRACKER_Inventory;
 import me.fivekfubi.raidcore.Executable.MANAGER_Executable;
 import me.fivekfubi.raidcore.GUI.MANAGER_GUI;
 import me.fivekfubi.raidcore.GUI.MANAGER_GUI_loader;
+import me.fivekfubi.raidcore.GUI.MANAGER_Storage;
 import me.fivekfubi.raidcore.Input.MANAGER_Input;
 import me.fivekfubi.raidcore.Item.MANAGER_Item;
 import me.fivekfubi.raidcore.Message.MANAGER_Message;
@@ -71,6 +72,7 @@ public final class RaidCore extends JavaPlugin {
     public static MANAGER_Cooldown m_cooldown = new MANAGER_Cooldown();
     public static MANAGER_GUI m_gui = new MANAGER_GUI();
     public static MANAGER_GUI_loader m_gui_loader = new MANAGER_GUI_loader();
+    public static MANAGER_Storage m_storage = new MANAGER_Storage();
     public static MANAGER_Dialogue m_dialogue = new MANAGER_Dialogue();
     public static MANAGER_Dialogue_loader m_dialogue_loader = new MANAGER_Dialogue_loader();
     public static MANAGER_Message m_message = new MANAGER_Message();
@@ -187,6 +189,9 @@ public final class RaidCore extends JavaPlugin {
     @Override
     public void onDisable() {
         for (JavaPlugin plugin : m_web.registered_sites.keySet()) m_web.stop_all(plugin);
+
+        m_storage.save_all_open();
+        m_database.update_databases();
     }
 
     /// TODO: ----------------------------------------------------------------------------------------------------------
@@ -213,6 +218,7 @@ public final class RaidCore extends JavaPlugin {
         m_economy.load();
         m_gui_loader.load_all();
         m_gui_loader.load_local();
+        m_storage.load();
         if (!loaded) m_gui.register_default();
         m_dialogue_loader.load_all();
         if (!loaded) m_executable.register_default();

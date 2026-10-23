@@ -27,7 +27,7 @@ public class ENTITY_Part<T extends Entity> {
     @SuppressWarnings("unchecked")
     public T get() {
         if (uuid == null) return null;
-        if (cached_entity != null && cached_entity.isValid()) return cached_entity;
+        if (cached_entity != null && !cached_entity.isDead() && cached_entity.isInWorld()) return cached_entity;
         cached_entity = (T) Bukkit.getEntity(uuid);
         return cached_entity;
     }

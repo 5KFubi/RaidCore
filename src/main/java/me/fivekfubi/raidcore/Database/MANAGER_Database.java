@@ -4,6 +4,7 @@ import me.fivekfubi.raidcore.Config.Data.DATA_Config;
 import me.fivekfubi.raidcore.Database.Data.DB_DATA;
 import me.fivekfubi.raidcore.Database.Data.DB_DATA_Column;
 import me.fivekfubi.raidcore.Economy.Data.DATA_Discount;
+import me.fivekfubi.raidcore.GUI.Data.DATA_Storage;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -118,6 +119,23 @@ public class MANAGER_Database {
                 m_discount.discount_cache,
                 discount_class,
                 discount_columns.get(discount_class)
+        );
+
+        Class<?> storage_class = DATA_Storage.class;
+        Map<Class<?>, LinkedHashMap<String, DB_DATA_Column>> storage_columns =
+                DB_DATA_Builder.build(storage_class)
+                        .register("uid", null, null, String.class, "")
+                        .register("allowed_players", null, null, String.class, "")
+                        .register("data", null, null, String.class, "")
+                        .register("slots", null, null, int.class, "18")
+                        .build();
+
+        register_database(
+                CORE,
+                "storages",
+                m_storage.storage_cache,
+                storage_class,
+                storage_columns.get(storage_class)
         );
     }
 
@@ -371,7 +389,7 @@ public class MANAGER_Database {
         return query.toString();
     }
     public String generate_insert_query(String table_name, List<String> columns) {
-        StringBuilder query = new StringBuilder("INSERT INTO " + table_name + " (");
+        StringBuilder query = new StringBuilder("INSERT OR IGNORE INTO " + table_name + " (");
         query.append("id, ");
         for (String column : columns) {
             query.append(column).append(", ");

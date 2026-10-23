@@ -33,6 +33,7 @@ public class GUI_Inventory implements InventoryHolder {
     public final Map<Integer, HOLDER> present_holder_data = new HashMap<>();
     public final Map<String, Boolean> first_time = new HashMap<>();
     public Map<String, Boolean> any_item_handled_this_page = new HashMap<>();
+    public final Map<Integer, ItemStack> storage_snapshot = new HashMap<>();
 
     public GUI_Inventory(String plugin_name, String file_path, int size, Component title, DATA_GUI gui_data) {
         this.plugin_name = plugin_name;

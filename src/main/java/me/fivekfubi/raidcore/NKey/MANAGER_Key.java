@@ -47,6 +47,12 @@ public class MANAGER_Key {
     public NamespacedKey gui_item_clicked_index = generate( "gui_item_clicked_index" );
     public NamespacedKey gui_item_empty_slot    = generate( "gui_item_empty_slot"    );
 
+    public NamespacedKey storage_uid            = generate( "storage_uid"            );
+    public NamespacedKey storage_index          = generate( "storage_index"          );
+    public NamespacedKey storage_locked         = generate( "storage_locked"         );
+    public NamespacedKey storage_view_name      = generate( "storage_view_name"      );
+    public NamespacedKey storage_view_uuid      = generate( "storage_view_uuid"      );
+
     public NamespacedKey generate(){
         return generate(CORE, UUID.randomUUID().toString());
     }

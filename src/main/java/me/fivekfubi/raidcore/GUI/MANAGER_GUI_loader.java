@@ -357,6 +357,7 @@ public class MANAGER_GUI_loader {
                         }
                         gPage.items = page_items;
                         pages.put(page_number, gPage);
+                        page_number++;
                     }
 
                     if (group_settings.repeat_last_page > 0 && !pages.isEmpty()) {
@@ -424,7 +425,11 @@ public class MANAGER_GUI_loader {
                 }
             }
 
-            g_item.item_type = section.getString("item-type", "none").toLowerCase();
+            String raw_item_type = section.getString("item-type", "none");
+            int item_type_end = raw_item_type.indexOf(' ');
+            g_item.item_type = item_type_end == -1
+                    ? raw_item_type.toLowerCase()
+                    : raw_item_type.substring(0, item_type_end).toLowerCase() + raw_item_type.substring(item_type_end);
             g_item.model_data = section.getInt("model-data");
             g_item.enchants = utils.get_enchants(section.getStringList("enchants"), path_string);
             g_item.flags = utils.get_item_flags(section.getStringList("flags"), path_string);
@@ -434,23 +439,17 @@ public class MANAGER_GUI_loader {
             g_item.hide_tooltip = section.getBoolean("hide-tooltip");
 
             if (g_item.item_type.contains(" ")) {
-                String[] item_type_split = g_item.item_type.split(" ");
-                g_item.item_type = item_type_split[0];
-                if (item_type_split.length > 1) {
+                int type_end = g_item.item_type.indexOf(' ');
+                String type_args = g_item.item_type.substring(type_end + 1).trim();
+                g_item.item_type = g_item.item_type.substring(0, type_end);
+                g_item.extra_data = type_args.isEmpty() ? null : type_args;
+
+                // engine rule kept as before: a number in the 1st or 2nd argument is the start index
+                String[] args = type_args.split("\\s+");
+                for (int i = 0; i < Math.min(args.length, 2); i++) {
                     try {
-                        g_item.start_index = Integer.parseInt(item_type_split[1]);
-                    } catch (NumberFormatException e) {
-                        g_item.extra_data = item_type_split[1];
-                    }
-                }
-                if (item_type_split.length > 2) {
-                    try {
-                        g_item.start_index = Integer.parseInt(item_type_split[2]);
-                    } catch (NumberFormatException e) {
-                        if (g_item.extra_data == null) {
-                            g_item.extra_data = item_type_split[2];
-                        }
-                    }
+                        g_item.start_index = Integer.parseInt(args[i]);
+                    } catch (NumberFormatException ignored) {}
                 }
             }
 

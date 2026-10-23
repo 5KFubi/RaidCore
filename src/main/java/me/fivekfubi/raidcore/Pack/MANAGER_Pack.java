@@ -57,7 +57,7 @@ public class MANAGER_Pack implements Listener {
     public void load() {
         DATA_Config config_data = m_config.get_config_data(CORE_NAME, List.of("config.yml"));
         FileConfiguration config = config_data != null ? config_data.config : null;
-        enabled = config == null || config.getBoolean("resource-pack.enabled", true);
+        enabled = config == null || config.getBoolean("resource-pack.enabled", false);
         force = config != null && config.getBoolean("resource-pack.force", false);
         host = config != null ? config.getString("resource-pack.host", "").trim() : "";
         pack_format = config != null ? config.getInt("resource-pack.pack-format", 46) : 46;

@@ -82,3 +82,109 @@ commands:
             - " "
           success:
             - "<dark_gray>[<gold><b>RC</b><dark_gray>] - <gray>Recipe unlocked"
+      storage:
+        permission: "raidcore.admin.use.storage"
+        description:
+          - "Admin commands for storages."
+        messages:
+          missing-permission:
+            - "You don't have permission to use /raidcore storage"
+          usage:
+            - " "
+            - "<dark_gray>[<gold><b>RC</b><dark_gray>] - <red>Storage commands"
+            - "<dark_gray>・<gray>storage list [id]"
+            - "<dark_gray>・<gray>storage info <id> <uid>"
+            - "<dark_gray>・<gray>storage view <id> <uid>"
+            - "<dark_gray>・<gray>storage getitem <id> <uid> <index>"
+            - "<dark_gray>・<gray>storage setitem <id> <uid> <index>"
+            - "<dark_gray>・<gray>storage give <id> <uid>"
+            - "<dark_gray>・<gray>storage removeitem <id> <uid> <index>"
+            - "<dark_gray>・<gray>storage clear <id> <uid>"
+            - "<dark_gray>・<gray>storage setslots|addslots|removeslots <id> <uid> <amount>"
+            - "<dark_gray>・<gray>storage allow|disallow <id> <uid> <player>"
+            - "<dark_gray>・<gray>storage delete <id> <uid>"
+            - "<dark_gray>・<gray>storage save"
+            - " "
+          not-found:
+            - " "
+            - "<dark_gray>[<gold><b>RC</b><dark_gray>] - <red>Storage not found"
+            - "<dark_gray>・<gray>No storage <yellow>%storage-id% %storage-uid%<gray> exists."
+            - " "
+          player-only:
+            - "<dark_gray>[<gold><b>RC</b><dark_gray>] - <red>This action can only be used by a player."
+          player-unknown:
+            - "<dark_gray>[<gold><b>RC</b><dark_gray>] - <red>Unknown player <yellow>%input%"
+          invalid-number:
+            - "<dark_gray>[<gold><b>RC</b><dark_gray>] - <red>Invalid number: <yellow>%input%"
+          list-header:
+            - " "
+            - "<dark_gray>[<gold><b>RC</b><dark_gray>] - <gray>Storages <dark_gray>(<green>%storage-count%<dark_gray>)"
+          list-entry:
+            - " <dark_gray>- <yellow>%storage-id% <white>%storage-uid% <dark_gray>| <gray>slots: <green>%storage-slots% <dark_gray>| <gray>items: <green>%storage-items%"
+          list-empty:
+            - "<dark_gray>[<gold><b>RC</b><dark_gray>] - <gray>No storages found."
+          info:
+            - " "
+            - "<dark_gray>[<gold><b>RC</b><dark_gray>] - <gray>Storage <yellow>%storage-id% %storage-uid%"
+            - "<dark_gray>・<gray>Owner: <white>%storage-owner% <dark_gray>(%storage-owner-uuid%)"
+            - "<dark_gray>・<gray>Slots: <green>%storage-slots%"
+            - "<dark_gray>・<gray>Items: <green>%storage-items%"
+            - "<dark_gray>・<gray>Allowed: <white>%storage-allowed%"
+            - "<dark_gray>・<gray>Viewing now: <white>%storage-viewers%"
+            - " "
+          view-success:
+            - "<dark_gray>[<gold><b>RC</b><dark_gray>] - <gray>Opened storage <yellow>%storage-id% %storage-uid%"
+          view-unavailable:
+            - "<dark_gray>[<gold><b>RC</b><dark_gray>] - <red>No loaded GUI can display <yellow>%storage-id% %storage-uid%"
+          getitem-success:
+            - "<dark_gray>[<gold><b>RC</b><dark_gray>] - <gray>Copied <yellow>%storage-item% <dark_gray>(x%storage-amount%) <gray>from slot <green>%storage-index%"
+          setitem-success:
+            - "<dark_gray>[<gold><b>RC</b><dark_gray>] - <gray>Set slot <green>%storage-index% <gray>to <yellow>%storage-item% <dark_gray>(x%storage-amount%)"
+          give-success:
+            - "<dark_gray>[<gold><b>RC</b><dark_gray>] - <gray>Added <yellow>%storage-item% <dark_gray>(x%storage-amount%) <gray>to slot <green>%storage-index%"
+          removeitem-success:
+            - "<dark_gray>[<gold><b>RC</b><dark_gray>] - <gray>Removed the item in slot <green>%storage-index%"
+          clear-success:
+            - "<dark_gray>[<gold><b>RC</b><dark_gray>] - <gray>Cleared <yellow>%storage-id% %storage-uid%"
+          slots-success:
+            - "<dark_gray>[<gold><b>RC</b><dark_gray>] - <gray>Slots of <yellow>%storage-id% %storage-uid% <gray>are now <green>%storage-slots%"
+          slot-empty:
+            - "<dark_gray>[<gold><b>RC</b><dark_gray>] - <red>Slot <yellow>%storage-index% <red>is empty."
+          no-held-item:
+            - "<dark_gray>[<gold><b>RC</b><dark_gray>] - <red>Hold an item in your main hand first."
+          storage-full:
+            - "<dark_gray>[<gold><b>RC</b><dark_gray>] - <red>No free slot left in <yellow>%storage-id% %storage-uid%"
+          allow-success:
+            - "<dark_gray>[<gold><b>RC</b><dark_gray>] - <green>%input% <gray>can now access <yellow>%storage-id% %storage-uid%"
+          allow-already:
+            - "<dark_gray>[<gold><b>RC</b><dark_gray>] - <red>%input% already has access."
+          disallow-success:
+            - "<dark_gray>[<gold><b>RC</b><dark_gray>] - <green>%input% <gray>no longer has access to <yellow>%storage-id% %storage-uid%"
+          disallow-missing:
+            - "<dark_gray>[<gold><b>RC</b><dark_gray>] - <red>%input% is not in the allowed list."
+          delete-success:
+            - "<dark_gray>[<gold><b>RC</b><dark_gray>] - <gray>Deleted storage <yellow>%storage-id% %storage-uid%"
+          save-success:
+            - "<dark_gray>[<gold><b>RC</b><dark_gray>] - <gray>Saved all open storages."
+      gui:
+        permission: "raidcore.admin.use.gui"
+        description:
+          - "Opens any loaded GUI."
+        messages:
+          missing-permission:
+            - "You don't have permission to use /raidcore gui"
+          usage:
+            - " "
+            - "<dark_gray>[<gold><b>RC</b><dark_gray>] - <red>Usage"
+            - "<dark_gray>・<gray>gui open [player] <plugin>:<path>"
+            - "<dark_gray>・<gray>Example: <yellow>gui open Steve raidcore:GUIs/storage.yml"
+            - " "
+          target-not-found:
+            - " "
+            - "<dark_gray>[<gold><b>RC</b><dark_gray>] - <red>Player not found"
+            - "<dark_gray>・<gray>The player <yellow>%target-name%<gray> was not found."
+            - " "
+          gui-not-found:
+            - "<dark_gray>[<gold><b>RC</b><dark_gray>] - <red>GUI not found: <yellow>%gui-ref%"
+          success:
+            - "<dark_gray>[<gold><b>RC</b><dark_gray>] - <gray>Opened <yellow>%gui-ref% <gray>for <green>%target-name%"

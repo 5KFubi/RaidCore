@@ -30,6 +30,7 @@ import static me.fivekfubi.raidcore.Utils.gson;
 
 public class MANAGER_Entity implements Listener {
     public final Map<String, CUSTOM_Entity> instances = new LinkedHashMap<>();
+    public final Map<String, CUSTOM_Entity> ticking = new LinkedHashMap<>();
     public final Map<UUID, String> entity_map = new HashMap<>();
     public final Map<String, Supplier<CUSTOM_Entity>> rebuilders = new LinkedHashMap<>();
 
@@ -130,6 +131,7 @@ public class MANAGER_Entity implements Listener {
         }
 
         instances.put(entity.instance_id, entity);
+        if (!entity.tickers.isEmpty()) ticking.put(entity.instance_id, entity);
         save();
         return entity;
     }
@@ -176,6 +178,7 @@ public class MANAGER_Entity implements Listener {
     }
 
     public void remove(String instance_id) {
+        ticking.remove(instance_id);
         CUSTOM_Entity entity = instances.remove(instance_id);
         if (entity == null) return;
         for (ENTITY_Part<?> part : entity.parts) {
@@ -204,10 +207,12 @@ public class MANAGER_Entity implements Listener {
 
     public void tick() {
         if (++global_tick % 200 == 0) save();
-        for (CUSTOM_Entity entity : instances.values()) {
+        for (CUSTOM_Entity entity : ticking.values()) {
             for (ENTITY_Ticker<?> ticker : entity.tickers) {
+                if (ticker.next_run < 0) ticker.next_run = global_tick + ticker.refresh_rate;
+                if (global_tick < ticker.next_run) continue;
+                ticker.next_run = global_tick + ticker.refresh_rate;
                 ticker.counter++;
-                if (ticker.counter % ticker.refresh_rate != 0) continue;
                 run_ticker(ticker, entity);
             }
         }
@@ -375,6 +380,7 @@ public class MANAGER_Entity implements Listener {
             Bukkit.getScheduler().runTask(CORE, () -> spawn_when_chunk_ready(entity, 20));
         } else {
             instances.put(inst_id, entity);
+            if (!entity.tickers.isEmpty()) ticking.put(inst_id, entity);
         }
 
         if (obj.has("parts_data")) {

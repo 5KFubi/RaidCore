@@ -280,7 +280,7 @@ public class Utils {
     }
 
     public ItemStack get_item(String value, String path_string){
-        if (value == null) return null;
+        if (value == null) return new ItemStack(Material.AIR);
         ItemStack item = null;
         Material material = null;
         if (value.contains(":")) {

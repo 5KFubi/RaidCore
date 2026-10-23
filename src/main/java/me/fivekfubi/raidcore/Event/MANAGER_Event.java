@@ -26,6 +26,7 @@ import org.bukkit.event.player.*;
 import org.bukkit.inventory.BrewerInventory;
 import org.bukkit.inventory.EntityEquipment;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
 
 import java.util.*;
@@ -189,7 +190,8 @@ public class MANAGER_Event implements Listener {
 
         if (event.getClickedBlock() != null) event_blocks.add(event.getClickedBlock());
 
-        event.setCancelled(handle_actions(player, event.getEventName(), event_actions, event_targets, event_blocks, event, event.useItemInHand() == Event.Result.DENY));
+        boolean interact_cancelled = handle_actions(player, event.getEventName(), event_actions, event_targets, event_blocks, event, event.useItemInHand() == Event.Result.DENY);
+        if (interact_cancelled) event.setCancelled(true);
     }
 
     public void on_interact_delayed(PlayerInteractEvent event, Player player, UUID player_uuid, boolean sneak, boolean sprint){
@@ -990,7 +992,11 @@ public class MANAGER_Event implements Listener {
             notify_listeners(player, event_type, action_string, targets, blocks, event);
         }
 
-        if (event instanceof Cancellable cancellable && cancellable.isCancelled()) was_cancelled = true;
+        if (event instanceof PlayerInteractEvent interact_event) {
+            if (interact_event.useItemInHand() == Event.Result.DENY) was_cancelled = true;
+        } else if (event instanceof Cancellable cancellable && cancellable.isCancelled()) {
+            was_cancelled = true;
+        }
 
         ItemStack item = used_item;
         if (item == null) {
@@ -998,11 +1004,13 @@ public class MANAGER_Event implements Listener {
             if (equipment == null) return was_cancelled;
             item = equipment.getItemInMainHand();
         }
-        if (item.getItemMeta() == null) return was_cancelled;
+        if (!item.hasItemMeta()) return was_cancelled;
 
-        Map<NamespacedKey, Object> container_data = utils.get_container_data(item.getItemMeta().getPersistentDataContainer());
-        String plugin_name = (String) container_data.get(NKEY.file_plugin);
-        String file_path = (String) container_data.get(NKEY.file_path);
+        PersistentDataContainer container = item.getItemMeta().getPersistentDataContainer();
+        String plugin_name = container.get(NKEY.file_plugin, PersistentDataType.STRING);
+        String file_path = container.get(NKEY.file_path, PersistentDataType.STRING);
+        if (plugin_name == null || file_path == null) return was_cancelled;
+
         DATA_Item item_data = m_item.get_item_data(plugin_name, file_path);
         if (item_data == null) return was_cancelled;
 

@@ -110,7 +110,7 @@ item:
         chance:
           amount: 100.0 # Chance to execute
           reroll-weight: false # Re-roll for the other groups in this click-type, if there are none -> run 'fail'
-          fail:
+          reroll-fail:
             - "[MESSAGE] <dark_gray>[<blue><b>ITEM PASSIVE</b><dark_gray>] <red>Failed `passive` chance!"
         cancel-event:
           - "*" # Cancel the event no matter the source it came from (block_dig, attack, etc.), use `*` for any

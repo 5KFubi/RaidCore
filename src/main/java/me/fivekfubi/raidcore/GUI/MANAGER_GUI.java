@@ -12,10 +12,7 @@ import org.bukkit.NamespacedKey;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
-import org.bukkit.event.inventory.ClickType;
-import org.bukkit.event.inventory.InventoryClickEvent;
-import org.bukkit.event.inventory.InventoryCloseEvent;
-import org.bukkit.event.inventory.InventoryOpenEvent;
+import org.bukkit.event.inventory.*;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
@@ -36,6 +33,108 @@ public class MANAGER_GUI implements Listener {
     public final Set<Player> suppress_history_clear = new HashSet<>();
 
     public void register_default(){
+        register_item_type("storage",
+                (
+                        player,
+                        group_id,
+                        page_id,
+                        data,
+                        extra_data,
+                        placed,
+                        slots_size,
+                        inventory,
+                        g_inventory,
+                        global_holder,
+                        item_holder
+                ) -> {
+                    // extra_data: <id> <uid> [default-slots]
+                    if (data.extra_data == null || data.extra_data.isBlank()) return false;
+                    String[] args = data.extra_data.trim().split("\\s+");
+                    if (args.length < 2) return false;
+
+                    int default_slots = 18;
+                    if (args.length > 2) {
+                        try {
+                            default_slots = Integer.parseInt(args[2]);
+                        } catch (NumberFormatException ignored) {}
+                    }
+
+                    // an admin viewing someone else's storage passes the owner through the holder
+                    Object view_name = global_holder.get_data().get(NKEY.storage_view_name.getKey());
+                    Object view_uuid = global_holder.get_data().get(NKEY.storage_view_uuid.getKey());
+                    String owner_name = view_name instanceof String s_name ? s_name : player.getName();
+                    String owner_uuid = view_uuid instanceof String s_uuid ? s_uuid : player.getUniqueId().toString();
+
+                    String uid = (args[0] + " " + args[1])
+                            .replace("%player-name%", owner_name)
+                            .replace("%player-uuid%", owner_uuid);
+
+                    DATA_Storage storage = m_storage.get_or_create(uid, default_slots);
+
+                    int gui_index = placed - data.start_index;
+                    if (gui_index < 0 || gui_index >= data.slots.size()) return false;
+                    int slot = data.slots.get(gui_index);
+
+                    MANAGER_Storage.StorageOrderProvider order = m_storage.order_providers.get(uid);
+                    Integer mapped = order != null ? order.storage_index_at(uid, storage, placed) : placed;
+
+                    Boolean first_time = g_inventory.first_time.get(group_id);
+                    boolean render = first_time == null || first_time;
+
+                    if (mapped == null) {
+                        if (render) inventory.setItem(slot, null);
+                        g_inventory.cache_item(slot, group_id, page_id, data, item_holder);
+                        g_inventory.present_item_types.put(slot, "storage");
+                        item_holder.set(NKEY.storage_uid.getKey(), uid);
+                        item_holder.set(NKEY.storage_index.getKey(), -1);
+                        item_holder.set(NKEY.storage_locked.getKey(), true);
+                        return true;
+                    }
+
+                    int index = mapped;
+                    ItemStack stored = storage.get_item(index);
+
+                    MANAGER_Storage.StorageLockProvider lock = m_storage.lock_providers.get(uid);
+                    Boolean forced = lock != null ? lock.is_locked(uid, storage, index) : null;
+                    boolean usable = forced != null
+                            ? !forced
+                            : (index < storage.slots || stored != null || index == 0 || storage.has_item(index - 1));
+
+                    if (!usable) {
+                        GUI_Item locked_var = data.variations != null ? data.variations.get("locked-item") : null;
+                        GUI_Item cached_locked = locked_var != null ? locked_var : data;
+                        if (render) {
+                            ItemStack placeholder = cached_locked.item;
+                            if (placeholder != null) inventory.setItem(slot, placeholder.clone());
+                        }
+                        g_inventory.cache_item(slot, group_id, page_id, cached_locked, item_holder);
+                        g_inventory.present_item_types.put(slot, "storage");
+                        item_holder.set(NKEY.storage_uid.getKey(), uid);
+                        item_holder.set(NKEY.storage_index.getKey(), index);
+                        item_holder.set(NKEY.storage_locked.getKey(), true);
+                        return true;
+                    }
+
+                    g_inventory.any_item_handled_this_page.put(group_id, true);
+
+                    if (render) {
+                        inventory.setItem(slot, stored);
+                        g_inventory.storage_snapshot.put(slot, stored == null ? null : stored.clone());
+                    }
+
+                    GUI_Item cached = data;
+                    if (data.variations != null) {
+                        GUI_Item variation = data.variations.get(stored != null ? "occupied-slot" : "empty-slot");
+                        if (variation != null && variation.item != null) cached = variation;
+                    }
+                    g_inventory.cache_item(slot, group_id, page_id, cached, item_holder);
+                    g_inventory.present_item_types.put(slot, "storage");
+                    item_holder.set(NKEY.storage_uid.getKey(), uid);
+                    item_holder.set(NKEY.storage_index.getKey(), index);
+                    return true;
+                }
+        );
+
         register_item_type("protection-members",
                 (
                         player,
@@ -156,13 +255,13 @@ public class MANAGER_GUI implements Listener {
 
         g_inventory.first_time.put(group_id, true);
 
+        m_storage.sync_gui(g_inventory);
+
         Map<Integer, GUI_Page> pages = group.pages;
         int size = pages.size();
         if (group.group_settings != null && group.group_settings.repeat_last_page_auto) {
             size = Integer.MAX_VALUE;
         }
-
-        //handleStorage(g_inventory, g_inventory.getInventory());
 
         int new_page = page_number;
         if (direction.equalsIgnoreCase("forward")) {
@@ -400,7 +499,7 @@ public class MANAGER_GUI implements Listener {
                                 // ITEM TYPE ----------------------------------------------
                                 String item_type = data.item_type;
                                 int start_index = data.start_index;
-                                String extra_data = data.extra_data != null ? data.extra_data.toUpperCase() : null;
+                                String extra_data = data.extra_data;
                                 placed += start_index;
                                 // ----------------------------------------------
 
@@ -452,7 +551,9 @@ public class MANAGER_GUI implements Listener {
 
                                         if (handled) {
                                             placed++;
-                                            g_inventory.any_item_handled_this_page.put(group_id, true);
+                                            if (!"storage".equals(item_type)) {
+                                                g_inventory.any_item_handled_this_page.put(group_id, true);
+                                            }
                                             continue;
                                         }
 
@@ -484,8 +585,11 @@ public class MANAGER_GUI implements Listener {
                                 }
                             }
 
+                            g_inventory.first_time.put(group_id, false);
+
                             if (is_synthetic && !g_inventory.any_item_handled_this_page.getOrDefault(group_id, false)) {
                                 player_pages.put(group_id, requested_page - 1);
+                                g_inventory.first_time.put(group_id, true);
                             }
                         }
                     } else {
@@ -615,6 +719,25 @@ public class MANAGER_GUI implements Listener {
         }
     }
     @EventHandler
+    public void onInventoryDrag(InventoryDragEvent event) {
+        if (!(event.getWhoClicked() instanceof Player)) return;
+        Inventory top_inventory = event.getView().getTopInventory();
+        if (!(top_inventory.getHolder() instanceof GUI_Inventory g_inventory)) return;
+        for (Map.Entry<String, HANDLER_Gui_Drag> drag_entry : DRAG_HANDLERS.entrySet()) {
+            if (g_inventory.present_item_types.containsValue(drag_entry.getKey())) {
+                drag_entry.getValue().handle((Player) event.getWhoClicked(), g_inventory, event);
+            }
+        }
+        if (!g_inventory.present_item_types.containsValue("storage")) return;
+        if (m_storage.touches_storage(event, g_inventory)
+                && !m_storage.allow(event.getWhoClicked().getUniqueId(), g_inventory)) {
+            event.setCancelled(true);
+            return;
+        }
+        Bukkit.getScheduler().runTaskLater(CORE, () -> m_storage.sync_gui(g_inventory), 1L);
+    }
+
+    @EventHandler
     public void onGUIClose(InventoryCloseEvent event) {
         if (!(event.getPlayer() instanceof Player player)) return;
 
@@ -622,7 +745,7 @@ public class MANAGER_GUI implements Listener {
         InventoryHolder holder = inventory.getHolder();
         if (!(holder instanceof GUI_Inventory g_inventory)) return;
 
-        //handleStorage(g_inventory, inventory);
+        m_storage.sync_gui(g_inventory);
 
         Bukkit.getScheduler().runTaskLater(CORE, () -> {
             InventoryHolder current_holder = player.getOpenInventory().getTopInventory().getHolder();
@@ -649,6 +772,18 @@ public class MANAGER_GUI implements Listener {
 
             Inventory top_inventory = event.getView().getTopInventory();
             if (top_inventory.getHolder() instanceof GUI_Inventory g_inventory) {
+
+                if (m_storage.touches_storage(event, g_inventory)
+                        && !m_storage.allow(player.getUniqueId(), g_inventory)) {
+                    event.setCancelled(true);
+                    return;
+                }
+
+                for (Map.Entry<String, HANDLER_Gui_Slot> slot_entry : SLOT_HANDLERS.entrySet()) {
+                    if (g_inventory.present_item_types.containsValue(slot_entry.getKey())) {
+                        slot_entry.getValue().handle(player, g_inventory, event);
+                    }
+                }
 
                 String plugin_name = g_inventory.plugin_name;
                 HOLDER holder_data = g_inventory.holder_data;
@@ -695,10 +830,17 @@ public class MANAGER_GUI implements Listener {
                     }
                 }
 
+                if (g_inventory.present_item_types.containsValue("storage")) {
+                    Bukkit.getScheduler().runTaskLater(CORE, () -> m_storage.sync_gui(g_inventory), 1L);
+                }
+
                 Inventory clicked_inventory = event.getClickedInventory();
 
                 if (clicked_inventory == top_inventory){
-                    if (!Boolean.FALSE.equals(container_data.get(NKEY.should_cancel))) {
+                    boolean slot_is_storage = "storage".equals(g_inventory.present_item_types.get(clicked_slot));
+                    boolean has_gui_item = container_data.containsKey(NKEY.gui_item);
+                    if (slot_is_storage && !has_gui_item) {
+                    } else if (!Boolean.FALSE.equals(container_data.get(NKEY.should_cancel))) {
                         event.setCancelled(true);
                     }
                 }
@@ -890,8 +1032,6 @@ public class MANAGER_GUI implements Listener {
         return ITEM_TYPE_HANDLERS.get(type.toLowerCase(Locale.ROOT));
     }
 
-
-
     public interface HANDLER_Gui_Click {
         void handle(
                 Player player,
@@ -908,5 +1048,33 @@ public class MANAGER_GUI implements Listener {
 
     public HANDLER_Gui_Click get_click_type_handler(String type) {
         return CLICK_TYPE_HANDLERS.get(type.toLowerCase(Locale.ROOT));
+    }
+
+    public interface HANDLER_Gui_Slot {
+        void handle(
+                Player player,
+                GUI_Inventory g_inventory,
+                InventoryClickEvent event
+        );
+    }
+
+    public final Map<String, HANDLER_Gui_Slot> SLOT_HANDLERS = new HashMap<>();
+
+    public void register_slot_type(String type, HANDLER_Gui_Slot handler) {
+        SLOT_HANDLERS.put(type.toLowerCase(Locale.ROOT), handler);
+    }
+
+    public interface HANDLER_Gui_Drag {
+        void handle(
+                Player player,
+                GUI_Inventory g_inventory,
+                InventoryDragEvent event
+        );
+    }
+
+    public final Map<String, HANDLER_Gui_Drag> DRAG_HANDLERS = new HashMap<>();
+
+    public void register_drag_type(String type, HANDLER_Gui_Drag handler) {
+        DRAG_HANDLERS.put(type.toLowerCase(Locale.ROOT), handler);
     }
 }

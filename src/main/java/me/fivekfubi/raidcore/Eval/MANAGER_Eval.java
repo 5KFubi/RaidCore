@@ -83,7 +83,9 @@ public class MANAGER_Eval {
 
     public Node compile(String expression) {
         if (expression == null || expression.isBlank()) return ALWAYS_TRUE;
-        if (cache.size() >= MAX_CACHE && !cache.containsKey(expression)) return parse(expression);
+        Node cached = cache.get(expression);
+        if (cached != null) return cached;
+        if (cache.size() >= MAX_CACHE) return parse(expression);
         return cache.computeIfAbsent(expression, this::parse);
     }
 
@@ -480,8 +482,33 @@ public class MANAGER_Eval {
     private static final Pattern NUMBER = Pattern.compile("[-+]?(\\d+\\.?\\d*|\\.\\d+)([eE][-+]?\\d+)?");
 
     private static Double number(String text) {
-        if (!NUMBER.matcher(text.trim()).matches()) return null;
-        try { return Double.valueOf(text); } catch (NumberFormatException e) { return null; }
+        int length = text.length();
+        int i = 0;
+        while (i < length && Character.isWhitespace(text.charAt(i))) i++;
+        while (length > i && Character.isWhitespace(text.charAt(length - 1))) length--;
+        if (i == length) return null;
+
+        int start = i;
+        if (text.charAt(i) == '+' || text.charAt(i) == '-') i++;
+
+        int digits = 0;
+        while (i < length && Character.isDigit(text.charAt(i))) { i++; digits++; }
+        if (i < length && text.charAt(i) == '.') {
+            i++;
+            while (i < length && Character.isDigit(text.charAt(i))) { i++; digits++; }
+        }
+        if (digits == 0) return null;
+
+        if (i < length && (text.charAt(i) == 'e' || text.charAt(i) == 'E')) {
+            i++;
+            if (i < length && (text.charAt(i) == '+' || text.charAt(i) == '-')) i++;
+            int exponent_start = i;
+            while (i < length && Character.isDigit(text.charAt(i))) i++;
+            if (i == exponent_start) return null;
+        }
+        if (i != length) return null;
+
+        try { return Double.valueOf(text.substring(start, length)); } catch (NumberFormatException e) { return null; }
     }
 
     // 'zom*' style wildcard, compiled once at parse time

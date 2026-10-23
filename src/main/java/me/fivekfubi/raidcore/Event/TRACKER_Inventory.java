@@ -16,6 +16,8 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.player.*;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
+import org.bukkit.persistence.PersistentDataContainer;
+import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
 
@@ -27,6 +29,21 @@ import static me.fivekfubi.raidcore.RaidCore.*;
 public class TRACKER_Inventory implements Listener {
 
     public int SLOTS_PER_TICK = 4;
+
+    public volatile Set<Material> passive_materials = Collections.emptySet();
+
+    public void refresh_passive_materials() {
+        Set<Material> materials = EnumSet.noneOf(Material.class);
+        for (Map<String, DATA_Item> items : m_item.item_cache.values()) {
+            for (DATA_Item item_data : items.values()) {
+                if (item_data == null || item_data.original == null) continue;
+                DATA_Action action_data = item_data.action_data;
+                if (action_data == null || action_data.action_passive == null || action_data.action_passive.isEmpty()) continue;
+                materials.add(item_data.original.getType());
+            }
+        }
+        passive_materials = materials;
+    }
     public void load(){
         DATA_Config config_data = m_config.get_config_data(CORE_NAME, List.of("config.yml"));
         FileConfiguration config = config_data.config;
@@ -38,11 +55,39 @@ public class TRACKER_Inventory implements Listener {
             String plugin_name,
             String file_path,
             Map<String, List<DATA_Action_State>> passive_data,
-            HOLDER holder
+            HOLDER holder,
+            Map<DATA_Action_State, DATA_Action_Condition> resolved_cache
     ) {}
     //Map<UUID, Map<Integer, Map<String, List<BukkitTask>>>> tracked_items
     public final Map<UUID, Map<Integer, TRACKER_Item_entry>> tracked_items = new ConcurrentHashMap<>();
     public final Map<UUID, Map<Integer, String>> current_file_paths = new ConcurrentHashMap<>();
+
+    public final DATA_Action_Condition NO_MATCH = new DATA_Action_Condition();
+    public final DATA_Action_Condition DYNAMIC  = new DATA_Action_Condition();
+
+    public boolean is_static_condition(DATA_Action_Condition condition) {
+        for (DATA_Action_Condition c = condition; c != null; c = c.else_branch) {
+            if (c.condition == null || c.condition.isEmpty()) continue;
+            java.util.regex.Matcher matcher = m_placeholder.PLACEHOLDER_PATTERN.matcher(c.condition);
+            while (matcher.find()) {
+                if (!m_placeholder.is_holder_bound(matcher.group(1))) return false;
+            }
+        }
+        return true;
+    }
+
+    public DATA_Action_Condition resolve_passive(TRACKER_Item_entry entry, DATA_Action_State state) {
+        DATA_Action_Condition cached = entry.resolved_cache().get(state);
+        if (cached == null) {
+            cached = is_static_condition(state.conditions)
+                    ? Objects.requireNonNullElse(utils.resolve_condition(state.conditions, entry.holder()), NO_MATCH)
+                    : DYNAMIC;
+            entry.resolved_cache().put(state, cached);
+        }
+        if (cached == NO_MATCH) return null;
+        if (cached == DYNAMIC) return utils.resolve_condition(state.conditions, entry.holder());
+        return cached;
+    }
     public final Map<UUID, Map<String, Map<DATA_Action_Condition, Long>>> cooldowns_map = new ConcurrentHashMap<>();
 
 
@@ -66,7 +111,7 @@ public class TRACKER_Inventory implements Listener {
 
         // Just store data — no task spawned
         tracked_items.computeIfAbsent(uuid, k -> new ConcurrentHashMap<>())
-                .put(slot, new TRACKER_Item_entry(plugin_name, file_path, passive_data, holder));
+                .put(slot, new TRACKER_Item_entry(plugin_name, file_path, passive_data, holder, new HashMap<>()));
         current_file_paths.computeIfAbsent(uuid, k -> new ConcurrentHashMap<>())
                 .put(slot, file_path);
 
@@ -238,6 +283,7 @@ public class TRACKER_Inventory implements Listener {
                 int start_slot = tick_index * SLOTS_PER_TICK;
                 int end_slot = Math.min(start_slot + SLOTS_PER_TICK, 36);
                 boolean scan_armor = start_slot == 0;
+                if (scan_armor) refresh_passive_materials();
 
                 for (Player player : Bukkit.getOnlinePlayers()) {
                     UUID uuid = player.getUniqueId();
@@ -308,7 +354,7 @@ public class TRACKER_Inventory implements Listener {
 
                         for (List<DATA_Action_State> states : entry.passive_data().values()) {
                             for (DATA_Action_State state : states) {
-                                DATA_Action_Condition resolved = utils.resolve_condition(state.conditions, entry.holder());
+                                DATA_Action_Condition resolved = resolve_passive(entry, state);
                                 if (resolved == null) continue;
 
                                 Long cd = cooldowns.get(resolved);
@@ -348,15 +394,22 @@ public class TRACKER_Inventory implements Listener {
             return;
         }
 
-        Map<NamespacedKey, Object> data = utils.get_container_data(item);
-        if (data == null || !data.containsKey(NKEY.item_key)) {
+        if (!passive_materials.contains(item.getType())) {
             if (is_tracked) untrack_slot(uuid, slot);
             return;
         }
 
-        String file_path = (String) data.get(NKEY.file_path);
+        PersistentDataContainer container = item.getItemMeta().getPersistentDataContainer();
+        String file_path = container.get(NKEY.file_path, PersistentDataType.STRING);
+        if (file_path == null || !container.has(NKEY.item_key, PersistentDataType.STRING)) {
+            if (is_tracked) untrack_slot(uuid, slot);
+            return;
+        }
+
         String tracked = is_tracked ? path_map.get(slot) : null;
         if (file_path.equals(tracked)) return;
+
+        Map<NamespacedKey, Object> data = utils.get_container_data(container);
 
         boolean tracked_now = track(player, uuid, slot, data);
         if (!tracked_now && is_tracked) untrack_slot(uuid, slot);
